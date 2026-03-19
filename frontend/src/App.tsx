@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import Sidebar from './components/Sidebar';
-import Facturare from './pages/Facturare';
-import Incasari from './pages/Incasari';
+import Sidebar from './componente/Sidebar';
+import Facturare from './modules/03facturare/Facturare';
+import Incasari from './modules/04incasari/Incasari';
 
 export default function App() {
   const [paginaCurenta, setPaginaCurenta] = useState<string>('incasari');
