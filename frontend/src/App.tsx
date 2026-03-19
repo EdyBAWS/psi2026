@@ -2,9 +2,11 @@ import { useState } from 'react';
 import Sidebar from './componente/Sidebar';
 import Facturare from './modules/03facturare/Facturare';
 import Incasari from './modules/04incasari/Incasari';
+import Penalizare from './modules/03facturare/penalizari/Penalizare';
+import Oferta from './modules/03facturare/oferte/Oferta'; // Am adăugat importul pentru oferte
 
 export default function App() {
-  const [paginaCurenta, setPaginaCurenta] = useState<string>('incasari');
+  const [paginaCurenta, setPaginaCurenta] = useState<string>('facturare');
 
   const randeazaPagina = () => {
     switch (paginaCurenta) {
@@ -12,6 +14,10 @@ export default function App() {
         return <Facturare />;
       case 'incasari':
         return <Incasari />;
+      case 'penalizari':
+        return <Penalizare />;
+      case 'oferte': // Am adăugat cazul pentru oferte
+        return <Oferta />;
       default:
         return (
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center h-96">
