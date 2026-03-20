@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Sidebar from './componente/Sidebar';
+import Operational from './modules/02operational/Operational';
 import Facturare from './modules/03facturare/Facturare';
 import Incasari from './modules/04incasari/Incasari';
 
@@ -8,6 +9,8 @@ export default function App() {
 
   const randeazaPagina = () => {
     switch (paginaCurenta) {
+      case 'operational':
+        return <Operational />;
       case 'facturare':
         return <Facturare />;
       case 'incasari':

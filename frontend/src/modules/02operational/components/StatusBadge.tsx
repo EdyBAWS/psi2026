@@ -1,0 +1,23 @@
+import type { StatusComanda } from '../types';
+
+interface StatusBadgeProps {
+  status: StatusComanda;
+}
+
+const stiluri: Record<StatusComanda, string> = {
+  Deschis: 'bg-amber-50 text-amber-700 border-amber-200',
+  'In Lucru': 'bg-sky-50 text-sky-700 border-sky-200',
+  Finalizat: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Facturat: 'bg-violet-50 text-violet-700 border-violet-200',
+  Anulat: 'bg-rose-50 text-rose-700 border-rose-200',
+};
+
+export default function StatusBadge({ status }: StatusBadgeProps) {
+  return (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${stiluri[status]}`}
+    >
+      {status}
+    </span>
+  );
+}

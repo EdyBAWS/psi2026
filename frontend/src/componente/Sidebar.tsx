@@ -15,6 +15,11 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       label: 'Facturare Comenzi',
       icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     },
+    {
+      id: 'operational',
+      label: 'Operațional',
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3a1.5 1.5 0 00-1.42 1.02l-.3.86a1.5 1.5 0 01-.95.95l-.86.3a1.5 1.5 0 000 2.84l.86.3a1.5 1.5 0 01.95.95l.3.86a1.5 1.5 0 002.84 0l.3-.86a1.5 1.5 0 01.95-.95l.86-.3a1.5 1.5 0 000-2.84l-.86-.3a1.5 1.5 0 01-.95-.95l-.3-.86A1.5 1.5 0 009.75 3zm8.25 9.75a1.5 1.5 0 00-1.42 1.02l-.12.33a1.5 1.5 0 01-.95.95l-.33.12a1.5 1.5 0 000 2.84l.33.12a1.5 1.5 0 01.95.95l.12.33a1.5 1.5 0 002.84 0l.12-.33a1.5 1.5 0 01.95-.95l.33-.12a1.5 1.5 0 000-2.84l-.33-.12a1.5 1.5 0 01-.95-.95l-.12-.33A1.5 1.5 0 0018 12.75zM4.5 15.75A2.25 2.25 0 102.25 18 2.25 2.25 0 004.5 15.75z" />
+    },
     { 
       id: 'incasari', 
       label: 'Registru Încasări',

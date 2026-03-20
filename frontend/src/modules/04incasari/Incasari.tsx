@@ -12,7 +12,6 @@ export default function Incasari() {
   const [clientSelectat, setClientSelectat] = useState<string>('');
   const [sumaIncasata, setSumaIncasata] = useState<number | ''>('');
   const [modalitate, setModalitate] = useState<string>('Transfer Bancar');
-  const [contBancar, setContBancar] = useState<string>('');
   
   const [facturiRestante, setFacturiRestante] = useState<FacturaRestanta[]>([
     { idFactura: 101, numar: 'F-2026-001', dataEmitere: '2026-03-01', restDePlata: 1500, sumaAlocata: '' },

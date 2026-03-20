@@ -1,8 +1,3 @@
-// src/modules/02operational/types.ts
-// Strict alignment with the logical database schema.
-
-// ─── Core domain entities ──────────────────────────────────────────────────
-
 export interface Vehicul {
   idVehicul: number;
   idClient: number;
@@ -27,13 +22,13 @@ export interface DosarDauna {
 export interface ComandaService {
   idComanda: number;
   idVehicul: number;
-  idDosar: number | null;       // null when not an insurance job
+  idDosar: number | null;
   idMecanic: number;
   nrComanda: string;
   dataDeschidere: Date;
   dataFinalizare: Date | null;
   status: StatusComanda;
-  totalEstimat: number;         // derived: sum of PozitieComanda rows
+  totalEstimat: number;
 }
 
 export interface PozitieComanda {
@@ -45,15 +40,7 @@ export interface PozitieComanda {
   tipPozitie: TipPozitie;
   cantitate: number;
   pretVanzare: number;
-  cotaTVA: number;              // e.g. 0.19 for 19%
-}
-
-// ─── Lookup / reference entities ──────────────────────────────────────────
-
-export interface Client {
-  idClient: number;
-  nume: string;
-  telefon: string;
+  cotaTVA: number;
 }
 
 export interface Asigurator {
@@ -67,8 +54,6 @@ export interface Mecanic {
   specialitate: string;
 }
 
-// ─── Enums / literal unions ────────────────────────────────────────────────
-
 export type StatusComanda =
   | 'Deschis'
   | 'In Lucru'
@@ -78,22 +63,11 @@ export type StatusComanda =
 
 export type TipPozitie = 'Piesa' | 'Kit' | 'Manopera';
 
-// ─── UI / form-only types (not persisted) ─────────────────────────────────
-
-/** Draft row while user builds the positions list before saving. */
 export interface PozitieComandaDraft {
-  _draftId: string;             // local key, replaced by idPozitieCmd on save
+  _draftId: string;
   tipPozitie: TipPozitie;
-  descriere: string;            // free text label for mock purposes
+  descriere: string;
   cantitate: number;
   pretVanzare: number;
   cotaTVA: number;
-}
-
-export interface FormComandaValues {
-  idVehicul: number | null;
-  idDosar: number | null;
-  idMecanic: number | null;
-  dataEstimataFinalizare: string; // ISO date string from <input type="date">
-  observatii: string;
 }
