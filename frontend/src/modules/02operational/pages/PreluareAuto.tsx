@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import FormComanda from '../components/FormComanda';
-import SelectorDosar, {
-  type StareDosarAsigurare,
-  stareDosarInitiala,
-} from '../components/SelectorDosar';
+import SelectorDosar from '../components/SelectorDosar';
 import SelectorVehicul from '../components/SelectorVehicul';
-import { creeazaPozitieDraft } from '../components/TabelPozitii';
+import {
+  creeazaPozitieDraft,
+  stareDosarInitiala,
+  type StareDosarAsigurare,
+} from '../formState';
 import type {
   Asigurator,
   ComandaService,

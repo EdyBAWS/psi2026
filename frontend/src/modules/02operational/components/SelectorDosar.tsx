@@ -1,20 +1,5 @@
+import type { StareDosarAsigurare } from '../formState';
 import type { Asigurator, DosarDauna, Vehicul } from '../types';
-
-export interface StareDosarAsigurare {
-  mod: 'existent' | 'nou';
-  idDosarSelectat: number | null;
-  idAsigurator: number | null;
-  sumaAprobata: number | '';
-  franciza: number | '';
-}
-
-export const stareDosarInitiala: StareDosarAsigurare = {
-  mod: 'existent',
-  idDosarSelectat: null,
-  idAsigurator: null,
-  sumaAprobata: '',
-  franciza: '',
-};
 
 interface SelectorDosarProps {
   asiguratori: Asigurator[];

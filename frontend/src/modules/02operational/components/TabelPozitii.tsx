@@ -1,4 +1,5 @@
 import type { PozitieComandaDraft, TipPozitie } from '../types';
+import { creeazaPozitieDraft } from '../formState';
 
 interface TabelPozitiiProps {
   pozitii: PozitieComandaDraft[];
@@ -13,18 +14,6 @@ const formatSuma = (valoare: number) =>
     currency: 'RON',
     maximumFractionDigits: 2,
   }).format(valoare);
-
-const genereazaDraftId = () =>
-  `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
-
-export const creeazaPozitieDraft = (): PozitieComandaDraft => ({
-  _draftId: genereazaDraftId(),
-  tipPozitie: 'Manopera',
-  descriere: '',
-  cantitate: 1,
-  pretVanzare: 0,
-  cotaTVA: 19,
-});
 
 const calculeazaTotalLinie = (pozitie: PozitieComandaDraft) =>
   Number(

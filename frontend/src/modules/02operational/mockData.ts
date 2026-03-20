@@ -106,7 +106,7 @@ const pozitiiComanda1: PozitieComanda[] = [
   },
   {
     idPozitieCmd: 3,
-    idComanda: 2,
+    idComanda: 1,
     idPiesa: 302,
     idKit: null,
     idManopera: null,
