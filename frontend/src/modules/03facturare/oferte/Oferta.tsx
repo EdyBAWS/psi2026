@@ -1,172 +1,86 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-// Interfețe
-interface Client {
-  idClient: number;
-  nume: string;
-}
-
-interface Factura {
-  idFactura: number;
-  idClient: number;
-  serie: string;
-  numar: string;
-  valoareTotala: number; // Valoarea înainte de reducere
-}
-
-const Oferta: React.FC = () => {
-  // State-uri
-  const [clientSelectat, setClientSelectat] = useState<number | ''>('');
-  const [facturaSelectata, setFacturaSelectata] = useState<Factura | null>(null);
-  
-  // State-uri specifice pentru POZITIE_FACTURA_OFERTA
-  const [codCampanie, setCodCampanie] = useState<string>('');
-  const [procentReducere, setProcentReducere] = useState<number>(10); // Default 10%
-
-  // --- DATE DE TEST (Mock Data) ---
-  const clientiMock: Client[] = [
-    { idClient: 1, nume: 'Ion Popescu (PF)' },
-    { idClient: 2, nume: 'SC Transport SRL (PJ)' }
+export default function Oferta() {
+  // Pentru moment, simulăm câteva facturi deja emise anterior de modulul de facturare
+  const facturiEmise = [
+    { id: 101, numar: 'F-2026-001', dataEmitere: '2026-03-01', total: 1500, client: 'SC Auto Fleet SRL' },
+    { id: 102, numar: 'F-2026-002', dataEmitere: '2026-03-05', total: 850, client: 'Ion Popescu' },
+    { id: 103, numar: 'F-2026-005', dataEmitere: '2026-03-10', total: 3200, client: 'Vasile Dorel' },
   ];
 
-  const facturiMock: Factura[] = [
-    { idFactura: 101, idClient: 1, serie: 'FCT', numar: '2026-080', valoareTotala: 1500 },
-    { idFactura: 102, idClient: 2, serie: 'FCT', numar: '2026-081', valoareTotala: 4500 }
-  ];
-  // --------------------------------
+  const [facturaSelectata, setFacturaSelectata] = useState('');
+  const [tipOperatiune, setTipOperatiune] = useState('discount');
 
-  // Filtrăm facturile pentru clientul selectat
-  const facturiClient = facturiMock.filter(f => f.idClient === clientSelectat);
-
-  // Calcule
-  const valoareReducere = facturaSelectata ? (facturaSelectata.valoareTotala * (procentReducere / 100)) : 0;
-  const totalDupaReducere = facturaSelectata ? (facturaSelectata.valoareTotala - valoareReducere) : 0;
-
-  const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setClientSelectat(parseInt(e.target.value) || '');
-    setFacturaSelectata(null); // Reset
-  };
-
-  const handleFacturaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = parseInt(e.target.value);
-    const facturaGasita = facturiClient.find(f => f.idFactura === id) || null;
-    setFacturaSelectata(facturaGasita);
-  };
-
-  const handleAplicaOferta = () => {
-    if (!facturaSelectata || !codCampanie || procentReducere <= 0) {
-      alert('Te rog selectează o factură, introdu un cod de campanie și un procent valid!');
+  const handleSalvare = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!facturaSelectata) {
+      alert("Te rog selectează o factură din listă!");
       return;
     }
     
-    // Aici va veni logica de INSERT în POZITIE_FACTURA și POZITIE_FACTURA_OFERTA
-    // și UPDATE pe valoarea totală a facturii
-    console.log('Ofertă aplicată:', {
-      idFactura: facturaSelectata.idFactura,
-      codCampanie,
-      procentReducere,
-      valoareReducere
-    });
-    
-    alert(`Reducerea de ${valoareReducere.toFixed(2)} RON a fost aplicată cu succes pe factura ${facturaSelectata.numar}!`);
+    if (tipOperatiune === 'discount') {
+      alert(`S-a aplicat Discount / Ofertă pentru factura ID: ${facturaSelectata}. Se va ajusta restul de plată.`);
+    } else {
+      alert(`S-a generat o Factură Storno Promoțională pentru factura ID: ${facturaSelectata}.`);
+    }
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-emerald-600">Aplicare Ofertă / Campanie Promoțională</h1>
-      <p className="mb-6 text-gray-600">
-        Acest modul adaugă o poziție de reducere (discount) pe o factură existentă, conform campaniilor active.
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold mb-2 text-slate-800">Gestiune Campanii & Oferte</h2>
+      <p className="text-slate-500 mb-6 text-sm">
+        Selectează o factură deja emisă pentru a aplica un discount extra sau pentru a emite o factură storno aferentă unei promoții.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Partea Stângă: Selecție și Date Campanie */}
-        <div className="space-y-6">
-          <div className="border p-4 rounded shadow-sm bg-white">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Selectare Factură</h2>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Client:</label>
-              <select className="w-full border p-2 rounded mt-1" value={clientSelectat} onChange={handleClientChange}>
-                <option value="">-- Alege client --</option>
-                {clientiMock.map(c => (
-                  <option key={c.idClient} value={c.idClient}>{c.nume}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-2">
-              <label className="block text-sm font-medium text-gray-700">Factură vizată:</label>
-              <select className="w-full border p-2 rounded mt-1" disabled={!clientSelectat} onChange={handleFacturaChange}>
-                <option value="">-- Alege factură --</option>
-                {facturiClient.map(f => (
-                  <option key={f.idFactura} value={f.idFactura}>
-                    {f.serie} {f.numar} (Total: {f.valoareTotala} RON)
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="border p-4 rounded shadow-sm bg-white">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">2. Detalii Ofertă</h2>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Cod Campanie Promoțională:</label>
-              <input 
-                type="text" 
-                className="w-full border p-2 rounded mt-1 uppercase" 
-                placeholder="Ex: BLACKFRIDAY26"
-                value={codCampanie} 
-                onChange={(e) => setCodCampanie(e.target.value.toUpperCase())} 
-              />
-            </div>
-
-            <div className="mb-2">
-              <label className="block text-sm font-medium text-gray-700">Procent Reducere (%):</label>
-              <input 
-                type="number" 
-                min="0"
-                max="100"
-                className="w-full border p-2 rounded mt-1" 
-                value={procentReducere} 
-                onChange={(e) => setProcentReducere(parseFloat(e.target.value) || 0)} 
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Partea Dreaptă: Sumar Reducere */}
-        <div className="border p-6 rounded shadow-sm bg-gray-50 flex flex-col justify-center">
-          <h2 className="text-xl font-semibold mb-6 text-gray-800 text-center">Sumar Factură</h2>
-          
-          <div className="space-y-4 text-lg">
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-600">Total inițial:</span>
-              <span className="font-medium">{facturaSelectata ? facturaSelectata.valoareTotala.toFixed(2) : '0.00'} RON</span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-600">Reducere aplicată ({procentReducere}%):</span>
-              <span className="font-medium text-emerald-600">- {valoareReducere.toFixed(2)} RON</span>
-            </div>
-            
-            <div className="flex justify-between pt-4 text-2xl font-bold">
-              <span className="text-gray-800">Total de Plată:</span>
-              <span className="text-blue-600">{totalDupaReducere.toFixed(2)} RON</span>
-            </div>
-          </div>
-
-          <button 
-            className="mt-10 w-full py-3 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 font-bold transition-colors text-lg"
-            onClick={handleAplicaOferta}
+      <form onSubmit={handleSalvare} className="space-y-6">
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">Factura de Bază</label>
+          <select 
+            className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+            value={facturaSelectata}
+            onChange={(e) => setFacturaSelectata(e.target.value)}
           >
-            Aplică Reducerea
-          </button>
+            <option value="">-- Caută factură emisă --</option>
+            {facturiEmise.map(f => (
+              <option key={f.id} value={f.id}>
+                {f.numar} - {f.client} ({f.total} RON)
+              </option>
+            ))}
+          </select>
         </div>
 
-      </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">Tipul Operațiunii</label>
+          <div className="flex space-x-4">
+            <label className="flex items-center space-x-2 cursor-pointer p-3 border border-slate-200 rounded-lg flex-1 hover:bg-slate-50">
+              <input 
+                type="radio" 
+                name="tipOp" 
+                value="discount" 
+                checked={tipOperatiune === 'discount'}
+                onChange={(e) => setTipOperatiune(e.target.value)}
+                className="text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm font-medium text-slate-700">Aplicare Discount Extra</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer p-3 border border-slate-200 rounded-lg flex-1 hover:bg-slate-50">
+              <input 
+                type="radio" 
+                name="tipOp" 
+                value="storno" 
+                checked={tipOperatiune === 'storno'}
+                onChange={(e) => setTipOperatiune(e.target.value)}
+                className="text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm font-medium text-slate-700">Emitere Factură Storno</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl shadow-md font-semibold transition-colors mt-4">
+          Procesează Operațiunea
+        </button>
+      </form>
     </div>
   );
-};
-
-export default Oferta;
+}

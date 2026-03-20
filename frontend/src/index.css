@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+/* Personalizare elegantă pentru scrollbar în toată aplicația */
+::-webkit-scrollbar {
+  width: 8px; /* Mai subțire */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Fără fundal gri urât */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* slate-300 - un gri foarte pal */
+  border-radius: 10px; /* Colțuri rotunjite */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8; /* slate-400 - se închide puțin la hover */
+}
