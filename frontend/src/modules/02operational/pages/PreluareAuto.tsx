@@ -9,6 +9,7 @@ import { calculeazaRezumatPozitii, comandaEsteActiva } from '../calculations';
 import FormComanda from '../components/FormComanda';
 import SelectorDosar from '../components/SelectorDosar';
 import SelectorVehicul from '../components/SelectorVehicul';
+import { suntPozitiiValide, valideazaPreluare } from '../validations';
 import {
   creeazaPozitieDraft,
   detaliiPreluareInitiale,
@@ -79,21 +80,6 @@ const genereazaNumarDocument = (prefix: string, id: number) =>
 
 const esteNumarCompletat = (valoare: number | ''): valoare is number => valoare !== '';
 
-// Verificăm dacă fiecare poziție are datele minime pentru a deveni poziție reală la salvare.
-const suntPozitiiValide = (pozitiiDraft: PozitieComandaDraft[]) =>
-  pozitiiDraft.length > 0 &&
-  pozitiiDraft.every(
-    (pozitie) =>
-      pozitie.catalogId !== null &&
-      pozitie.descriere.trim() !== '' &&
-      pozitie.codArticol.trim() !== '' &&
-      pozitie.cantitate > 0 &&
-      pozitie.pretVanzare > 0 &&
-      pozitie.discountProcent >= 0 &&
-      pozitie.discountProcent <= 100 &&
-      pozitie.cotaTVA >= 0,
-  );
-
 const accesoriiCaLista = (valoare: string) =>
   valoare
     .split(',')
@@ -155,86 +141,23 @@ export default function PreluareAuto({
             comandaEsteActiva(comanda.status),
         ) ?? null;
 
-  const dosarValid = !esteLucrareAsigurare
-    ? true
-    : stareDosar.mod === 'existent'
-      ? stareDosar.idDosarSelectat !== null
-      : stareDosar.idAsigurator !== null &&
-        stareDosar.numarReferintaAsigurator.trim() !== '' &&
-        stareDosar.inspectorDauna.trim() !== '' &&
-        stareDosar.dataConstatare !== '' &&
-        esteNumarCompletat(stareDosar.sumaAprobata) &&
-        stareDosar.sumaAprobata > 0 &&
-        esteNumarCompletat(stareDosar.franciza) &&
-        stareDosar.franciza >= 0;
-
-  // `mesajeBlocare` conține motivele pentru care butonul de salvare trebuie dezactivat.
-  // Am ales această abordare pentru ca utilizatorul să știe exact ce lipsește.
-  const mesajeBlocare: string[] = [];
-
-  if (!vehiculSelectat) {
-    mesajeBlocare.push('Selectează un vehicul înainte de a continua fluxul.');
-  }
-  if (comandaActivaExistenta) {
-    mesajeBlocare.push(
-      `Vehiculul are deja o comandă activă (${comandaActivaExistenta.nrComanda}).`,
-    );
-  }
-  if (idMecanicSelectat === null) {
-    mesajeBlocare.push('Alege mecanicul responsabil pentru lucrare.');
-  }
-  if (
-    !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) ||
-    detaliiPreluare.kilometrajPreluare <= 0
-  ) {
-    mesajeBlocare.push('Completează kilometrajul de preluare.');
-  }
-  if (detaliiPreluare.simptomeReclamate.trim().length < 10) {
-    mesajeBlocare.push('Descrie simptomele reclamate în minimum 10 caractere.');
-  }
-  if (detaliiPreluare.termenPromis === '') {
-    mesajeBlocare.push('Setează un termen promis pentru livrare.');
-  }
-  if (
-    detaliiPreluare.termenPromis !== '' &&
-    new Date(detaliiPreluare.termenPromis).getTime() < new Date().setHours(0, 0, 0, 0)
-  ) {
-    mesajeBlocare.push('Termenul promis nu poate fi în trecut.');
-  }
-  if (esteLucrareAsigurare && detaliiPreluare.tipPlata !== 'Asigurare') {
-    mesajeBlocare.push('Pentru lucrările pe asigurare, tipul de plată trebuie să fie Asigurare.');
-  }
-  if (!esteLucrareAsigurare && detaliiPreluare.tipPlata === 'Asigurare') {
-    mesajeBlocare.push('Activează fluxul de daună dacă plata este prin asigurare.');
-  }
-  if (!suntPozitiiValide(pozitiiDraft)) {
-    mesajeBlocare.push('Completează toate pozițiile și selectează articole din catalog.');
-  }
-  if (!dosarValid) {
-    mesajeBlocare.push('Completează corect datele dosarului de daună.');
-  }
-
-  // `mesajeAvertizare` nu blochează salvarea, dar semnalează situații sensibile
-  // pe care un consilier de service ar trebui să le observe.
-  const mesajeAvertizare: string[] = [];
-  if (pozitiiDraft.some((pozitie) => !pozitie.disponibilitateStoc)) {
-    mesajeAvertizare.push(
-      'Există poziții fără stoc local. Comanda poate fi salvată, dar va intra cel mai probabil în status Așteaptă piese.',
-    );
-  }
-
-  if (
-    esteLucrareAsigurare &&
-    stareDosar.mod === 'nou' &&
-    esteNumarCompletat(stareDosar.sumaAprobata) &&
-    stareDosar.sumaAprobata < rezumatPozitii.total
-  ) {
-    mesajeAvertizare.push(
-      'Suma aprobată în dosar este mai mică decât devizul estimat și va necesita suplimentare.',
-    );
-  }
-
-  const poateSalva = mesajeBlocare.length === 0;
+  // Mutăm regulile de business într-un fișier separat, iar pagina păstrează doar
+  // rolul de orchestrare a fluxului și afișare a rezultatului.
+  const {
+    dosarValid,
+    mesajeAvertizare,
+    mesajeBlocare,
+    poateSalva,
+  } = valideazaPreluare({
+    comandaActivaExistenta,
+    detaliiPreluare,
+    esteLucrareAsigurare,
+    idMecanicSelectat,
+    pozitiiDraft,
+    stareDosar,
+    totalEstimat: rezumatPozitii.total,
+    vehiculSelectat,
+  });
 
   // Resetarea readuce întreg fluxul la forma inițială.
   // Este utilă după salvare sau dacă utilizatorul vrea să reînceapă recepția.
