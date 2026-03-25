@@ -1,5 +1,6 @@
 // Componentă pur vizuală care traduce statusul comenzii într-un badge colorat.
 // Logica de business a statusului rămâne în paginile care folosesc badge-ul.
+// Cu alte cuvinte, aici decidem doar "cum arată" statusul, nu și "ce înseamnă".
 import type { StatusComanda } from '../types';
 
 interface StatusBadgeProps {

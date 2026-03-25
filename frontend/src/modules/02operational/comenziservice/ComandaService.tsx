@@ -1,5 +1,6 @@
 // Placeholder de compatibilitate.
 // Pagina reală de lucru pentru comenzi este acum în `pages/GestiuneComenzi.tsx`.
+// Scopul lui este pur informativ: nu mai conține logica veche de comenzi.
 export default function ComandaService() {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">

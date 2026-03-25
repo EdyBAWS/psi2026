@@ -1,6 +1,7 @@
 // Placeholder de compatibilitate.
 // În MVP, dosarul de daună nu are o pagină separată: el se completează direct
 // în fluxul de preluare auto.
+// Păstrăm fișierul pentru a arăta clar noua poziționare a funcționalității.
 export default function DosarDauna() {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">

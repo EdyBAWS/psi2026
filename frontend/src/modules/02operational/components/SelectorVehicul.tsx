@@ -20,9 +20,14 @@ export default function SelectorVehicul({
   onSelecteaza,
   vehicule,
 }: SelectorVehiculProps) {
+  // Componenta păstrează local doar textul de căutare.
+  // Vehiculul selectat rămâne în pagina părinte, pentru că și alte componente
+  // trebuie să știe ce mașină a fost aleasă.
   const [cautare, setCautare] = useState('');
 
   const termen = cautare.trim().toLowerCase();
+  // Filtrarea se face pe mai multe câmpuri ca să imite o căutare practică din recepție:
+  // număr de înmatriculare, model, VIN, numele clientului sau telefon.
   const vehiculeFiltrate = vehicule.filter((vehicul) => {
     const client = clienti.find((item) => item.idClient === vehicul.idClient);
     const campuriCautare = [
@@ -73,6 +78,8 @@ export default function SelectorVehicul({
 
       <div className="grid gap-3 lg:grid-cols-3">
         {vehiculeFiltrate.map((vehicul) => {
+          // Pentru fiecare card derivăm context suplimentar din alte liste.
+          // Nu duplicăm aceste date în `Vehicul`, ci le calculăm la afișare.
           const client = clienti.find((item) => item.idClient === vehicul.idClient) ?? null;
           const comenziActiveVehicul = comenzi.filter(
             (comanda) =>
@@ -84,6 +91,8 @@ export default function SelectorVehicul({
             <button
               key={vehicul.idVehicul}
               type="button"
+              // La click, componenta nu își schimbă singură selecția finală.
+              // Ea anunță pagina părinte prin callback-ul `onSelecteaza`.
               onClick={() => onSelecteaza(vehicul.idVehicul)}
               className={`rounded-2xl border p-5 text-left transition-all ${
                 esteSelectat

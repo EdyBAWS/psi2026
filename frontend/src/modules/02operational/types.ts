@@ -2,6 +2,9 @@
 // Am păstrat nucleul schemei inițiale și am adăugat câmpuri uzuale pentru
 // recepția auto, astfel încât fluxul să semene mai mult cu un service real.
 
+// Aceste tipuri simple sunt folosite ca liste de valori permise.
+// Avantajul pentru TypeScript este că prindem mai repede greșeli de scriere
+// și știm exact ce opțiuni poate avea un câmp din formular sau din datele salvate.
 export type TipClient = 'Persoana Fizica' | 'Persoana Juridica' | 'Flota';
 export type TipPlata = 'Client Direct' | 'Asigurare' | 'Flota';
 export type PrioritateComanda = 'Scazuta' | 'Normala' | 'Ridicata' | 'Urgenta';
@@ -21,6 +24,9 @@ export type StatusComanda =
   | 'Facturat'
   | 'Anulat';
 
+// `Client` este entitatea care deține vehiculul.
+// În UI o folosim pentru a afișa rapid cine aduce mașina în service
+// și pentru a decide din start anumite valori, cum ar fi tipul de plată.
 export interface Client {
   idClient: number;
   nume: string;
@@ -30,6 +36,8 @@ export interface Client {
   denumireCompanie: string | null;
 }
 
+// `Vehicul` rămâne apropiat de schema de bază.
+// În restul modulului el este "punctul de plecare" pentru o comandă nouă.
 export interface Vehicul {
   idVehicul: number;
   idClient: number;
@@ -41,6 +49,8 @@ export interface Vehicul {
 }
 
 // Un dosar de daună leagă vehiculul de asigurator și de starea aprobării.
+// Acesta este un tip "persistat", adică reprezintă obiectul final care ar putea
+// fi salvat într-o bază de date sau trimis către backend.
 export interface DosarDauna {
   idDosar: number;
   idClient: number;
@@ -60,6 +70,7 @@ export interface DosarDauna {
 
 // Comanda de service păstrează atât câmpurile esențiale din schema inițială,
 // cât și detaliile de recepție necesare în lucru de zi cu zi.
+// Practic, acesta este obiectul principal al modulului operațional.
 export interface ComandaService {
   idComanda: number;
   idVehicul: number;
@@ -83,6 +94,7 @@ export interface ComandaService {
 
 // Fiecare rând din comandă poate veni din catalog și conține și detalii utile
 // în operațional, nu doar prețul și TVA-ul.
+// Acesta este tipul "real" al unei poziții după salvare.
 export interface PozitieComanda {
   idPozitieCmd: number;
   idComanda: number;
@@ -112,6 +124,9 @@ export interface Mecanic {
   specialitate: string;
 }
 
+// Catalogele sunt sursa din care utilizatorul alege articole pentru deviz.
+// Separarea lor pe tipuri ne ajută să controlăm mai clar ce câmpuri sunt disponibile
+// pentru piese, kituri sau manoperă.
 export interface CatalogPiesa {
   idPiesa: number;
   cod: string;
@@ -143,6 +158,9 @@ export interface CatalogManopera {
 
 // Varianta "draft" este folosită doar în formular, înainte ca poziția
 // să fie transformată într-o înregistrare reală de tip `PozitieComanda`.
+// Diferența importantă pentru un începător:
+// - `PozitieComandaDraft` există doar cât timp edităm formularul
+// - `PozitieComanda` este forma finală, gata de salvat
 export interface PozitieComandaDraft {
   _draftId: string;
   tipPozitie: TipPozitie;

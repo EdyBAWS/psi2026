@@ -1,6 +1,8 @@
 // Selectorul de dosar rezolvă ramura "de asigurare" a fluxului:
 // fie atașează un dosar deja existent pentru vehicul, fie completează
 // datele principale pentru a crea unul nou la salvarea comenzii.
+// Componenta nu salvează nimic direct. Ea doar editează starea de formular
+// primită prin `value` și trimite modificările înapoi prin `onChange`.
 import type { StareDosarAsigurare } from '../formState';
 import type { Asigurator, DosarDauna, StatusDosar, Vehicul } from '../types';
 
@@ -38,6 +40,8 @@ export default function SelectorDosar({
   vehicul,
   onChange,
 }: SelectorDosarProps) {
+  // Fără vehicul selectat nu putem ști ce dosare sunt relevante,
+  // deci afișăm doar un mesaj de ghidare.
   if (!vehicul) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-sm text-slate-500">
@@ -46,6 +50,7 @@ export default function SelectorDosar({
     );
   }
 
+  // Selectăm doar dosarele care aparțin vehiculului curent.
   const dosareVehicul = dosare.filter((dosar) => dosar.idVehicul === vehicul.idVehicul);
   const dosarSelectat =
     dosareVehicul.find((dosar) => dosar.idDosar === value.idDosarSelectat) ?? null;
@@ -54,6 +59,8 @@ export default function SelectorDosar({
     null;
   const existaDosare = dosareVehicul.length > 0;
 
+  // Când schimbăm modul, păstrăm aceeași structură de stare,
+  // dar resetăm câmpurile care nu mai au sens în contextul nou.
   const schimbaMod = (mod: 'existent' | 'nou') => {
     if (mod === 'existent') {
       onChange({
@@ -118,6 +125,7 @@ export default function SelectorDosar({
 
       {value.mod === 'existent' ? (
         <div className="space-y-4">
+          {/* În acest mod, utilizatorul doar alege un dosar deja cunoscut. */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
               Selectează dosarul existent
@@ -144,6 +152,8 @@ export default function SelectorDosar({
 
           {dosarSelectat ? (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              {/* Afișăm un rezumat informativ, ca utilizatorul să confirme rapid
+                  că a ales dosarul corect înainte de salvarea comenzii. */}
               <dl className="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
                 <div>
                   <dt className="font-semibold text-slate-700">Număr dosar</dt>
@@ -191,6 +201,8 @@ export default function SelectorDosar({
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {/* În modul "nou", componenta colectează doar datele necesare pentru
+              construirea obiectului final `DosarDauna` în pagina părinte. */}
           <div className="md:col-span-2 xl:col-span-4 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
             Numărul noului dosar va fi generat automat la salvare: <strong>{nrDosarPreview}</strong>
           </div>
