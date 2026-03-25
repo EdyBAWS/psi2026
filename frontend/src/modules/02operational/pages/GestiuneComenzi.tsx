@@ -1,6 +1,7 @@
 // Pagina de gestiune afișează comenzile deja create în modulul operațional.
 // Pentru a reflecta mai bine utilizarea reală, include filtre, indicii de
 // prioritate și o zonă de detalii pentru comanda selectată.
+// O poți privi ca pe un mic "tablou de bord" pentru recepție și coordonarea lucrărilor.
 import { useState } from 'react';
 import { calculeazaRezumatPozitii, comandaEsteActiva, comandaEsteIntarziata } from '../calculations';
 import StatusBadge from '../components/StatusBadge';
@@ -78,6 +79,8 @@ export default function GestiuneComenzi({
   const [doarIntarziate, setDoarIntarziate] = useState(false);
   const [idComandaSelectata, setIdComandaSelectata] = useState<number | null>(null);
 
+  // Aplicăm toate filtrele într-un singur lanț pentru a obține lista finală afișată.
+  // Căutarea se face simultan în date de comandă, vehicul și client.
   const comenziFiltrate = comenzi
     .filter((comanda) => {
       const vehicul = vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
@@ -114,6 +117,7 @@ export default function GestiuneComenzi({
     .slice()
     .sort((left, right) => right.dataDeschidere.getTime() - left.dataDeschidere.getTime());
 
+  // Dacă utilizatorul nu a selectat nimic explicit, afișăm automat prima comandă din listă.
   const comandaSelectata =
     comenziFiltrate.find((comanda) => comanda.idComanda === idComandaSelectata) ??
     comenziFiltrate[0] ??
@@ -139,6 +143,8 @@ export default function GestiuneComenzi({
     ? asiguratori.find((item) => item.idAsigurator === dosarSelectat.idAsigurator) ?? null
     : null;
 
+  // Statisticile din antet folosesc lista completă, nu doar lista filtrată,
+  // pentru a oferi o imagine generală asupra modului.
   const totalComenziActive = comenzi.filter((comanda) => comandaEsteActiva(comanda.status)).length;
   const totalIntarziate = comenzi.filter((comanda) =>
     comandaEsteIntarziata(comanda.status, comanda.termenPromis),
@@ -181,6 +187,8 @@ export default function GestiuneComenzi({
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[1.4fr_repeat(4,0.7fr)]">
+          {/* Filtrele controlează doar afișarea din această pagină.
+              Ele nu modifică datele comenzilor. */}
           <input
             type="text"
             value={cautare}
@@ -266,6 +274,8 @@ export default function GestiuneComenzi({
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {comenziFiltrate.map((comanda) => {
+                    // Pentru fiecare rând derivăm și datele asociate, ca să putem afișa
+                    // clientul și vehiculul fără să duplicăm aceste informații în comandă.
                     const vehicul =
                       vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
                     const client =
@@ -283,6 +293,7 @@ export default function GestiuneComenzi({
                         className={`cursor-pointer align-top transition-colors ${
                           esteSelectata ? 'bg-indigo-50/70' : 'hover:bg-slate-50/70'
                         }`}
+                        // Click-ul pe rând schimbă panoul de detalii din dreapta.
                         onClick={() => setIdComandaSelectata(comanda.idComanda)}
                       >
                         <td className="px-5 py-4">
@@ -328,6 +339,8 @@ export default function GestiuneComenzi({
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
             {comandaSelectata && vehiculSelectat && clientSelectat ? (
               <div className="space-y-5">
+                {/* Panoul din dreapta rezumă aceeași comandă selectată în tabel.
+                    Ideea este ca utilizatorul să nu părăsească pagina pentru detalii. */}
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                     Detalii comandă
@@ -463,6 +476,8 @@ export default function GestiuneComenzi({
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {pozitiiComandaSelectata.map((pozitie) => {
+                          // Refolosim funcția de calcul chiar și pentru o singură poziție,
+                          // astfel încât formula să rămână identică peste tot în aplicație.
                           const valori = calculeazaRezumatPozitii([pozitie]);
                           return (
                             <tr key={pozitie.idPozitieCmd}>

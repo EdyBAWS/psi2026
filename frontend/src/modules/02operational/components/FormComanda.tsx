@@ -1,5 +1,8 @@
 // Componenta afișează antetul comenzii, datele de recepție și tabelul de poziții.
 // Ea nu salvează nimic singură; pagina părinte deține starea și validarea finală.
+// Acesta este un pattern important pentru începători:
+// - componenta copil afișează și colectează input-uri
+// - componenta părinte decide când datele sunt valide și când se salvează
 import TabelPozitii from './TabelPozitii';
 import type { DetaliiPreluareForm } from '../formState';
 import type {
@@ -91,6 +94,8 @@ export default function FormComanda({
           </div>
         </div>
 
+        {/* Această grilă grupează toate datele de recepție ale comenzii.
+            Fiecare input trimite doar modificarea locală înapoi către părinte. */}
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -210,6 +215,8 @@ export default function FormComanda({
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 md:col-span-2">
+            {/* Rezumatul folosește totalurile deja calculate în părinte.
+                Componenta nu recalculează aici formulele, doar le afișează. */}
             <p className="text-sm font-semibold text-slate-700">Rezumat deviz</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <p className="text-sm text-slate-500">
@@ -291,6 +298,8 @@ export default function FormComanda({
         </div>
       </div>
 
+      {/* Tabelul de poziții este separat pentru a păstra componenta curată.
+          El gestionează lista de rânduri, iar această componentă se ocupă de antetul comenzii. */}
       <TabelPozitii
         catalogKituri={catalogKituri}
         catalogManopere={catalogManopere}

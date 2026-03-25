@@ -1,6 +1,10 @@
 // Tabelul de poziții gestionează liniile editabile din comanda de service.
 // Utilizatorul alege articole dintr-un catalog simplificat, apoi poate ajusta
 // cantitatea, discountul și observațiile pentru deviz.
+// Pentru un coleg începător, componenta poate fi înțeleasă astfel:
+// - primește lista curentă de poziții
+// - modifică o poziție sau adaugă/șterge una
+// - trimite lista actualizată înapoi prin `onChange`
 import { calculeazaRezumatPozitii, calculeazaValoriPozitie } from '../calculations';
 import { creeazaPozitieDraft } from '../formState';
 import type {
@@ -45,8 +49,13 @@ export default function TabelPozitii({
   pozitii,
   onChange,
 }: TabelPozitiiProps) {
+  // Rezumatul este calculat la fiecare randare pe baza pozițiilor primite.
+  // Așa, totalurile rămân mereu sincronizate cu ce este în tabel.
   const rezumat = calculeazaRezumatPozitii(pozitii);
 
+  // În funcție de tipul poziției, alegem catalogul corect.
+  // Returnăm toate formele într-o structură comună (`CatalogOption`)
+  // pentru a putea afișa aceeași interfață în tabel.
   const obtineCatalog = (tipPozitie: TipPozitie): CatalogOption[] => {
     if (tipPozitie === 'Piesa') {
       return catalogPiese.map((item) => ({
@@ -87,6 +96,7 @@ export default function TabelPozitii({
     draftId: string,
     modificari: Partial<PozitieComandaDraft>,
   ) => {
+    // Căutăm doar rândul care trebuie schimbat și îl reconstruim cu noile valori.
     onChange(
       pozitii.map((pozitie) =>
         pozitie._draftId === draftId ? { ...pozitie, ...modificari } : pozitie,
@@ -95,6 +105,8 @@ export default function TabelPozitii({
   };
 
   const schimbaTipPozitie = (draftId: string, tipPozitie: TipPozitie) => {
+    // Când se schimbă tipul poziției, resetăm și articolul ales din catalog.
+    // Facem asta pentru a evita combinații invalide, de tip "piesă veche rămasă pe manoperă".
     const unitateMasura = tipPozitie === 'Manopera' ? 'ore' : tipPozitie === 'Kit' ? 'kit' : 'buc';
 
     actualizeazaPozitie(draftId, {
@@ -116,6 +128,8 @@ export default function TabelPozitii({
     tipPozitie: TipPozitie,
     catalogId: number | null,
   ) => {
+    // Alegerea unui articol completează automat câmpurile derivate:
+    // cod, denumire, unitate, preț, TVA și stoc.
     const articol = obtineCatalog(tipPozitie).find((item) => item.id === catalogId) ?? null;
 
     actualizeazaPozitie(draftId, {
@@ -202,6 +216,7 @@ export default function TabelPozitii({
                     <td className="px-4 py-4">
                       <select
                         value={pozitie.catalogId ?? ''}
+                        // Lista de articole se schimbă dinamic în funcție de tipul ales pe rând.
                         onChange={(event) =>
                           selecteazaArticol(
                             pozitie._draftId,
@@ -328,6 +343,8 @@ export default function TabelPozitii({
       )}
 
       <div className="border-t border-slate-100 bg-slate-50 px-6 py-5">
+        {/* Acest rezumat îl ajută pe utilizator să vadă imediat impactul
+            modificărilor din fiecare rând asupra totalului comenzii. */}
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Subtotal</p>

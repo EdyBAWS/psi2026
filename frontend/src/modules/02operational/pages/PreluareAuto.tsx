@@ -1,6 +1,10 @@
 // Aceasta este pagina principală a fluxului operațional.
 // Ea coordonează toți pașii: selectarea vehiculului, datele de recepție,
 // fluxul de asigurare, devizul inițial și validarea înainte de salvare.
+// Dacă ar fi să explicăm simplu:
+// - aici se află "creierul" fluxului de preluare
+// - componentele copil doar editează bucăți din stare
+// - această pagină decide când datele sunt complete și cum se salvează
 import { calculeazaRezumatPozitii, comandaEsteActiva } from '../calculations';
 import FormComanda from '../components/FormComanda';
 import SelectorDosar from '../components/SelectorDosar';
@@ -64,14 +68,18 @@ const formatSuma = (valoare: number) =>
 
 const formatData = (valoare: Date) => valoare.toLocaleDateString('ro-RO');
 
+// Funcție utilitară pentru generarea următorului id local.
+// În lipsa unui backend, simulăm aici auto-incrementarea.
 const urmatorulId = <T,>(items: T[], selector: (item: T) => number) =>
   items.length === 0 ? 1 : Math.max(...items.map(selector)) + 1;
 
+// Generăm numere ușor de recunoscut pentru comandă și dosar.
 const genereazaNumarDocument = (prefix: string, id: number) =>
   `${prefix}-${new Date().getFullYear()}-${String(id).padStart(3, '0')}`;
 
 const esteNumarCompletat = (valoare: number | ''): valoare is number => valoare !== '';
 
+// Verificăm dacă fiecare poziție are datele minime pentru a deveni poziție reală la salvare.
 const suntPozitiiValide = (pozitiiDraft: PozitieComandaDraft[]) =>
   pozitiiDraft.length > 0 &&
   pozitiiDraft.every(
@@ -92,6 +100,8 @@ const accesoriiCaLista = (valoare: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+// Tipul de plată implicit pleacă din profilul clientului.
+// Pentru flote, alegem automat "Flota", iar pentru ceilalți "Client Direct".
 const tipPlataImplicit = (client: Client | null) =>
   client?.tipClient === 'Flota' ? 'Flota' : 'Client Direct';
 
@@ -119,6 +129,8 @@ export default function PreluareAuto({
     creeazaPozitieDraft(),
   ]);
 
+  // Aici derivăm contextul curent din starea de bază.
+  // Nu duplicăm aceleași informații în mai multe locuri, ci le calculăm din listele existente.
   const vehiculSelectat =
     vehicule.find((vehicul) => vehicul.idVehicul === idVehiculSelectat) ?? null;
   const clientSelectat =
@@ -133,6 +145,7 @@ export default function PreluareAuto({
     urmatorulId(dosare, (dosar) => dosar.idDosar),
   );
 
+  // Blocăm deschiderea unei noi comenzi dacă există deja una activă pentru același vehicul.
   const comandaActivaExistenta =
     vehiculSelectat === null
       ? null
@@ -155,6 +168,8 @@ export default function PreluareAuto({
         esteNumarCompletat(stareDosar.franciza) &&
         stareDosar.franciza >= 0;
 
+  // `mesajeBlocare` conține motivele pentru care butonul de salvare trebuie dezactivat.
+  // Am ales această abordare pentru ca utilizatorul să știe exact ce lipsește.
   const mesajeBlocare: string[] = [];
 
   if (!vehiculSelectat) {
@@ -199,6 +214,8 @@ export default function PreluareAuto({
     mesajeBlocare.push('Completează corect datele dosarului de daună.');
   }
 
+  // `mesajeAvertizare` nu blochează salvarea, dar semnalează situații sensibile
+  // pe care un consilier de service ar trebui să le observe.
   const mesajeAvertizare: string[] = [];
   if (pozitiiDraft.some((pozitie) => !pozitie.disponibilitateStoc)) {
     mesajeAvertizare.push(
@@ -219,6 +236,8 @@ export default function PreluareAuto({
 
   const poateSalva = mesajeBlocare.length === 0;
 
+  // Resetarea readuce întreg fluxul la forma inițială.
+  // Este utilă după salvare sau dacă utilizatorul vrea să reînceapă recepția.
   const reseteazaFlux = () => {
     const tipPlata = tipPlataImplicit(clientSelectat);
     setIdVehiculSelectat(null);
@@ -233,6 +252,8 @@ export default function PreluareAuto({
   };
 
   const handleSelecteazaVehicul = (idVehicul: number | null) => {
+    // Schimbarea vehiculului afectează mai multe lucruri:
+    // tipul de plată implicit, fluxul de daună și dosarul selectat.
     const vehicul = vehicule.find((item) => item.idVehicul === idVehicul) ?? null;
     const client = clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
 
@@ -246,6 +267,8 @@ export default function PreluareAuto({
   };
 
   const handleSchimbaFluxAsigurare = (activ: boolean) => {
+    // Când activăm fluxul de asigurare, forțăm și tipul de plată la "Asigurare".
+    // Când îl dezactivăm, revenim la tipul implicit al clientului.
     setEsteLucrareAsigurare(activ);
 
     if (!activ || idVehiculSelectat === null) {
@@ -270,10 +293,12 @@ export default function PreluareAuto({
   };
 
   const handleDetaliiChange = (modificari: Partial<DetaliiPreluareForm>) => {
+    // Acest helper evită să scriem aceeași logică de îmbinare a stării în mai multe locuri.
     setDetaliiPreluare((previous) => ({ ...previous, ...modificari }));
   };
 
   const handleSalveaza = () => {
+    // Verificarea de siguranță de la început ne asigură că nu construim obiecte incomplete.
     if (!vehiculSelectat || idMecanicSelectat === null || !poateSalva) {
       return;
     }
@@ -288,6 +313,8 @@ export default function PreluareAuto({
     let dosarNou: DosarDauna | null = null;
     let idDosarFinal: number | null = null;
 
+    // Dacă lucrarea este pe asigurare, alegem fie dosarul existent,
+    // fie construim unul nou pe baza stării din formular.
     if (esteLucrareAsigurare) {
       if (stareDosar.mod === 'existent') {
         idDosarFinal = stareDosar.idDosarSelectat;
@@ -317,6 +344,7 @@ export default function PreluareAuto({
       }
     }
 
+    // În acest pas transformăm starea de formular într-un obiect de domeniu real.
     const comandaNoua: ComandaService = {
       idComanda: idComandaNoua,
       idVehicul: vehiculSelectat.idVehicul,
@@ -338,6 +366,8 @@ export default function PreluareAuto({
       tipPlata: esteLucrareAsigurare ? 'Asigurare' : detaliiPreluare.tipPlata,
     };
 
+    // Aici transformăm fiecare rând "draft" din tabel într-o poziție reală de comandă.
+    // Observă că mapăm și catalogul ales către unul dintre câmpurile idPiesa / idKit / idManopera.
     const urmatorulIdPozitie = urmatorulId(pozitii, (pozitie) => pozitie.idPozitieCmd);
     const pozitiiNoi: PozitieComanda[] = pozitiiDraft.map((pozitie, index) => {
       const idPozitieCmd = urmatorulIdPozitie + index;
@@ -367,9 +397,12 @@ export default function PreluareAuto({
       pozitiiNoi,
     });
 
+    // După salvare, curățăm formularul pentru o eventuală recepție nouă.
     reseteazaFlux();
   };
 
+  // Acest indicator este strict pentru UI.
+  // El estimează în ce pas se află utilizatorul pe baza datelor deja completate.
   const pasCurent = !vehiculSelectat
     ? 1
     : !detaliiPreluare.simptomeReclamate
@@ -434,6 +467,8 @@ export default function PreluareAuto({
 
       {vehiculSelectat ? (
         <>
+          {/* După selecția vehiculului, afișăm două zone:
+              contextul vehiculului/clientului și modul de lucru normal/asigurare. */}
           <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -548,6 +583,7 @@ export default function PreluareAuto({
           ) : null}
 
           {esteLucrareAsigurare ? (
+            // Selectorul de dosar apare doar când fluxul de daună este activ.
             <SelectorDosar
               asiguratori={asiguratori}
               dosare={dosare}
@@ -600,6 +636,7 @@ export default function PreluareAuto({
               </button>
               <button
                 type="button"
+                // Butonul este activ doar când lista de blocaje este goală.
                 onClick={handleSalveaza}
                 disabled={!poateSalva}
                 className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"

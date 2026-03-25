@@ -1,6 +1,10 @@
 // Mock data-ul permite rularea completă a modulului fără API.
 // În plus, am adăugat clienți și un mic catalog de piese/manoperă pentru un flux
 // mai apropiat de recepția reală din service.
+// Ideea acestui fișier este simplă:
+// - definim câteva entități realiste
+// - le legăm între ele prin id-uri
+// - pornim aplicația cu un "mic ecosistem" complet funcțional
 import { calculeazaRezumatPozitii } from './calculations';
 import type {
   Asigurator,
@@ -15,6 +19,8 @@ import type {
   Vehicul,
 } from './types';
 
+// Clienții sunt separați de vehicule pentru a simula modelul real:
+// un client poate avea unul sau mai multe vehicule.
 export const mockClienti: Client[] = [
   {
     idClient: 1001,
@@ -42,6 +48,7 @@ export const mockClienti: Client[] = [
   },
 ];
 
+// Fiecare vehicul indică prin `idClient` cine este proprietarul lui.
 export const mockVehicule: Vehicul[] = [
   {
     idVehicul: 1,
@@ -78,12 +85,15 @@ export const mockAsiguratori: Asigurator[] = [
   { idAsigurator: 503, denumire: 'Omniasig' },
 ];
 
+// Mecanicii sunt folosiți în select-ul din formular și în lista de gestiune.
 export const mockMecanici: Mecanic[] = [
   { idMecanic: 201, nume: 'Mihai Ionescu', specialitate: 'Mecanica generala' },
   { idMecanic: 202, nume: 'Andrei Popa', specialitate: 'Tinichigerie si vopsitorie' },
   { idMecanic: 203, nume: 'Cristian Pavel', specialitate: 'Diagnoza si electrica' },
 ];
 
+// Catalogul de piese oferă sursa din care utilizatorul poate alege rapid articole
+// pentru deviz, fără să scrie totul manual.
 export const mockCatalogPiese: CatalogPiesa[] = [
   {
     idPiesa: 301,
@@ -123,6 +133,7 @@ export const mockCatalogPiese: CatalogPiesa[] = [
   },
 ];
 
+// Kiturile sunt utile atunci când mai multe materiale sunt vândute ca pachet.
 export const mockCatalogKituri: CatalogKit[] = [
   {
     idKit: 701,
@@ -144,6 +155,8 @@ export const mockCatalogKituri: CatalogKit[] = [
   },
 ];
 
+// Pentru manoperă folosim un catalog separat, deoarece aici vorbim despre tarif/oră,
+// nu despre piese fizice aflate sau nu pe stoc.
 export const mockCatalogManopera: CatalogManopera[] = [
   {
     idManopera: 401,
@@ -171,6 +184,8 @@ export const mockCatalogManopera: CatalogManopera[] = [
   },
 ];
 
+// Dosarele de daună sunt legate atât de client, cât și de vehicul și asigurator.
+// Astfel putem simula fluxul în care o comandă de service este susținută de un dosar existent.
 export const mockDosareDauna: DosarDauna[] = [
   {
     idDosar: 1,
@@ -206,6 +221,8 @@ export const mockDosareDauna: DosarDauna[] = [
   },
 ];
 
+// Pozițiile sunt grupate pe comandă pentru a păstra mai clar relația
+// dintre deviz și comanda în care apare.
 const pozitiiComanda1: PozitieComanda[] = [
   {
     idPozitieCmd: 1,
@@ -314,8 +331,11 @@ const pozitiiComanda2: PozitieComanda[] = [
   },
 ];
 
+// Lista generală de poziții este construită prin concatenarea tuturor grupurilor.
 export const mockPozitii: PozitieComanda[] = [...pozitiiComanda1, ...pozitiiComanda2];
 
+// Totalul estimat al fiecărei comenzi este calculat din pozițiile ei.
+// Așa ne asigurăm că datele de demo sunt coerente cu formula folosită în UI.
 export const mockComenzi: ComandaService[] = [
   {
     idComanda: 1,

@@ -1,6 +1,8 @@
 // Fișierul principal al modulului operațional.
 // Aici ținem starea "mare" a modulului și decidem ce pagină internă se vede:
 // preluarea unei comenzi noi sau lista comenzilor deja deschise.
+// Un începător poate privi acest fișier ca pe "containerul" modulului:
+// el nu implementează fiecare pas din flux, ci doar coordonează paginile și datele comune.
 import { useState } from 'react';
 import {
   mockAsiguratori,
@@ -30,6 +32,7 @@ const taburi: Array<{ id: OperationalView; label: string }> = [
 export default function Operational() {
   // Inițializăm starea modulului din mock data, astfel încât tot fluxul să poată
   // funcționa local fără backend.
+  // Aceste `useState` joacă rolul unui mini-store local pentru întreg modulul.
   const [view, setView] = useState<OperationalView>('preluare-auto');
   const [comenzi, setComenzi] = useState(mockComenzi);
   const [dosare, setDosare] = useState(mockDosareDauna);
@@ -37,6 +40,8 @@ export default function Operational() {
 
   // Când pagina de preluare salvează o comandă nouă, această funcție actualizează
   // toate colecțiile dependente: comenzi, dosare și poziții.
+  // Este important că actualizăm toate aceste liste aici, într-un singur loc,
+  // pentru ca apoi pagina de gestiune să vadă imediat datele noi.
   const handleSalveazaPreluare = ({
     comanda,
     dosarNou,
@@ -115,6 +120,8 @@ export default function Operational() {
 
       {/* Randăm pagina internă în funcție de tabul selectat. */}
       {view === 'preluare-auto' ? (
+        // Pagina de preluare primește atât datele de intrare, cât și callback-ul
+        // prin care "urcă" înapoi comanda nou creată.
         <PreluareAuto
           clienti={mockClienti}
           vehicule={mockVehicule}
@@ -129,6 +136,8 @@ export default function Operational() {
           onSalveazaPreluare={handleSalveazaPreluare}
         />
       ) : (
+        // Pagina de gestiune este doar de citire în MVP.
+        // Ea folosește datele deja adunate în starea modulului.
         <GestiuneComenzi
           clienti={mockClienti}
           comenzi={comenzi}
