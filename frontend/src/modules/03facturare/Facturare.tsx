@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { mockComenzi } from '../02operational/mockData';
 import type { ComandaService } from '../02operational/types';
 
-export default function Facturare() {
+interface FacturareProps {
+  comenzi: ComandaService[];
+}
+
+export default function Facturare({ comenzi }: FacturareProps) {
   // Facturarea preia comenzile care au trecut de execuție și sunt gata pentru
   // livrare sau deja marcate ca livrate.
-  const comenziGata = mockComenzi.filter(
+  const comenziGata = comenzi.filter(
     (comanda) => comanda.status === 'Gata de livrare' || comanda.status === 'Livrat',
   );
 

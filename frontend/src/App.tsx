@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Sidebar from './componente/Sidebar';
 import Operational from './modules/02operational/Operational';
+import { mockComenzi } from './modules/02operational/mockData';
 import Facturare from './modules/03facturare/Facturare';
 import Incasari from './modules/04incasari/Incasari';
 import Penalizare from './modules/03facturare/penalizari/Penalizare';
@@ -29,7 +30,7 @@ export default function App() {
       case 'operational-comenzi':
         return <Operational view="gestiune-comenzi" onNavigate={setPaginaCurenta} />;
       // Facturare
-      case 'facturare-comenzi': return <Facturare />;
+      case 'facturare-comenzi': return <Facturare comenzi={mockComenzi} />;
       case 'facturare-penalizari': return <Penalizare />;
       case 'facturare-campanii': return <Oferta />;
       // Incasari
