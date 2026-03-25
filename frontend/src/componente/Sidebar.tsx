@@ -38,7 +38,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       titlu: 'Operațional',
       icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3a1.5 1.5 0 00-1.42 1.02l-.3.86a1.5 1.5 0 01-.95.95l-.86.3a1.5 1.5 0 000 2.84l.86.3a1.5 1.5 0 01.95.95l.3.86a1.5 1.5 0 002.84 0l.3-.86a1.5 1.5 0 01.95-.95l.86-.3a1.5 1.5 0 000-2.84l-.86-.3a1.5 1.5 0 01-.95-.95l-.3-.86A1.5 1.5 0 009.75 3zm8.25 9.75a1.5 1.5 0 00-1.42 1.02l-.12.33a1.5 1.5 0 01-.95.95l-.33.12a1.5 1.5 0 000 2.84l.33.12a1.5 1.5 0 01.95.95l.12.33a1.5 1.5 0 002.84 0l.12-.33a1.5 1.5 0 01.95-.95l.33-.12a1.5 1.5 0 000-2.84l-.33-.12a1.5 1.5 0 01-.95-.95l-.12-.33A1.5 1.5 0 0018 12.75z" />,
       subItems: [
-        { id: 'operational', label: 'Recepție & Comenzi' }
+        { id: 'operational-preluare', label: 'Preluare Auto' },
+        { id: 'operational-comenzi', label: 'Gestiune Comenzi' }
       ]
     },
     {

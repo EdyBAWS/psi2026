@@ -27,7 +27,10 @@ export default function App() {
       case 'entitati-angajati': return <Angajat />;
       case 'entitati-asiguratori': return <Asigurator />;
       // Operational
-      case 'operational': return <Operational />;
+      case 'operational-preluare':
+        return <Operational view="preluare-auto" onNavigate={setPaginaCurenta} />;
+      case 'operational-comenzi':
+        return <Operational view="gestiune-comenzi" onNavigate={setPaginaCurenta} />;
       // Facturare
       case 'facturare-comenzi': return <Facturare />;
       case 'facturare-penalizari': return <Penalizare />;
