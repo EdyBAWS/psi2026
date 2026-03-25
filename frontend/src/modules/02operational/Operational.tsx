@@ -1,6 +1,6 @@
 // Fișierul principal al modulului operațional.
-// Aici ținem starea "mare" a modulului și decidem ce pagină internă se vede:
-// preluarea unei comenzi noi sau lista comenzilor deja deschise.
+// Aici ținem starea "mare" a modulului și decidem ce pagină internă se vede
+// pe baza prop-ului primit din `App.tsx`.
 // Un începător poate privi acest fișier ca pe "containerul" modulului:
 // el nu implementează fiecare pas din flux, ci doar coordonează paginile și datele comune.
 import { useState } from 'react';
@@ -20,20 +20,18 @@ import { comandaEsteActiva } from './calculations';
 import GestiuneComenzi from './pages/GestiuneComenzi';
 import PreluareAuto, { type SalvarePreluarePayload } from './pages/PreluareAuto';
 
-type OperationalView = 'preluare-auto' | 'gestiune-comenzi';
+export type OperationalView = 'preluare-auto' | 'gestiune-comenzi';
 
-// Lista de taburi interne. Nu folosim React Router, deci schimbarea se face
-// doar prin schimbarea stării locale `view`.
-const taburi: Array<{ id: OperationalView; label: string }> = [
-  { id: 'preluare-auto', label: 'Preluare Auto' },
-  { id: 'gestiune-comenzi', label: 'Gestiune Comenzi' },
-];
+interface OperationalProps {
+  onNavigate: (pagina: string) => void;
+  view: OperationalView;
+}
 
-export default function Operational() {
+export default function Operational({ onNavigate, view }: OperationalProps) {
   // Inițializăm starea modulului din mock data, astfel încât tot fluxul să poată
   // funcționa local fără backend.
   // Aceste `useState` joacă rolul unui mini-store local pentru întreg modulul.
-  const [view, setView] = useState<OperationalView>('preluare-auto');
+  // Starea rămâne aici chiar dacă pagina afișată se schimbă din sidebar.
   const [comenzi, setComenzi] = useState(mockComenzi);
   const [dosare, setDosare] = useState(mockDosareDauna);
   const [pozitii, setPozitii] = useState(mockPozitii);
@@ -52,7 +50,7 @@ export default function Operational() {
       setDosare((previous) => [...previous, dosarNou]);
     }
     setPozitii((previous) => [...previous, ...pozitiiNoi]);
-    setView('gestiune-comenzi');
+    onNavigate('operational-comenzi');
   };
 
   // Statistica din antet afișează rapid câte comenzi sunt încă active.
@@ -70,8 +68,8 @@ export default function Operational() {
               Preluare vehicule și deschidere comenzi service
             </h2>
             <p className="max-w-3xl text-sm text-slate-500">
-              Fluxul operațional acoperă selecția vehiculului, asocierea unui dosar
-              de daună și estimarea inițială a pieselor și manoperei.
+              Modulul operațional acoperă recepția vehiculului și gestionarea
+              comenzilor service, cu aceeași stare comună între cele două ecrane.
             </p>
           </div>
 
@@ -96,29 +94,9 @@ export default function Operational() {
             </div>
           </div>
         </div>
-
-        <div className="mt-8 flex flex-wrap gap-3">
-          {taburi.map((tab) => {
-            const active = tab.id === view;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setView(tab.id)}
-                className={`rounded-xl px-5 py-3 text-sm font-semibold transition-all ${
-                  active
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
-      {/* Randăm pagina internă în funcție de tabul selectat. */}
+      {/* Randăm pagina internă în funcție de view-ul selectat în sidebar. */}
       {view === 'preluare-auto' ? (
         // Pagina de preluare primește atât datele de intrare, cât și callback-ul
         // prin care "urcă" înapoi comanda nou creată.
