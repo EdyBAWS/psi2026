@@ -14,6 +14,9 @@ import Angajat from './modules/01entitati/angajati/Angajat';
 import Asigurator from './modules/01entitati/asiguratori/Asigurator';
 import Notificare from './modules/05notificari/Notificare';
 
+// AICI AM ADĂUGAT IMPORTUL PENTRU ISTORIC
+import Istoric from './modules/06istoric/istoric';
+
 export default function App() {
   const [paginaCurenta, setPaginaCurenta] = useState<string>('facturare-comenzi');
 
@@ -36,6 +39,9 @@ export default function App() {
       case 'catalog-manopera': return <Manopera />;
       // Notificari
       case 'notificari': return <Notificare />;
+      
+      // AICI AM ADĂUGAT RUTA PENTRU ISTORIC
+      case 'istoric': return <Istoric />;
       
       default:
         return (
