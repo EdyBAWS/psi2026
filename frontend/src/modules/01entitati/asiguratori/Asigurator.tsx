@@ -1,104 +1,82 @@
 import { useState } from 'react';
-
-interface AsigData {
-  id: number;
-  denumire: string;
-  contact: string;
-}
+import type { Asigurator as AsiguratorType } from '../../../types/entitati';
 
 export default function Asigurator() {
-  const [asiguratori, setAsiguratori] = useState<AsigData[]>([
-    { id: 1, denumire: 'Allianz-Țiriac', contact: 'daune@allianz.ro' },
-    { id: 2, denumire: 'Groupama', contact: 'contact@groupama.ro' },
-  ]);
+  const [asiguratori, setAsiguratori] = useState<AsiguratorType[]>([]);
+  const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
+  const [asigCurent, setAsigCurent] = useState<Partial<AsiguratorType>>({});
 
-  const [arataFormular, setArataFormular] = useState(false);
-  const [nouDenumire, setNouDenumire] = useState('');
-  const [nouContact, setNouContact] = useState('');
-
-  const [editId, setEditId] = useState<number | null>(null);
-  const [editData, setEditData] = useState<Partial<AsigData>>({});
-
-  const handleAdaugare = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nouDenumire) return;
-    setAsiguratori([{ id: Date.now(), denumire: nouDenumire, contact: nouContact }, ...asiguratori]);
-    setArataFormular(false);
-    setNouDenumire(''); setNouContact('');
+  const handleSalvare = () => {
+    if (asigCurent.idAsigurator) {
+      setAsiguratori(asiguratori.map(a => a.idAsigurator === asigCurent.idAsigurator ? (asigCurent as AsiguratorType) : a));
+    } else {
+      setAsiguratori([...asiguratori, { ...asigCurent, idAsigurator: Date.now() } as AsiguratorType]);
+    }
+    setModLucru('vizualizare');
+    setAsigCurent({});
   };
 
-  const startEditare = (asig: AsigData) => {
-    setEditId(asig.id);
-    setEditData(asig);
-  };
-
-  const salveazaEditare = () => {
-    setAsiguratori(asiguratori.map(a => a.id === editId ? { ...a, ...editData } as AsigData : a));
-    setEditId(null);
+  const handleStergere = (id: number) => {
+    if (window.confirm('Ștergi acest asigurător?')) {
+      setAsiguratori(asiguratori.filter(a => a.idAsigurator !== id));
+    }
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-slate-800">Asigurători</h2>
-        <button 
-          onClick={() => setArataFormular(!arataFormular)}
-          className={`${arataFormular ? 'bg-slate-200 text-slate-700' : 'bg-indigo-600 text-white'} px-4 py-2 rounded shadow text-sm font-semibold`}
-        >
-          {arataFormular ? 'Anulează' : '+ Adaugă Asigurător'}
-        </button>
-      </div>
-
-      {arataFormular && (
-        <form onSubmit={handleAdaugare} className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Denumire Asigurător *</label>
-            <input type="text" value={nouDenumire} onChange={e => setNouDenumire(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500" required/>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Date Contact (Email/Tel)</label>
-            <input type="text" value={nouContact} onChange={e => setNouContact(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500"/>
-          </div>
-          <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 h-9.5">
-            Salvează
+        <h1 className="text-2xl font-bold text-slate-800">Societăți Asigurare</h1>
+        {modLucru === 'vizualizare' && (
+          <button type="button" onClick={() => { setModLucru('adaugare'); setAsigCurent({}); }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-sm hover:bg-indigo-700 transition-colors">
+            + Adaugă Asigurător
           </button>
-        </form>
-      )}
-
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="min-w-full bg-white text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-            <tr>
-              <th className="py-3 px-4">Denumire</th>
-              <th className="py-3 px-4">Contact</th>
-              <th className="py-3 px-4 text-center w-24">Acțiuni</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {asiguratori.map(a => (
-              <tr key={a.id} className="hover:bg-slate-50">
-                {editId === a.id ? (
-                  <>
-                    <td className="py-2 px-4"><input type="text" value={editData.denumire} onChange={e => setEditData({...editData, denumire: e.target.value})} className="w-full border rounded px-2 py-1 text-sm outline-none" /></td>
-                    <td className="py-2 px-4"><input type="text" value={editData.contact} onChange={e => setEditData({...editData, contact: e.target.value})} className="w-full border rounded px-2 py-1 text-sm outline-none" /></td>
-                    <td className="py-2 px-4 text-center space-x-2">
-                      <button onClick={salveazaEditare} className="text-green-600 font-bold hover:underline">OK</button>
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className="py-3 px-4 font-medium">{a.denumire}</td>
-                    <td className="py-3 px-4 text-slate-500">{a.contact}</td>
-                    <td className="py-3 px-4 text-center">
-                      <button onClick={() => startEditare(a)} className="text-indigo-600 font-medium hover:underline">Edit</button>
-                    </td>
-                  </>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        )}
       </div>
+
+      {modLucru === 'vizualizare' ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
+                <th className="p-4 font-semibold">Denumire Societate</th>
+                <th className="p-4 font-semibold">CUI</th>
+                <th className="p-4 font-semibold">Telefon de contact</th>
+                <th className="p-4 font-semibold text-center">Acțiuni</th>
+              </tr>
+            </thead>
+            <tbody>
+              {asiguratori.length === 0 ? (
+                <tr><td colSpan={4} className="p-8 text-center text-slate-400">Nu există asigurători înregistrați.</td></tr>
+              ) : (
+                asiguratori.map(a => (
+                  <tr key={a.idAsigurator} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="p-4 font-medium text-slate-700">{a.denumire}</td>
+                    <td className="p-4 text-slate-600">{a.CUI}</td>
+                    <td className="p-4 text-slate-600">{a.telefon}</td>
+                    <td className="p-4 flex justify-center gap-2">
+                      <button type="button" onClick={() => { setModLucru('modificare'); setAsigCurent(a); }} className="text-indigo-600 hover:bg-indigo-50 px-3 py-1 rounded transition-colors text-sm font-medium">Editează</button>
+                      <button type="button" onClick={() => handleStergere(a.idAsigurator)} className="text-red-600 hover:bg-red-50 px-3 py-1 rounded transition-colors text-sm font-medium">Șterge</button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 max-w-2xl">
+          <h2 className="text-xl font-semibold mb-4 text-slate-800">{modLucru === 'adaugare' ? 'Adăugare Asigurător' : 'Modificare Asigurător'}</h2>
+          <div className="flex flex-col gap-4">
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">Denumire Societate</label><input type="text" value={asigCurent.denumire || ''} onChange={e => setAsigCurent({...asigCurent, denumire: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">CUI</label><input type="text" value={asigCurent.CUI || ''} onChange={e => setAsigCurent({...asigCurent, CUI: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">Telefon</label><input type="text" value={asigCurent.telefon || ''} onChange={e => setAsigCurent({...asigCurent, telefon: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+          </div>
+          <div className="mt-6 flex gap-3">
+            <button type="button" onClick={handleSalvare} className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium">Salvează</button>
+            <button type="button" onClick={() => setModLucru('vizualizare')} className="bg-white border border-slate-300 text-slate-700 px-6 py-2 rounded-lg hover:bg-slate-50 transition-colors font-medium">Renunță</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,141 +1,122 @@
 import { useState } from 'react';
-
-interface ClientData {
-  id: number;
-  nume: string;
-  tip: 'Fizica' | 'Juridica';
-  telefon: string;
-  email: string;
-  sold: number;
-}
+import type { Client as ClientType } from '../../../types/entitati';
 
 export default function Client() {
-  const [clienti, setClienti] = useState<ClientData[]>([
-    { id: 1, nume: 'Ion Popescu', tip: 'Fizica', telefon: '0711222333', email: 'ion@email.com', sold: 0 },
-    { id: 2, nume: 'SC Auto Fleet SRL', tip: 'Juridica', telefon: '0744555666', email: 'contact@autofleet.ro', sold: 1500 },
-  ]);
+  const [clienti, setClienti] = useState<ClientType[]>([]);
+  const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
+  const [clientCurent, setClientCurent] = useState<Partial<ClientType>>({});
 
-  const [arataFormular, setArataFormular] = useState(false);
-  
-  // State pentru adăugare
-  const [nouNume, setNouNume] = useState('');
-  const [nouTip, setNouTip] = useState<'Fizica' | 'Juridica'>('Fizica');
-  const [nouTelefon, setNouTelefon] = useState('');
-  const [nouEmail, setNouEmail] = useState('');
-
-  // State pentru editare dinamică (inline)
-  const [editId, setEditId] = useState<number | null>(null);
-  const [editData, setEditData] = useState<Partial<ClientData>>({});
-
-  const handleAdaugare = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nouNume || !nouTelefon) return alert('Numele și telefonul sunt obligatorii!');
-    
-    const clientNou: ClientData = {
-      id: Date.now(),
-      nume: nouNume,
-      tip: nouTip,
-      telefon: nouTelefon,
-      email: nouEmail,
-      sold: 0 // Un client nou pleacă cu sold 0
-    };
-    setClienti([clientNou, ...clienti]);
-    setArataFormular(false);
-    setNouNume(''); setNouTelefon(''); setNouEmail(''); setNouTip('Fizica');
+  const handleSalvare = () => {
+    if (clientCurent.idClient) {
+      setClienti(clienti.map(c => c.idClient === clientCurent.idClient ? (clientCurent as ClientType) : c));
+    } else {
+      setClienti([...clienti, { ...clientCurent, idClient: Date.now() } as ClientType]);
+    }
+    setModLucru('vizualizare');
+    setClientCurent({});
   };
 
-  const startEditare = (client: ClientData) => {
-    setEditId(client.id);
-    setEditData(client);
-  };
-
-  const salveazaEditare = () => {
-    setClienti(clienti.map(c => c.id === editId ? { ...c, ...editData } as ClientData : c));
-    setEditId(null);
+  const handleStergere = (id: number) => {
+    if (window.confirm('Sigur dorești să ștergi acest client?')) {
+      setClienti(clienti.filter(c => c.idClient !== id));
+    }
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-slate-800">Clienți</h2>
-        <button 
-          onClick={() => setArataFormular(!arataFormular)}
-          className={`${arataFormular ? 'bg-slate-200 text-slate-700' : 'bg-indigo-600 text-white'} hover:opacity-90 px-4 py-2 rounded shadow transition-colors text-sm font-semibold`}
-        >
-          {arataFormular ? 'Anulează' : '+ Adaugă Client'}
-        </button>
-      </div>
-
-      {arataFormular && (
-        <form onSubmit={handleAdaugare} className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-          <div className="md:col-span-2">
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Nume / Denumire *</label>
-            <input type="text" value={nouNume} onChange={e => setNouNume(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Tip *</label>
-            <select value={nouTip} onChange={e => setNouTip(e.target.value as 'Fizica' | 'Juridica')} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
-              <option value="Fizica">Fizică</option>
-              <option value="Juridica">Juridică</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Telefon *</label>
-            <input type="text" value={nouTelefon} onChange={e => setNouTelefon(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500" />
-          </div>
-          <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-colors h-9.5">
-            Salvează
+        <h1 className="text-2xl font-bold text-slate-800">Gestiune Clienți</h1>
+        {modLucru === 'vizualizare' && (
+          <button 
+            onClick={() => { setModLucru('adaugare'); setClientCurent({ tipClient: 'PF', soldDebitor: 0 }); }}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-sm hover:bg-indigo-700 transition-colors"
+          >
+            + Adaugă Client
           </button>
-        </form>
-      )}
-
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="min-w-full bg-white text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-            <tr>
-              <th className="py-3 px-4">Nume / Denumire</th>
-              <th className="py-3 px-4 w-32">Tip</th>
-              <th className="py-3 px-4 w-40">Contact</th>
-              <th className="py-3 px-4 text-right w-32">Sold Debitor</th>
-              <th className="py-3 px-4 text-center w-24">Acțiuni</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {clienti.map(c => (
-              <tr key={c.id} className="hover:bg-slate-50">
-                {editId === c.id ? (
-                  // Modul EDITARE
-                  <>
-                    <td className="py-2 px-4"><input type="text" value={editData.nume} onChange={e => setEditData({...editData, nume: e.target.value})} className="w-full border rounded px-2 py-1 text-sm outline-none focus:border-indigo-500" /></td>
-                    <td className="py-2 px-4">
-                      <select value={editData.tip} onChange={e => setEditData({...editData, tip: e.target.value as 'Fizica'|'Juridica'})} className="w-full border rounded px-2 py-1 text-sm outline-none">
-                        <option value="Fizica">Fizică</option><option value="Juridica">Juridică</option>
-                      </select>
-                    </td>
-                    <td className="py-2 px-4"><input type="text" value={editData.telefon} onChange={e => setEditData({...editData, telefon: e.target.value})} className="w-full border rounded px-2 py-1 text-sm outline-none focus:border-indigo-500" /></td>
-                    <td className="py-2 px-4 text-right font-bold text-slate-400">{c.sold} RON</td>
-                    <td className="py-2 px-4 text-center space-x-2">
-                      <button onClick={salveazaEditare} className="text-green-600 font-bold hover:underline">OK</button>
-                      <button onClick={() => setEditId(null)} className="text-slate-500 hover:underline">X</button>
-                    </td>
-                  </>
-                ) : (
-                  // Modul VIZUALIZARE
-                  <>
-                    <td className="py-3 px-4 font-medium">{c.nume}</td>
-                    <td className="py-3 px-4 text-slate-500">{c.tip}</td>
-                    <td className="py-3 px-4 text-slate-500">{c.telefon}</td>
-                    <td className="py-3 px-4 text-right font-bold text-red-600">{c.sold} RON</td>
-                    <td className="py-3 px-4 text-center">
-                      <button onClick={() => startEditare(c)} className="text-indigo-600 font-medium hover:underline">Edit</button>
-                    </td>
-                  </>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        )}
       </div>
+
+      {modLucru === 'vizualizare' ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
+                <th className="p-4 font-semibold">Nume / CUI</th>
+                <th className="p-4 font-semibold">Tip</th>
+                <th className="p-4 font-semibold">Telefon</th>
+                <th className="p-4 font-semibold">Email</th>
+                <th className="p-4 font-semibold">Sold Debitor</th>
+                <th className="p-4 font-semibold text-center">Acțiuni</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clienti.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-slate-400">Nu există clienți înregistrați.</td></tr>
+              ) : (
+                clienti.map(c => (
+                  <tr key={c.idClient} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="p-4 font-medium text-slate-700">{c.tipClient === 'PF' ? c.CNP : c.CUI}</td>
+                    <td className="p-4"><span className="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs font-bold">{c.tipClient}</span></td>
+                    <td className="p-4 text-slate-600">{c.telefon}</td>
+                    <td className="p-4 text-slate-600">{c.email}</td>
+                    <td className="p-4 font-semibold text-slate-700">{c.soldDebitor} RON</td>
+                    <td className="p-4 flex justify-center gap-2">
+                      <button onClick={() => { setModLucru('modificare'); setClientCurent(c); }} className="text-indigo-600 hover:bg-indigo-50 px-3 py-1 rounded transition-colors text-sm font-medium">Editează</button>
+                      <button onClick={() => handleStergere(c.idClient)} className="text-red-600 hover:bg-red-50 px-3 py-1 rounded transition-colors text-sm font-medium">Șterge</button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <h2 className="text-xl font-semibold mb-4 text-slate-800">{modLucru === 'adaugare' ? 'Adăugare Client Nou' : 'Modificare Client'}</h2>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Tip Client</label>
+              <select value={clientCurent.tipClient} onChange={e => setClientCurent({...clientCurent, tipClient: e.target.value as 'PF'|'PJ'})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="PF">Persoană Fizică (PF)</option>
+                <option value="PJ">Persoană Juridică (PJ)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Telefon</label>
+              <input type="text" value={clientCurent.telefon || ''} onChange={e => setClientCurent({...clientCurent, telefon: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input type="email" value={clientCurent.email || ''} onChange={e => setClientCurent({...clientCurent, email: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Adresă</label>
+              <input type="text" value={clientCurent.adresa || ''} onChange={e => setClientCurent({...clientCurent, adresa: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+            </div>
+
+            {clientCurent.tipClient === 'PF' ? (
+              <>
+                <div><label className="block text-sm font-medium text-slate-700 mb-1">CNP</label><input type="text" value={clientCurent.CNP || ''} onChange={e => setClientCurent({...clientCurent, CNP: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+                <div><label className="block text-sm font-medium text-slate-700 mb-1">Serie CI</label><input type="text" value={clientCurent.serieCI || ''} onChange={e => setClientCurent({...clientCurent, serieCI: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+              </>
+            ) : (
+              <>
+                <div><label className="block text-sm font-medium text-slate-700 mb-1">CUI</label><input type="text" value={clientCurent.CUI || ''} onChange={e => setClientCurent({...clientCurent, CUI: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+                <div><label className="block text-sm font-medium text-slate-700 mb-1">Nr. Reg. Comerțului</label><input type="text" value={clientCurent.nrRegCom || ''} onChange={e => setClientCurent({...clientCurent, nrRegCom: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+                <div><label className="block text-sm font-medium text-slate-700 mb-1">IBAN</label><input type="text" value={clientCurent.IBAN || ''} onChange={e => setClientCurent({...clientCurent, IBAN: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+              </>
+            )}
+            
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">Sold Debitor (RON)</label><input type="number" value={clientCurent.soldDebitor || 0} onChange={e => setClientCurent({...clientCurent, soldDebitor: Number(e.target.value)})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <button onClick={handleSalvare} className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium">Salvează Datele</button>
+            <button onClick={() => setModLucru('vizualizare')} className="bg-white border border-slate-300 text-slate-700 px-6 py-2 rounded-lg hover:bg-slate-50 transition-colors font-medium">Renunță</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
