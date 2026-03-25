@@ -1,3 +1,6 @@
+// Pagina de gestiune afișează comenzile deja create în modulul operațional.
+// Pentru MVP este doar de citire: face join local între comenzi, vehicule,
+// dosare și mecanici pentru o vedere completă.
 import StatusBadge from '../components/StatusBadge';
 import type {
   ComandaService,
@@ -54,6 +57,8 @@ export default function GestiuneComenzi({
           Nu există comenzi înregistrate în modulul operațional.
         </div>
       ) : (
+        // Aici "asamblăm" informația din mai multe liste locale pentru a obține
+        // un tabel ușor de citit fără să avem încă un backend sau un query real.
         <div className="overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">

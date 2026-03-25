@@ -1,3 +1,6 @@
+// Placeholder de compatibilitate.
+// Modulul nou folosește `pages/PreluareAuto.tsx`, iar acest fișier rămâne doar
+// pentru a explica unde a fost mutată logica veche.
 export default function Vehicul() {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">

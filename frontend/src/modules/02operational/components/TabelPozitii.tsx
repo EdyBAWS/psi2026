@@ -1,3 +1,6 @@
+// Tabelul de poziții gestionează liniile editabile din comanda de service.
+// Aici utilizatorul adaugă piesele/manopera, iar componenta părinte primește
+// lista actualizată la fiecare schimbare.
 import type { PozitieComandaDraft, TipPozitie } from '../types';
 import { creeazaPozitieDraft } from '../formState';
 
@@ -15,12 +18,15 @@ const formatSuma = (valoare: number) =>
     maximumFractionDigits: 2,
   }).format(valoare);
 
+// Totalul unei linii este derivat imediat din cantitate, preț și TVA,
+// pentru ca utilizatorul să vadă instant impactul fiecărei modificări.
 const calculeazaTotalLinie = (pozitie: PozitieComandaDraft) =>
   Number(
     (pozitie.cantitate * pozitie.pretVanzare * (1 + pozitie.cotaTVA / 100)).toFixed(2),
   );
 
 export default function TabelPozitii({ pozitii, onChange }: TabelPozitiiProps) {
+  // Actualizăm doar linia modificată, păstrând restul listei neschimbată.
   const actualizeazaPozitie = (
     draftId: string,
     modificari: Partial<PozitieComandaDraft>,
@@ -32,6 +38,8 @@ export default function TabelPozitii({ pozitii, onChange }: TabelPozitiiProps) {
     );
   };
 
+  // Ștergerea elimină linia doar din starea locală a formularului;
+  // pozițiile persistente se construiesc abia la salvarea comenzii.
   const stergePozitie = (draftId: string) => {
     onChange(pozitii.filter((pozitie) => pozitie._draftId !== draftId));
   };
@@ -60,6 +68,8 @@ export default function TabelPozitii({ pozitii, onChange }: TabelPozitiiProps) {
           Nu există poziții în estimare. Adaugă prima poziție pentru a continua.
         </div>
       ) : (
+        // Tabelul este complet controlat din părinte: fiecare input face update
+        // în lista de draft-uri trimisă prin props.
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">

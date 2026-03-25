@@ -1,3 +1,6 @@
+// Fișierul principal al modulului operațional.
+// Aici ținem starea "mare" a modulului și decidem ce pagină internă se vede:
+// preluarea unei comenzi noi sau lista comenzilor deja deschise.
 import { useState } from 'react';
 import {
   mockAsiguratori,
@@ -12,17 +15,23 @@ import PreluareAuto, { type SalvarePreluarePayload } from './pages/PreluareAuto'
 
 type OperationalView = 'preluare-auto' | 'gestiune-comenzi';
 
+// Lista de taburi interne. Nu folosim React Router, deci schimbarea se face
+// doar prin schimbarea stării locale `view`.
 const taburi: Array<{ id: OperationalView; label: string }> = [
   { id: 'preluare-auto', label: 'Preluare Auto' },
   { id: 'gestiune-comenzi', label: 'Gestiune Comenzi' },
 ];
 
 export default function Operational() {
+  // Inițializăm starea modulului din mock data, astfel încât tot fluxul să poată
+  // funcționa local fără backend.
   const [view, setView] = useState<OperationalView>('preluare-auto');
   const [comenzi, setComenzi] = useState(mockComenzi);
   const [dosare, setDosare] = useState(mockDosareDauna);
   const [pozitii, setPozitii] = useState(mockPozitii);
 
+  // Când pagina de preluare salvează o comandă nouă, această funcție actualizează
+  // toate colecțiile dependente: comenzi, dosare și poziții.
   const handleSalveazaPreluare = ({
     comanda,
     dosarNou,
@@ -36,6 +45,7 @@ export default function Operational() {
     setView('gestiune-comenzi');
   };
 
+  // Statistica din antet afișează rapid câte comenzi sunt încă active.
   const comenziActive = comenzi.filter(
     (comanda) => comanda.status === 'Deschis' || comanda.status === 'In Lucru',
   ).length;
@@ -100,6 +110,7 @@ export default function Operational() {
         </div>
       </div>
 
+      {/* Randăm pagina internă în funcție de tabul selectat. */}
       {view === 'preluare-auto' ? (
         <PreluareAuto
           vehicule={mockVehicule}

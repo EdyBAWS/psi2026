@@ -1,3 +1,6 @@
+// Selectorul de vehicul este primul pas din flux.
+// El filtrează lista local și trimite mai departe doar `idVehicul`,
+// iar pagina părinte decide ce face cu selecția.
 import { useState } from 'react';
 import type { Vehicul } from '../types';
 
@@ -14,6 +17,8 @@ export default function SelectorVehicul({
 }: SelectorVehiculProps) {
   const [cautare, setCautare] = useState('');
 
+  // Căutarea lucrează pe câmpurile cele mai utile din front office:
+  // număr, marcă, model și serie șasiu.
   const termen = cautare.trim().toLowerCase();
   const vehiculeFiltrate = vehicule.filter((vehicul) => {
     if (!termen) {
@@ -57,6 +62,7 @@ export default function SelectorVehicul({
         className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
 
+      {/* Fiecare card reprezintă un vehicul; selecția merge mai departe doar ca id. */}
       <div className="grid gap-3 lg:grid-cols-3">
         {vehiculeFiltrate.map((vehicul) => {
           const esteSelectat = vehicul.idVehicul === idVehiculSelectat;
