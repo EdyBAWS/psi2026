@@ -7,9 +7,12 @@ interface StatusBadgeProps {
 }
 
 const stiluri: Record<StatusComanda, string> = {
-  Deschis: 'bg-amber-50 text-amber-700 border-amber-200',
+  'In asteptare diagnoza': 'bg-slate-100 text-slate-700 border-slate-200',
+  'Asteapta aprobare client': 'bg-amber-50 text-amber-700 border-amber-200',
+  'Asteapta piese': 'bg-rose-50 text-rose-700 border-rose-200',
   'In Lucru': 'bg-sky-50 text-sky-700 border-sky-200',
-  Finalizat: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Gata de livrare': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Livrat: 'bg-emerald-100 text-emerald-800 border-emerald-200',
   Facturat: 'bg-violet-50 text-violet-700 border-violet-200',
   Anulat: 'bg-rose-50 text-rose-700 border-rose-200',
 };
