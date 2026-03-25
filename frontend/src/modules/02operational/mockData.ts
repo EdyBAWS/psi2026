@@ -1,8 +1,13 @@
 // Mock data-ul permite rularea completă a modulului fără API.
-// În plus, menține relațiile dintre comenzi, dosare și poziții suficient de
-// realiste pentru a testa fluxul operațional cap-coadă.
+// În plus, am adăugat clienți și un mic catalog de piese/manoperă pentru un flux
+// mai apropiat de recepția reală din service.
+import { calculeazaRezumatPozitii } from './calculations';
 import type {
   Asigurator,
+  CatalogKit,
+  CatalogManopera,
+  CatalogPiesa,
+  Client,
   ComandaService,
   DosarDauna,
   Mecanic,
@@ -10,20 +15,33 @@ import type {
   Vehicul,
 } from './types';
 
-// Totalul estimat este derivat din pozițiile unei comenzi, nu introdus manual.
-// Formula folosește și TVA-ul pentru a reflecta valoarea totală afișată în UI.
-const calculeazaTotalEstimat = (pozitii: PozitieComanda[]) =>
-  Number(
-    pozitii
-      .reduce(
-        (total, pozitie) =>
-          total + pozitie.cantitate * pozitie.pretVanzare * (1 + pozitie.cotaTVA / 100),
-        0,
-      )
-      .toFixed(2),
-  );
+export const mockClienti: Client[] = [
+  {
+    idClient: 1001,
+    nume: 'Ion Popescu',
+    telefon: '0722 445 781',
+    email: 'ion.popescu@gmail.com',
+    tipClient: 'Persoana Fizica',
+    denumireCompanie: null,
+  },
+  {
+    idClient: 1002,
+    nume: 'Auto Fleet Solutions',
+    telefon: '021 440 55 90',
+    email: 'service@autofleet.ro',
+    tipClient: 'Flota',
+    denumireCompanie: 'Auto Fleet Solutions SRL',
+  },
+  {
+    idClient: 1003,
+    nume: 'Ana Marinescu',
+    telefon: '0744 118 620',
+    email: 'ana.marinescu@yahoo.com',
+    tipClient: 'Persoana Fizica',
+    denumireCompanie: null,
+  },
+];
 
-// Vehiculele sunt baza fluxului: de la ele pornește deschiderea unei comenzi.
 export const mockVehicule: Vehicul[] = [
   {
     idVehicul: 1,
@@ -54,42 +72,140 @@ export const mockVehicule: Vehicul[] = [
   },
 ];
 
-// Asiguratorii și mecanicii sunt folosiți în dropdown-uri.
 export const mockAsiguratori: Asigurator[] = [
-  {
-    idAsigurator: 501,
-    denumire: 'Allianz-Tiriac',
-  },
-  {
-    idAsigurator: 502,
-    denumire: 'Groupama',
-  },
-  {
-    idAsigurator: 503,
-    denumire: 'Omniasig',
-  },
+  { idAsigurator: 501, denumire: 'Allianz-Tiriac' },
+  { idAsigurator: 502, denumire: 'Groupama' },
+  { idAsigurator: 503, denumire: 'Omniasig' },
 ];
 
 export const mockMecanici: Mecanic[] = [
+  { idMecanic: 201, nume: 'Mihai Ionescu', specialitate: 'Mecanica generala' },
+  { idMecanic: 202, nume: 'Andrei Popa', specialitate: 'Tinichigerie si vopsitorie' },
+  { idMecanic: 203, nume: 'Cristian Pavel', specialitate: 'Diagnoza si electrica' },
+];
+
+export const mockCatalogPiese: CatalogPiesa[] = [
   {
-    idMecanic: 201,
-    nume: 'Mihai Ionescu',
-    specialitate: 'Mecanica generala',
+    idPiesa: 301,
+    cod: 'P-ULEI-5W30',
+    denumire: 'Ulei motor 5W30',
+    unitateMasura: 'buc',
+    pretVanzare: 58,
+    cotaTVA: 19,
+    disponibilitateStoc: true,
   },
   {
-    idMecanic: 202,
-    nume: 'Andrei Popa',
-    specialitate: 'Tinichigerie',
+    idPiesa: 302,
+    cod: 'P-FIL-U',
+    denumire: 'Filtru ulei',
+    unitateMasura: 'buc',
+    pretVanzare: 95,
+    cotaTVA: 19,
+    disponibilitateStoc: true,
   },
   {
-    idMecanic: 203,
-    nume: 'Cristian Pavel',
-    specialitate: 'Diagnoza si electrica',
+    idPiesa: 305,
+    cod: 'P-BARA-F-SKO',
+    denumire: 'Bara față Skoda Octavia',
+    unitateMasura: 'buc',
+    pretVanzare: 1820,
+    cotaTVA: 19,
+    disponibilitateStoc: false,
+  },
+  {
+    idPiesa: 306,
+    cod: 'P-FAR-ST-SKO',
+    denumire: 'Far stânga Skoda Octavia',
+    unitateMasura: 'buc',
+    pretVanzare: 640,
+    cotaTVA: 19,
+    disponibilitateStoc: true,
   },
 ];
 
-// Pozițiile sunt împărțite pe comenzi pentru ca totalul fiecărei comenzi
-// să poată fi calculat independent și verificat ușor.
+export const mockCatalogKituri: CatalogKit[] = [
+  {
+    idKit: 701,
+    cod: 'K-REV-DAC',
+    denumire: 'Kit revizie Dacia Logan',
+    unitateMasura: 'kit',
+    pretVanzare: 210,
+    cotaTVA: 19,
+    disponibilitateStoc: true,
+  },
+  {
+    idKit: 702,
+    cod: 'K-DISTR-VW',
+    denumire: 'Kit distribuție VW 1.6 TDI',
+    unitateMasura: 'kit',
+    pretVanzare: 1180,
+    cotaTVA: 19,
+    disponibilitateStoc: false,
+  },
+];
+
+export const mockCatalogManopera: CatalogManopera[] = [
+  {
+    idManopera: 401,
+    cod: 'M-REV',
+    denumire: 'Revizie generală',
+    unitateMasura: 'ore',
+    tarif: 170,
+    cotaTVA: 19,
+  },
+  {
+    idManopera: 402,
+    cod: 'M-TIN-VOPS',
+    denumire: 'Tinichigerie și vopsitorie element',
+    unitateMasura: 'ore',
+    tarif: 210,
+    cotaTVA: 19,
+  },
+  {
+    idManopera: 403,
+    cod: 'M-DIAG',
+    denumire: 'Diagnoză computerizată',
+    unitateMasura: 'ore',
+    tarif: 190,
+    cotaTVA: 19,
+  },
+];
+
+export const mockDosareDauna: DosarDauna[] = [
+  {
+    idDosar: 1,
+    idClient: 1002,
+    idVehicul: 2,
+    idAsigurator: 501,
+    nrDosar: 'DAUNA-2026-001',
+    numarReferintaAsigurator: 'ALT-CASCO-88214',
+    tipPolita: 'CASCO',
+    dataDeschidere: new Date('2026-03-14T09:00:00'),
+    dataConstatare: new Date('2026-03-15T10:00:00'),
+    sumaAprobata: 5200,
+    franciza: 600,
+    statusAprobare: 'Aprobat partial',
+    inspectorDauna: 'Radu Enache',
+    observatiiDauna: 'Așteaptă confirmare pentru elementele suplimentare de vopsit.',
+  },
+  {
+    idDosar: 2,
+    idClient: 1003,
+    idVehicul: 3,
+    idAsigurator: 503,
+    nrDosar: 'DAUNA-2026-002',
+    numarReferintaAsigurator: 'OMN-RCA-99312',
+    tipPolita: 'RCA',
+    dataDeschidere: new Date('2026-03-18T11:30:00'),
+    dataConstatare: new Date('2026-03-18T14:00:00'),
+    sumaAprobata: 2800,
+    franciza: 300,
+    statusAprobare: 'In analiza',
+    inspectorDauna: 'Gabriela Oprea',
+    observatiiDauna: 'Se verifică devizul inițial transmis de service.',
+  },
+];
+
 const pozitiiComanda1: PozitieComanda[] = [
   {
     idPozitieCmd: 1,
@@ -98,9 +214,15 @@ const pozitiiComanda1: PozitieComanda[] = [
     idKit: null,
     idManopera: null,
     tipPozitie: 'Piesa',
+    codArticol: 'P-ULEI-5W30',
+    descriere: 'Ulei motor 5W30',
+    unitateMasura: 'buc',
     cantitate: 4,
     pretVanzare: 58,
+    discountProcent: 0,
     cotaTVA: 19,
+    disponibilitateStoc: true,
+    observatiiPozitie: 'Înlocuire conform planului de întreținere.',
   },
   {
     idPozitieCmd: 2,
@@ -109,9 +231,15 @@ const pozitiiComanda1: PozitieComanda[] = [
     idKit: null,
     idManopera: 401,
     tipPozitie: 'Manopera',
+    codArticol: 'M-REV',
+    descriere: 'Revizie generală',
+    unitateMasura: 'ore',
     cantitate: 1.2,
     pretVanzare: 170,
+    discountProcent: 0,
     cotaTVA: 19,
+    disponibilitateStoc: true,
+    observatiiPozitie: 'Include verificare filtre și lichide.',
   },
   {
     idPozitieCmd: 3,
@@ -120,9 +248,15 @@ const pozitiiComanda1: PozitieComanda[] = [
     idKit: null,
     idManopera: null,
     tipPozitie: 'Piesa',
+    codArticol: 'P-FIL-U',
+    descriere: 'Filtru ulei',
+    unitateMasura: 'buc',
     cantitate: 1,
     pretVanzare: 95,
+    discountProcent: 5,
     cotaTVA: 19,
+    disponibilitateStoc: true,
+    observatiiPozitie: 'Promoție fidelizare client.',
   },
 ];
 
@@ -134,9 +268,15 @@ const pozitiiComanda2: PozitieComanda[] = [
     idKit: null,
     idManopera: null,
     tipPozitie: 'Piesa',
+    codArticol: 'P-BARA-F-SKO',
+    descriere: 'Bara față Skoda Octavia',
+    unitateMasura: 'buc',
     cantitate: 1,
     pretVanzare: 1820,
+    discountProcent: 0,
     cotaTVA: 19,
+    disponibilitateStoc: false,
+    observatiiPozitie: 'Piesa comandată, termen estimat 3 zile.',
   },
   {
     idPozitieCmd: 5,
@@ -145,9 +285,15 @@ const pozitiiComanda2: PozitieComanda[] = [
     idKit: null,
     idManopera: null,
     tipPozitie: 'Piesa',
+    codArticol: 'P-FAR-ST-SKO',
+    descriere: 'Far stânga Skoda Octavia',
+    unitateMasura: 'buc',
     cantitate: 1,
     pretVanzare: 640,
+    discountProcent: 0,
     cotaTVA: 19,
+    disponibilitateStoc: true,
+    observatiiPozitie: 'Disponibil pe stoc local.',
   },
   {
     idPozitieCmd: 6,
@@ -156,39 +302,20 @@ const pozitiiComanda2: PozitieComanda[] = [
     idKit: null,
     idManopera: 402,
     tipPozitie: 'Manopera',
+    codArticol: 'M-TIN-VOPS',
+    descriere: 'Tinichigerie și vopsitorie element',
+    unitateMasura: 'ore',
     cantitate: 6,
     pretVanzare: 210,
+    discountProcent: 0,
     cotaTVA: 19,
-  },
-];
-
-// Dosarele sunt folosite când o comandă intră în fluxul de asigurare.
-export const mockDosareDauna: DosarDauna[] = [
-  {
-    idDosar: 1,
-    idClient: 1002,
-    idVehicul: 2,
-    idAsigurator: 501,
-    nrDosar: 'DAUNA-2026-001',
-    dataDeschidere: new Date('2026-03-14T09:00:00'),
-    sumaAprobata: 5200,
-    franciza: 600,
-  },
-  {
-    idDosar: 2,
-    idClient: 1003,
-    idVehicul: 3,
-    idAsigurator: 503,
-    nrDosar: 'DAUNA-2026-002',
-    dataDeschidere: new Date('2026-03-18T11:30:00'),
-    sumaAprobata: 2800,
-    franciza: 300,
+    disponibilitateStoc: true,
+    observatiiPozitie: 'Execuție după aprobarea finală a devizului.',
   },
 ];
 
 export const mockPozitii: PozitieComanda[] = [...pozitiiComanda1, ...pozitiiComanda2];
 
-// Comenzile finale folosesc totalul derivat din pozițiile aferente.
 export const mockComenzi: ComandaService[] = [
   {
     idComanda: 1,
@@ -198,8 +325,17 @@ export const mockComenzi: ComandaService[] = [
     nrComanda: 'CMD-2026-001',
     dataDeschidere: new Date('2026-03-19T08:30:00'),
     dataFinalizare: null,
-    status: 'Deschis',
-    totalEstimat: calculeazaTotalEstimat(pozitiiComanda1),
+    status: 'Asteapta aprobare client',
+    totalEstimat: calculeazaRezumatPozitii(pozitiiComanda1).total,
+    kilometrajPreluare: 146220,
+    nivelCombustibil: '1/2',
+    simptomeReclamate: 'Revizie anuală și zgomot ușor la frânare pe față.',
+    observatiiPreluare: 'Clientul solicită confirmare telefonică înainte de lucrări suplimentare.',
+    observatiiCaroserie: 'Zgârieturi fine pe bara spate, fără legătură cu intervenția.',
+    accesoriiPredate: ['Talonaș', 'Cheie principală', 'Roată de rezervă'],
+    termenPromis: new Date('2026-03-27T17:30:00'),
+    prioritate: 'Normala',
+    tipPlata: 'Client Direct',
   },
   {
     idComanda: 2,
@@ -209,7 +345,16 @@ export const mockComenzi: ComandaService[] = [
     nrComanda: 'CMD-2026-002',
     dataDeschidere: new Date('2026-03-20T10:15:00'),
     dataFinalizare: null,
-    status: 'In Lucru',
-    totalEstimat: calculeazaTotalEstimat(pozitiiComanda2),
+    status: 'Asteapta piese',
+    totalEstimat: calculeazaRezumatPozitii(pozitiiComanda2).total,
+    kilometrajPreluare: 84210,
+    nivelCombustibil: '3/4',
+    simptomeReclamate: 'Elemente avariate în partea frontală după incident minor.',
+    observatiiPreluare: 'Vehicul de flotă, reprezentantul firmei aprobă devizul pe email.',
+    observatiiCaroserie: 'Capotă ușor dezaliniată, stropitoare parbriz fisurată.',
+    accesoriiPredate: ['Carte service', 'Cheie principală', 'Laptop diagnoză flotă'],
+    termenPromis: new Date('2026-03-28T16:00:00'),
+    prioritate: 'Ridicata',
+    tipPlata: 'Asigurare',
   },
 ];

@@ -1,36 +1,45 @@
 // Selectorul de vehicul este primul pas din flux.
-// El filtrează lista local și trimite mai departe doar `idVehicul`,
-// iar pagina părinte decide ce face cu selecția.
+// Pe lângă datele mașinii, afișăm și contextul clientului și eventualele
+// comenzi deja active pentru același vehicul.
 import { useState } from 'react';
-import type { Vehicul } from '../types';
+import { comandaEsteActiva } from '../calculations';
+import type { Client, ComandaService, Vehicul } from '../types';
 
 interface SelectorVehiculProps {
+  clienti: Client[];
+  comenzi: ComandaService[];
   idVehiculSelectat: number | null;
   onSelecteaza: (idVehicul: number | null) => void;
   vehicule: Vehicul[];
 }
 
 export default function SelectorVehicul({
+  clienti,
+  comenzi,
   idVehiculSelectat,
   onSelecteaza,
   vehicule,
 }: SelectorVehiculProps) {
   const [cautare, setCautare] = useState('');
 
-  // Căutarea lucrează pe câmpurile cele mai utile din front office:
-  // număr, marcă, model și serie șasiu.
   const termen = cautare.trim().toLowerCase();
   const vehiculeFiltrate = vehicule.filter((vehicul) => {
-    if (!termen) {
-      return true;
-    }
-
-    return [
+    const client = clienti.find((item) => item.idClient === vehicul.idClient);
+    const campuriCautare = [
       vehicul.nrInmatriculare,
       vehicul.marca,
       vehicul.model,
       vehicul.serieSasiu,
-    ].some((camp) => camp.toLowerCase().includes(termen));
+      client?.nume ?? '',
+      client?.telefon ?? '',
+      client?.denumireCompanie ?? '',
+    ];
+
+    if (!termen) {
+      return true;
+    }
+
+    return campuriCautare.some((camp) => camp.toLowerCase().includes(termen));
   });
 
   return (
@@ -39,7 +48,7 @@ export default function SelectorVehicul({
         <div>
           <h3 className="text-xl font-bold text-slate-800">Selector vehicul</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Caută după număr de înmatriculare, marcă, model sau serie de șasiu.
+            Caută după număr, marcă, model, serie șasiu sau datele clientului.
           </p>
         </div>
 
@@ -58,13 +67,17 @@ export default function SelectorVehicul({
         type="text"
         value={cautare}
         onChange={(event) => setCautare(event.target.value)}
-        placeholder="Ex: IS-09-SAG, Logan, UU1LSDL4H60512345"
+        placeholder="Ex: IS-09-SAG, Ion Popescu, Octavia, 0722..."
         className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
 
-      {/* Fiecare card reprezintă un vehicul; selecția merge mai departe doar ca id. */}
       <div className="grid gap-3 lg:grid-cols-3">
         {vehiculeFiltrate.map((vehicul) => {
+          const client = clienti.find((item) => item.idClient === vehicul.idClient) ?? null;
+          const comenziActiveVehicul = comenzi.filter(
+            (comanda) =>
+              comanda.idVehicul === vehicul.idVehicul && comandaEsteActiva(comanda.status),
+          );
           const esteSelectat = vehicul.idVehicul === idVehiculSelectat;
 
           return (
@@ -87,26 +100,47 @@ export default function SelectorVehicul({
                     {vehicul.marca} {vehicul.model}
                   </h4>
                 </div>
-                {esteSelectat ? (
-                  <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                    Selectat
-                  </span>
-                ) : null}
+                <div className="flex flex-col items-end gap-2">
+                  {esteSelectat ? (
+                    <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                      Selectat
+                    </span>
+                  ) : null}
+                  {comenziActiveVehicul.length > 0 ? (
+                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-800">
+                      {comenziActiveVehicul.length} comandă activă
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
               <dl className="mt-4 space-y-2 text-sm text-slate-500">
                 <div className="flex items-center justify-between gap-2">
-                  <dt className="font-medium text-slate-600">An</dt>
-                  <dd>{vehicul.an}</dd>
+                  <dt className="font-medium text-slate-600">Client</dt>
+                  <dd className="text-right">{client?.nume ?? `#${vehicul.idClient}`}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <dt className="font-medium text-slate-600">Client</dt>
-                  <dd>#{vehicul.idClient}</dd>
+                  <dt className="font-medium text-slate-600">Telefon</dt>
+                  <dd>{client?.telefon ?? '-'}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="font-medium text-slate-600">Tip client</dt>
+                  <dd>{client?.tipClient ?? '-'}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="font-medium text-slate-600">An</dt>
+                  <dd>{vehicul.an}</dd>
                 </div>
                 <div className="space-y-1">
                   <dt className="font-medium text-slate-600">Serie șasiu</dt>
                   <dd className="break-all text-xs text-slate-500">{vehicul.serieSasiu}</dd>
                 </div>
+                {client?.denumireCompanie ? (
+                  <div className="space-y-1">
+                    <dt className="font-medium text-slate-600">Companie</dt>
+                    <dd className="text-xs text-slate-500">{client.denumireCompanie}</dd>
+                  </div>
+                ) : null}
               </dl>
             </button>
           );

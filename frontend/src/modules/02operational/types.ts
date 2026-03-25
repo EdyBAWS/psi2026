@@ -1,6 +1,35 @@
 // Tipurile din acest fișier descriu modelul domeniului operațional.
-// Ele urmăresc schema logică din proiect și sunt folosite atât în mock data,
-// cât și în componentele care afișează sau modifică informațiile.
+// Am păstrat nucleul schemei inițiale și am adăugat câmpuri uzuale pentru
+// recepția auto, astfel încât fluxul să semene mai mult cu un service real.
+
+export type TipClient = 'Persoana Fizica' | 'Persoana Juridica' | 'Flota';
+export type TipPlata = 'Client Direct' | 'Asigurare' | 'Flota';
+export type PrioritateComanda = 'Scazuta' | 'Normala' | 'Ridicata' | 'Urgenta';
+export type NivelCombustibil = 'Rezerva' | '1/4' | '1/2' | '3/4' | 'Plin';
+export type TipPolita = 'RCA' | 'CASCO';
+export type StatusDosar = 'Deschis' | 'In analiza' | 'Aprobat partial' | 'Aprobat' | 'Respins';
+export type TipPozitie = 'Piesa' | 'Kit' | 'Manopera';
+export type UnitateMasura = 'buc' | 'set' | 'ore' | 'kit';
+
+export type StatusComanda =
+  | 'In asteptare diagnoza'
+  | 'Asteapta aprobare client'
+  | 'Asteapta piese'
+  | 'In Lucru'
+  | 'Gata de livrare'
+  | 'Livrat'
+  | 'Facturat'
+  | 'Anulat';
+
+export interface Client {
+  idClient: number;
+  nume: string;
+  telefon: string;
+  email: string;
+  tipClient: TipClient;
+  denumireCompanie: string | null;
+}
+
 export interface Vehicul {
   idVehicul: number;
   idClient: number;
@@ -11,21 +40,26 @@ export interface Vehicul {
   serieSasiu: string;
 }
 
-// Un dosar de daună leagă un vehicul de un asigurator și de valorile aprobate
-// pentru reparația acoperită prin asigurare.
+// Un dosar de daună leagă vehiculul de asigurator și de starea aprobării.
 export interface DosarDauna {
   idDosar: number;
   idClient: number;
   idVehicul: number;
   idAsigurator: number;
   nrDosar: string;
+  numarReferintaAsigurator: string;
+  tipPolita: TipPolita;
   dataDeschidere: Date;
+  dataConstatare: Date;
   sumaAprobata: number;
   franciza: number;
+  statusAprobare: StatusDosar;
+  inspectorDauna: string;
+  observatiiDauna: string;
 }
 
-// Comanda de service este "capul" operațiunii: ce vehicul intră în service,
-// cine lucrează pe el și care este totalul estimat.
+// Comanda de service păstrează atât câmpurile esențiale din schema inițială,
+// cât și detaliile de recepție necesare în lucru de zi cu zi.
 export interface ComandaService {
   idComanda: number;
   idVehicul: number;
@@ -36,9 +70,19 @@ export interface ComandaService {
   dataFinalizare: Date | null;
   status: StatusComanda;
   totalEstimat: number;
+  kilometrajPreluare: number;
+  nivelCombustibil: NivelCombustibil;
+  simptomeReclamate: string;
+  observatiiPreluare: string;
+  observatiiCaroserie: string;
+  accesoriiPredate: string[];
+  termenPromis: Date;
+  prioritate: PrioritateComanda;
+  tipPlata: TipPlata;
 }
 
-// Fiecare rând din comandă reprezintă o piesă, un kit sau o manoperă.
+// Fiecare rând din comandă poate veni din catalog și conține și detalii utile
+// în operațional, nu doar prețul și TVA-ul.
 export interface PozitieComanda {
   idPozitieCmd: number;
   idComanda: number;
@@ -46,12 +90,17 @@ export interface PozitieComanda {
   idKit: number | null;
   idManopera: number | null;
   tipPozitie: TipPozitie;
+  codArticol: string;
+  descriere: string;
+  unitateMasura: UnitateMasura;
   cantitate: number;
   pretVanzare: number;
+  discountProcent: number;
   cotaTVA: number;
+  disponibilitateStoc: boolean;
+  observatiiPozitie: string;
 }
 
-// Entități ajutătoare pentru dropdown-uri și afișare în UI.
 export interface Asigurator {
   idAsigurator: number;
   denumire: string;
@@ -63,24 +112,48 @@ export interface Mecanic {
   specialitate: string;
 }
 
-// Valorile posibile pentru status și tip sunt separate în literal unions
-// pentru a reduce erorile de scriere în restul aplicației.
-export type StatusComanda =
-  | 'Deschis'
-  | 'In Lucru'
-  | 'Finalizat'
-  | 'Facturat'
-  | 'Anulat';
+export interface CatalogPiesa {
+  idPiesa: number;
+  cod: string;
+  denumire: string;
+  unitateMasura: UnitateMasura;
+  pretVanzare: number;
+  cotaTVA: number;
+  disponibilitateStoc: boolean;
+}
 
-export type TipPozitie = 'Piesa' | 'Kit' | 'Manopera';
+export interface CatalogKit {
+  idKit: number;
+  cod: string;
+  denumire: string;
+  unitateMasura: UnitateMasura;
+  pretVanzare: number;
+  cotaTVA: number;
+  disponibilitateStoc: boolean;
+}
+
+export interface CatalogManopera {
+  idManopera: number;
+  cod: string;
+  denumire: string;
+  unitateMasura: 'ore';
+  tarif: number;
+  cotaTVA: number;
+}
 
 // Varianta "draft" este folosită doar în formular, înainte ca poziția
 // să fie transformată într-o înregistrare reală de tip `PozitieComanda`.
 export interface PozitieComandaDraft {
   _draftId: string;
   tipPozitie: TipPozitie;
+  catalogId: number | null;
+  codArticol: string;
   descriere: string;
+  unitateMasura: UnitateMasura;
   cantitate: number;
   pretVanzare: number;
+  discountProcent: number;
   cotaTVA: number;
+  disponibilitateStoc: boolean;
+  observatiiPozitie: string;
 }

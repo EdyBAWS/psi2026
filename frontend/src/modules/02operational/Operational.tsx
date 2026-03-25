@@ -4,12 +4,17 @@
 import { useState } from 'react';
 import {
   mockAsiguratori,
+  mockCatalogKituri,
+  mockCatalogManopera,
+  mockCatalogPiese,
+  mockClienti,
   mockComenzi,
   mockDosareDauna,
   mockMecanici,
   mockPozitii,
   mockVehicule,
 } from './mockData';
+import { comandaEsteActiva } from './calculations';
 import GestiuneComenzi from './pages/GestiuneComenzi';
 import PreluareAuto, { type SalvarePreluarePayload } from './pages/PreluareAuto';
 
@@ -46,9 +51,7 @@ export default function Operational() {
   };
 
   // Statistica din antet afișează rapid câte comenzi sunt încă active.
-  const comenziActive = comenzi.filter(
-    (comanda) => comanda.status === 'Deschis' || comanda.status === 'In Lucru',
-  ).length;
+  const comenziActive = comenzi.filter((comanda) => comandaEsteActiva(comanda.status)).length;
 
   return (
     <section className="space-y-6">
@@ -113,18 +116,24 @@ export default function Operational() {
       {/* Randăm pagina internă în funcție de tabul selectat. */}
       {view === 'preluare-auto' ? (
         <PreluareAuto
+          clienti={mockClienti}
           vehicule={mockVehicule}
           dosare={dosare}
           comenzi={comenzi}
           pozitii={pozitii}
           mecanici={mockMecanici}
           asiguratori={mockAsiguratori}
+          catalogPiese={mockCatalogPiese}
+          catalogKituri={mockCatalogKituri}
+          catalogManopere={mockCatalogManopera}
           onSalveazaPreluare={handleSalveazaPreluare}
         />
       ) : (
         <GestiuneComenzi
+          clienti={mockClienti}
           comenzi={comenzi}
           dosare={dosare}
+          asiguratori={mockAsiguratori}
           mecanici={mockMecanici}
           pozitii={pozitii}
           vehicule={mockVehicule}

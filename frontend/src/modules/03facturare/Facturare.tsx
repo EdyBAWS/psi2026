@@ -1,37 +1,42 @@
 import { useState } from 'react';
 import { mockComenzi } from '../02operational/mockData';
-// 1. IMPORTĂM INTERFAȚA pentru a rezolva eroarea de tip 'any'
-// 1. IMPORTĂM INTERFAȚA pentru a rezolva eroarea de tip 'any'
-import type { ComandaService } from '../02operational/types'; 
+import type { ComandaService } from '../02operational/types';
 
 export default function Facturare() {
-  // Preluăm doar comenzile finalizate din operațional
-  const comenziGata = mockComenzi.filter(c => c.status === 'Finalizat');
-  
+  // Facturarea preia comenzile care au trecut de execuție și sunt gata pentru
+  // livrare sau deja marcate ca livrate.
+  const comenziGata = mockComenzi.filter(
+    (comanda) => comanda.status === 'Gata de livrare' || comanda.status === 'Livrat',
+  );
+
   // Stocăm ce comenzi primesc discount (ex: { 2: true } înseamnă comanda cu ID 2 are discount)
   const [discounturi, setDiscounturi] = useState<Record<number, boolean>>({});
 
   const toggleDiscount = (idComanda: number) => {
-    setDiscounturi(prev => ({
+    setDiscounturi((prev) => ({
       ...prev,
-      [idComanda]: !prev[idComanda]
+      [idComanda]: !prev[idComanda],
     }));
   };
 
-  // 2. ÎNLOCUIM 'any' cu tipul corect 'ComandaService'
   const emiteFactura = (comanda: ComandaService) => {
     const areDiscount = discounturi[comanda.idComanda];
     const totalEstimat = comanda.totalEstimat;
     const totalFinal = areDiscount ? totalEstimat * 0.9 : totalEstimat; // Ex: 10% discount
-    
-    alert(`Factură generată pentru Comanda ${comanda.nrComanda}!\nTotal: ${totalFinal.toFixed(2)} RON ${areDiscount ? '(Discount 10% aplicat)' : ''}`);
+
+    alert(
+      `Factură generată pentru Comanda ${comanda.nrComanda}!\nTotal: ${totalFinal.toFixed(
+        2,
+      )} RON ${areDiscount ? '(Discount 10% aplicat)' : ''}`,
+    );
   };
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
       <h2 className="text-2xl font-bold mb-2 text-slate-800">Facturare Comenzi (Așteptare)</h2>
       <p className="text-slate-500 mb-6 text-sm">
-        Aici apar automat comenzile de service care au primit statusul "Finalizat" în modulul Operațional.
+        Aici apar automat comenzile de service care au primit statusul "Gata de livrare"
+        sau "Livrat" în modulul Operațional.
       </p>
 
       <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -49,7 +54,7 @@ export default function Facturare() {
             {comenziGata.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-6 text-center text-slate-500">
-                  Nicio comandă finalizată în așteptare.
+                  Nicio comandă eligibilă pentru facturare.
                 </td>
               </tr>
             ) : (
