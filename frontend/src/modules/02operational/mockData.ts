@@ -1,3 +1,6 @@
+// Mock data-ul permite rularea completă a modulului fără API.
+// În plus, menține relațiile dintre comenzi, dosare și poziții suficient de
+// realiste pentru a testa fluxul operațional cap-coadă.
 import type {
   Asigurator,
   ComandaService,
@@ -7,6 +10,8 @@ import type {
   Vehicul,
 } from './types';
 
+// Totalul estimat este derivat din pozițiile unei comenzi, nu introdus manual.
+// Formula folosește și TVA-ul pentru a reflecta valoarea totală afișată în UI.
 const calculeazaTotalEstimat = (pozitii: PozitieComanda[]) =>
   Number(
     pozitii
@@ -18,6 +23,7 @@ const calculeazaTotalEstimat = (pozitii: PozitieComanda[]) =>
       .toFixed(2),
   );
 
+// Vehiculele sunt baza fluxului: de la ele pornește deschiderea unei comenzi.
 export const mockVehicule: Vehicul[] = [
   {
     idVehicul: 1,
@@ -48,6 +54,7 @@ export const mockVehicule: Vehicul[] = [
   },
 ];
 
+// Asiguratorii și mecanicii sunt folosiți în dropdown-uri.
 export const mockAsiguratori: Asigurator[] = [
   {
     idAsigurator: 501,
@@ -81,6 +88,8 @@ export const mockMecanici: Mecanic[] = [
   },
 ];
 
+// Pozițiile sunt împărțite pe comenzi pentru ca totalul fiecărei comenzi
+// să poată fi calculat independent și verificat ușor.
 const pozitiiComanda1: PozitieComanda[] = [
   {
     idPozitieCmd: 1,
@@ -153,6 +162,7 @@ const pozitiiComanda2: PozitieComanda[] = [
   },
 ];
 
+// Dosarele sunt folosite când o comandă intră în fluxul de asigurare.
 export const mockDosareDauna: DosarDauna[] = [
   {
     idDosar: 1,
@@ -178,6 +188,7 @@ export const mockDosareDauna: DosarDauna[] = [
 
 export const mockPozitii: PozitieComanda[] = [...pozitiiComanda1, ...pozitiiComanda2];
 
+// Comenzile finale folosesc totalul derivat din pozițiile aferente.
 export const mockComenzi: ComandaService[] = [
   {
     idComanda: 1,

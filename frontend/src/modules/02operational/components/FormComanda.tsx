@@ -1,3 +1,6 @@
+// Componenta afișează antetul comenzii și deleagă tabelul de poziții către
+// `TabelPozitii`. Ea nu salvează nimic singură, ci primește și trimite
+// starea către pagina părinte.
 import TabelPozitii from './TabelPozitii';
 import type { Mecanic, PozitieComandaDraft, Vehicul } from '../types';
 
@@ -31,6 +34,7 @@ export default function FormComanda({
 }: FormComandaProps) {
   return (
     <div className="space-y-5">
+      {/* Antetul explică pe ce vehicul se deschide comanda și ce total s-a acumulat. */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -59,6 +63,7 @@ export default function FormComanda({
           </div>
         </div>
 
+        {/* Zona de selecție a mecanicului și regulile minime ale MVP-ului. */}
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -91,6 +96,7 @@ export default function FormComanda({
         </div>
       </div>
 
+      {/* Tabelul gestionează efectiv liniile de piese/manoperă. */}
       <TabelPozitii pozitii={pozitii} onChange={onPozitiiChange} />
     </div>
   );

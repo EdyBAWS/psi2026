@@ -1,3 +1,6 @@
+// Selectorul de dosar rezolvă ramura "de asigurare" a fluxului:
+// fie atașează un dosar deja existent pentru vehicul, fie completează
+// datele minime pentru a crea unul nou la salvarea comenzii.
 import type { StareDosarAsigurare } from '../formState';
 import type { Asigurator, DosarDauna, Vehicul } from '../types';
 
@@ -27,6 +30,7 @@ export default function SelectorDosar({
   vehicul,
   onChange,
 }: SelectorDosarProps) {
+  // Fără vehicul selectat nu știm ce dosare putem filtra, deci oprim fluxul aici.
   if (!vehicul) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-sm text-slate-500">
@@ -35,11 +39,15 @@ export default function SelectorDosar({
     );
   }
 
+  // Filtrăm dosarele strict după vehiculul curent, pentru a evita asocierea
+  // accidentală a unui dosar cu altă mașină.
   const dosareVehicul = dosare.filter((dosar) => dosar.idVehicul === vehicul.idVehicul);
   const dosarSelectat =
     dosareVehicul.find((dosar) => dosar.idDosar === value.idDosarSelectat) ?? null;
   const existaDosare = dosareVehicul.length > 0;
 
+  // Schimbarea modului resetează doar partea relevantă din stare:
+  // la existent alegem un dosar din listă, iar la nou golim selecția.
   const schimbaMod = (mod: 'existent' | 'nou') => {
     if (mod === 'existent') {
       onChange({
@@ -102,6 +110,7 @@ export default function SelectorDosar({
         </div>
       ) : null}
 
+      {/* În modul existent alegem un dosar și afișăm rapid detaliile lui. */}
       {value.mod === 'existent' ? (
         <div className="space-y-4">
           <div>
@@ -152,6 +161,8 @@ export default function SelectorDosar({
           ) : null}
         </div>
       ) : (
+        // În modul nou păstrăm doar valorile de bază; numărul dosarului se generează
+        // automat la salvarea finală a comenzii.
         <div className="grid gap-4 md:grid-cols-3">
           <div className="md:col-span-3 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
             Numărul noului dosar va fi generat automat la salvare: <strong>{nrDosarPreview}</strong>

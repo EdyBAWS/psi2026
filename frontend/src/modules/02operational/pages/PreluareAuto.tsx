@@ -1,3 +1,6 @@
+// Aceasta este pagina principală a fluxului operațional.
+// Ea coordonează toți pașii: selectarea vehiculului, activarea fluxului de
+// asigurare, completarea comenzii și transformarea draft-ului în date persistente.
 import { useState } from 'react';
 import FormComanda from '../components/FormComanda';
 import SelectorDosar from '../components/SelectorDosar';
@@ -87,6 +90,8 @@ export default function PreluareAuto({
     creeazaPozitieDraft(),
   ]);
 
+  // Valorile derivate sunt recalculte la fiecare randare din starea curentă.
+  // Aici nu stocăm copii inutile ale acelorași date.
   const vehiculSelectat =
     vehicule.find((vehicul) => vehicul.idVehicul === idVehiculSelectat) ?? null;
   const totalEstimat = calculeazaTotalEstimat(pozitiiDraft);
@@ -115,6 +120,7 @@ export default function PreluareAuto({
     suntPozitiiValide(pozitiiDraft) &&
     dosarValid;
 
+  // Resetează complet fluxul după salvare sau când utilizatorul vrea să o ia de la capăt.
   const reseteazaFlux = () => {
     setIdVehiculSelectat(null);
     setEsteLucrareAsigurare(false);
@@ -123,12 +129,16 @@ export default function PreluareAuto({
     setPozitiiDraft([creeazaPozitieDraft()]);
   };
 
+  // La schimbarea vehiculului reluăm fluxul de asigurare, pentru că dosarele
+  // și contextul comenzii depind direct de mașina selectată.
   const handleSelecteazaVehicul = (idVehicul: number | null) => {
     setIdVehiculSelectat(idVehicul);
     setEsteLucrareAsigurare(false);
     setStareDosar(stareDosarInitiala);
   };
 
+  // Activează sau dezactivează ramura de asigurare. Dacă există deja dosare
+  // pentru vehicul, preselectăm primul ca punct de plecare.
   const handleSchimbaFluxAsigurare = (activ: boolean) => {
     setEsteLucrareAsigurare(activ);
 
@@ -145,6 +155,9 @@ export default function PreluareAuto({
     });
   };
 
+  // Acesta este punctul unde draft-ul din UI devine "date de modul":
+  // construim dosarul nou (dacă este cazul), comanda și pozițiile finale,
+  // apoi trimitem totul înapoi către componenta `Operational`.
   const handleSalveaza = () => {
     if (!vehiculSelectat || idMecanicSelectat === null || !poateSalva) {
       return;
@@ -195,6 +208,8 @@ export default function PreluareAuto({
     const pozitiiNoi: PozitieComanda[] = pozitiiDraft.map((pozitie, index) => {
       const idPozitieCmd = urmatorulIdPozitie + index;
 
+      // Pentru MVP generăm local id-uri sintetice pentru piesă/kit/manoperă.
+      // Într-o versiune conectată la backend, acestea ar veni din catalog.
       return {
         idPozitieCmd,
         idComanda: idComandaNoua,
@@ -243,6 +258,7 @@ export default function PreluareAuto({
         vehicule={vehicule}
       />
 
+      {/* Restul fluxului se afișează numai după ce știm pe ce vehicul lucrăm. */}
       {vehiculSelectat ? (
         <>
           <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
@@ -310,6 +326,7 @@ export default function PreluareAuto({
             </div>
           </div>
 
+          {/* Dosarul apare doar pentru lucrările trecute prin asigurare. */}
           {esteLucrareAsigurare ? (
             <SelectorDosar
               asiguratori={asiguratori}
@@ -332,6 +349,7 @@ export default function PreluareAuto({
             onPozitiiChange={setPozitiiDraft}
           />
 
+          {/* Acțiunile finale: resetarea formularului sau salvarea comenzii. */}
           <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1 text-sm text-slate-500">
               <p>
