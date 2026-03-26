@@ -1,6 +1,9 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from '../../lib/cn';
 
+// Card-urile sunt blocurile vizuale de bază ale interfeței.
+// În loc să rescriem aceleași clase Tailwind pentru fiecare secțiune,
+// centralizăm aici structura comună: container, header, titlu, descriere și conținut.
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
@@ -13,6 +16,8 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   );
 }
 
+// Subcomponentele de mai jos sunt opționale.
+// Le folosim doar când vrem o structură mai clară în interiorul unui card.
 export function CardHeader({
   className,
   ...props

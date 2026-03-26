@@ -73,6 +73,8 @@ export default function FormComanda({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
+            {/* Cardurile din dreapta sunt doar rezumate vizuale.
+                Valorile sunt calculate în pagina părinte și doar afișate aici. */}
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Status inițial

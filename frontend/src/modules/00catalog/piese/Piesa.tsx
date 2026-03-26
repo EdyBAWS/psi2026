@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+// Catalogul de piese este încă un ecran local și simplu,
+// dar ilustrează un pattern de bază:
+// listă + formular + câmpuri condiționale.
 type TipPiesa = 'NOUA' | 'SH';
 
 interface PiesaAuto {
@@ -21,7 +24,7 @@ export default function Piesa() {
 
   const [arataFormular, setArataFormular] = useState(false);
   
-  // State pentru form
+  // Starea de mai jos descrie fiecare câmp din formularul simplu de adăugare.
   const [codPiesa, setCodPiesa] = useState('');
   const [producator, setProducator] = useState('');
   const [pretBaza, setPretBaza] = useState('');
@@ -36,6 +39,8 @@ export default function Piesa() {
       return;
     }
 
+    // Construim obiectul final în funcție de tipul piesei.
+    // Unele câmpuri există doar pentru piese noi, altele doar pentru SH.
     const nouaPiesa: PiesaAuto = {
       idPiesa: Date.now(),
       codPiesa: codPiesa.toUpperCase(),
@@ -48,7 +53,7 @@ export default function Piesa() {
     setPiese([nouaPiesa, ...piese]);
     toast.success('Piesa a fost adăugată în catalog.');
     
-    // Reset form
+    // După salvare resetăm manual fiecare câmp, pentru că formularul nu folosește încă RHF.
     setCodPiesa(''); setProducator(''); setPretBaza(''); setLuniGarantie(''); setGradUzura('');
     setArataFormular(false);
   };

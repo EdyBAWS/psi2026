@@ -51,6 +51,8 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
       setDosare((previous) => [...previous, dosarNou]);
     }
     setPozitii((previous) => [...previous, ...pozitiiNoi]);
+    // Toast-ul este feedback-ul vizual rapid pentru utilizator.
+    // Îl folosim în locul unui `alert(...)`, ca să nu blocăm interfața.
     toast.success(`Comanda ${comanda.nrComanda} a fost deschisă cu succes.`);
     onNavigate('operational-comenzi');
   };

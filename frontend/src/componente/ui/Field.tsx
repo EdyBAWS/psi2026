@@ -1,6 +1,13 @@
 import type { InputHTMLAttributes } from 'react';
 import { cn } from '../../lib/cn';
 
+// `Field` standardizează câmpurile simple de input.
+// Componenta știe să afișeze:
+// - eticheta
+// - input-ul propriu-zis
+// - eroarea de validare
+// - un hint, dacă nu există eroare
+// Astfel, formularele din aplicație rămân mai coerente și mai ușor de citit.
 interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   hint?: string;
@@ -19,6 +26,8 @@ export function Field({
 }: FieldProps) {
   return (
     <div className={cn('space-y-1.5', wrapperClassName)}>
+      {/* Eticheta este păstrată în componentă pentru a evita repetarea
+          aceluiași pattern în toate formularele. */}
       <label className="block text-sm font-semibold text-slate-700">{label}</label>
       <input
         type={type}
@@ -29,6 +38,8 @@ export function Field({
         )}
         {...props}
       />
+      {/* Afișăm ori eroarea, ori hint-ul.
+          Nu le arătăm simultan pentru a nu încărca inutil formularul. */}
       {error ? <p className="text-xs font-medium text-rose-600">{error}</p> : null}
       {!error && hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
     </div>

@@ -1,6 +1,9 @@
 import type { SelectHTMLAttributes } from 'react';
 import { cn } from '../../lib/cn';
 
+// `SelectField` este varianta comună pentru dropdown-uri.
+// Ideea este aceeași ca la `Field`: UI-ul pentru label, eroare și hint
+// să fie uniform în toate formularele, indiferent de modul.
 interface SelectOption {
   label: string;
   value: string;
@@ -36,6 +39,8 @@ export function SelectField({
         )}
         {...props}
       >
+        {/* Placeholder-ul este util când vrem să forțăm o alegere explicită
+            și nu vrem ca primul element real să fie selectat automat. */}
         {placeholder ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (
           <option key={option.value} value={option.value}>

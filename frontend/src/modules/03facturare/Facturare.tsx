@@ -7,6 +7,9 @@ import { EmptyState } from '../../componente/ui/EmptyState';
 import { PageHeader } from '../../componente/ui/PageHeader';
 import type { ComandaService } from '../02operational/types';
 
+// Modulul de facturare pornește de la comenzile deja închise operațional
+// și le transformă în acțiuni comerciale.
+// În versiunea actuală nu emitem documente reale, ci simulăm acest pas în UI.
 interface FacturareProps {
   comenzi: ComandaService[];
 }
@@ -33,6 +36,8 @@ export default function Facturare({ comenzi }: FacturareProps) {
     const totalEstimat = comanda.totalEstimat;
     const totalFinal = areDiscount ? totalEstimat * 0.9 : totalEstimat; // Ex: 10% discount
 
+    // Folosim toast în loc de `alert(...)` ca să păstrăm fluxul mai fluid
+    // și să nu blocăm utilizatorul după fiecare acțiune.
     toast.success(
       `Factură generată pentru ${comanda.nrComanda}. Total: ${totalFinal.toFixed(2)} RON ${areDiscount ? '(Discount 10% aplicat)' : ''}`,
     );

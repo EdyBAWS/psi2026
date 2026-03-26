@@ -1,8 +1,13 @@
 import { z } from 'zod';
 
+// Schemele `zod` țin validarea structurii formularului într-un singur loc.
+// Avantajul este că JSX-ul rămâne mai curat, iar regulile pot fi citite separat
+// de interfața vizuală.
 const mesajEmail = 'Introdu o adresă de email validă.';
 const mesajTelefon = 'Introdu un număr de telefon valid.';
 
+// Pentru client verificăm atât câmpurile de bază,
+// cât și câmpurile condiționale în funcție de tipul PF/PJ.
 export const clientSchema = z
   .object({
     tipClient: z.enum(['PF', 'PJ']),
@@ -17,6 +22,8 @@ export const clientSchema = z
     nrRegCom: z.string().trim().optional(),
   })
   .superRefine((data, ctx) => {
+    // `superRefine` este util când regula depinde de combinația mai multor câmpuri,
+    // nu doar de validarea unuia singur.
     if (data.tipClient === 'PF') {
       if (!data.CNP) {
         ctx.addIssue({
@@ -52,6 +59,7 @@ export const clientSchema = z
     }
   });
 
+// La angajați, rolul ales influențează ce câmpuri devin obligatorii.
 export const angajatSchema = z
   .object({
     nume: z.string().trim().min(2, 'Numele este obligatoriu.'),
@@ -91,12 +99,15 @@ export const angajatSchema = z
     }
   });
 
+// Asiguratorul are nevoie doar de o validare simplă de bază.
 export const asiguratorSchema = z.object({
   denumire: z.string().trim().min(2, 'Denumirea este obligatorie.'),
   CUI: z.string().trim().min(2, 'CUI este obligatoriu.'),
   telefon: z.string().trim().min(6, mesajTelefon),
 });
 
+// `z.infer` ne ajută să derivăm automat tipurile TypeScript din scheme,
+// ca să nu dublăm aceeași definiție în două locuri.
 export type ClientFormValues = z.infer<typeof clientSchema>;
 export type AngajatFormValues = z.infer<typeof angajatSchema>;
 export type AsiguratorFormValues = z.infer<typeof asiguratorSchema>;

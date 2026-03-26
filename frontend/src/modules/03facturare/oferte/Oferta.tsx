@@ -5,6 +5,10 @@ import { Card, CardContent, CardHeader } from '../../../componente/ui/Card';
 import { PageHeader } from '../../../componente/ui/PageHeader';
 import { SelectField } from '../../../componente/ui/SelectField';
 
+// Acest ecran simulează operațiuni comerciale peste facturi deja emise:
+// discount suplimentar sau storno promoțional.
+// Fluxul este încă local, dar folosește aceleași componente UI comune
+// ca restul aplicației modernizate.
 export default function Oferta() {
   // Pentru moment, simulăm câteva facturi deja emise anterior de modulul de facturare
   const facturiEmise = [
@@ -24,6 +28,7 @@ export default function Oferta() {
     }
     
     if (tipOperatiune === 'discount') {
+      // Toast-ul confirmă rapid operațiunea fără să oprească utilizatorul din lucru.
       toast.success(
         `S-a aplicat discount pentru factura ID ${facturaSelectata}.`,
       );

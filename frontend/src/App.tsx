@@ -15,10 +15,18 @@ import Angajat from './modules/01entitati/angajati/Angajat';
 import Asigurator from './modules/01entitati/asiguratori/Asigurator';
 import Notificare from './modules/05notificari/Notificare';
 
+// `App` este shell-ul principal al aplicației.
+// În loc de React Router, ținem doar un `paginaCurenta` în stare locală
+// și alegem manual componenta de afișat printr-un `switch`.
+// Acest model este suficient pentru un MVP administrativ și este ușor de urmărit
+// de către colegii care sunt la început cu React.
 export default function App() {
   const [paginaCurenta, setPaginaCurenta] = useState<string>('facturare-comenzi');
 
   const randeazaPagina = () => {
+    // Acest `switch` este "harta" aplicației.
+    // Fiecare id din sidebar trebuie să existe și aici, altfel click-ul din meniu
+    // nu va duce nicăieri.
     switch (paginaCurenta) {
       // Entitati
       case 'entitati-clienti': return <Client />;
@@ -53,10 +61,13 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+      {/* Sidebar-ul nu știe ce pagină să afișeze.
+          El doar schimbă valoarea lui `paginaCurenta` prin callback-ul primit. */}
       <Sidebar setPagina={setPaginaCurenta} paginaCurenta={paginaCurenta} />
       
       <main className="flex-1 p-10 overflow-y-scroll">
         <div className="max-w-6xl mx-auto">
+          {/* Tot conținutul din dreapta vine din alegerea făcută în `randeazaPagina`. */}
           {randeazaPagina()}
         </div>
       </main>

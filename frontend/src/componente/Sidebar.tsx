@@ -10,12 +10,18 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/cn';
 
+// Sidebar-ul este meniul lateral global al aplicației.
+// El nu randă paginile propriu-zise și nu folosește router.
+// Rolul lui este doar să grupeze intrările din meniu și să anunțe `App.tsx`
+// ce id de pagină a fost selectat.
 interface SidebarProps {
   setPagina: (pagina: string) => void;
   paginaCurenta: string;
 }
 
 export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
+  // Păstrăm local doar ce secțiuni sunt deschise/închise.
+  // Pagina activă rămâne controlată de componenta părinte (`App`).
   const [meniuriDeschise, setMeniuriDeschise] = useState<string[]>(['Catalog', 'Facturare']);
 
   const toggleMeniu = (numeMeniu: string) => {
@@ -48,6 +54,9 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       titlu: 'Operațional',
       icon: Settings2,
       subItems: [
+        // Cele două intrări sunt separate intenționat.
+        // Astfel, recepția și gestiunea comenzilor sunt două ecrane distincte,
+        // nu două tab-uri din aceeași pagină.
         { id: 'operational-preluare', label: 'Preluare Auto' },
         { id: 'operational-comenzi', label: 'Gestiune Comenzi' },
       ],
@@ -79,7 +88,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
         <p className="text-slate-400 text-xs mt-1 font-medium tracking-wider uppercase">Sistem Creanțe</p>
       </div>
 
-      {/* AICI ESTE FIX-UL: Am adăugat clasele pentru a ascunde scrollbar-ul */}
+      {/* Ascundem scrollbar-ul pentru un aspect mai curat, dar păstrăm scroll-ul funcțional. */}
       <nav className="flex-1 px-4 py-6 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         
         {categorii.map((categorie) => {
@@ -120,6 +129,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
                   {categorie.subItems.map((item) => (
                     <button
                       key={item.id}
+                      // Click-ul trimite mai departe id-ul paginii.
+                      // `App.tsx` decide apoi ce componentă se afișează în zona principală.
                       onClick={() => setPagina(item.id)}
                       className={`w-full text-left px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                         paginaCurenta === item.id 
@@ -136,7 +147,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
           );
         })}
 
-        {/* Notificări */}
+        {/* Notificările sunt o intrare singulară, nu o categorie expandabilă. */}
         <button
           onClick={() => setPagina('notificari')}
           className={cn(

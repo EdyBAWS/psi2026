@@ -2,6 +2,9 @@ import type { ReactNode } from 'react';
 import { Inbox } from 'lucide-react';
 import { cn } from '../../lib/cn';
 
+// `EmptyState` este afișat atunci când o listă sau o secțiune nu are încă date.
+// Componenta oferă un mesaj mai prietenos decât un tabel gol și sugerează
+// utilizatorului care este următorul pas.
 interface EmptyStateProps {
   className?: string;
   description: string;
