@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '../../../componente/ui/Button';
 
 // Interfețe pentru Penalizări
 interface Client {
@@ -58,7 +60,7 @@ const Penalizare: React.FC = () => {
 
   const handleGenereazaPenalizare = () => {
     if (!facturaSelectata || zileIntarziere <= 0) {
-      alert('Te rog selectează o factură și introdu zilele de întârziere!');
+      toast.error('Te rog selectează o factură și introdu zilele de întârziere.');
       return;
     }
     // Aici va veni INSERT în FACTURA și FACTURA_PENALIZARE
@@ -68,7 +70,9 @@ const Penalizare: React.FC = () => {
       procentPenalizare,
       valoareTotala: valoarePenalizare
     });
-    alert(`Factura de penalizare în valoare de ${valoarePenalizare.toFixed(2)} RON a fost generată!`);
+    toast.success(
+      `Factura de penalizare în valoare de ${valoarePenalizare.toFixed(2)} RON a fost generată.`,
+    );
   };
 
   return (
@@ -158,12 +162,15 @@ const Penalizare: React.FC = () => {
             </div>
           </div>
 
-          <button 
-            className="mt-10 w-full py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 font-bold transition-colors text-lg"
+          <Button
+            className="mt-10 text-lg"
+            fullWidth
+            size="lg"
+            variant="danger"
             onClick={handleGenereazaPenalizare}
           >
             Emite Factura de Penalizare
-          </button>
+          </Button>
         </div>
 
       </div>

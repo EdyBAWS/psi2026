@@ -1,4 +1,9 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '../../../componente/ui/Button';
+import { Card, CardContent, CardHeader } from '../../../componente/ui/Card';
+import { PageHeader } from '../../../componente/ui/PageHeader';
+import { SelectField } from '../../../componente/ui/SelectField';
 
 export default function Oferta() {
   // Pentru moment, simulăm câteva facturi deja emise anterior de modulul de facturare
@@ -14,45 +19,49 @@ export default function Oferta() {
   const handleSalvare = (e: React.FormEvent) => {
     e.preventDefault();
     if (!facturaSelectata) {
-      alert("Te rog selectează o factură din listă!");
+      toast.error('Te rog selectează o factură din listă.');
       return;
     }
     
     if (tipOperatiune === 'discount') {
-      alert(`S-a aplicat Discount / Ofertă pentru factura ID: ${facturaSelectata}. Se va ajusta restul de plată.`);
+      toast.success(
+        `S-a aplicat discount pentru factura ID ${facturaSelectata}.`,
+      );
     } else {
-      alert(`S-a generat o Factură Storno Promoțională pentru factura ID: ${facturaSelectata}.`);
+      toast.success(
+        `S-a generat factura storno promoțională pentru factura ID ${facturaSelectata}.`,
+      );
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-2 text-slate-800">Gestiune Campanii & Oferte</h2>
-      <p className="text-slate-500 mb-6 text-sm">
-        Selectează o factură deja emisă pentru a aplica un discount extra sau pentru a emite o factură storno aferentă unei promoții.
-      </p>
-
-      <form onSubmit={handleSalvare} className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">Factura de Bază</label>
-          <select 
-            className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+    <Card className="mx-auto max-w-2xl">
+      <CardHeader className="p-6 pb-0">
+        <PageHeader
+          className="mb-0"
+          title="Gestiune Campanii & Oferte"
+          description="Selectează o factură emisă pentru a aplica un discount extra sau pentru a emite o factură storno promoțională."
+        />
+      </CardHeader>
+      <CardContent className="p-6 pt-6">
+        <form onSubmit={handleSalvare} className="space-y-6">
+          <SelectField
+            label="Factura de Bază"
             value={facturaSelectata}
             onChange={(e) => setFacturaSelectata(e.target.value)}
-          >
-            <option value="">-- Caută factură emisă --</option>
-            {facturiEmise.map(f => (
-              <option key={f.id} value={f.id}>
-                {f.numar} - {f.client} ({f.total} RON)
-              </option>
-            ))}
-          </select>
-        </div>
+            placeholder="-- Caută factură emisă --"
+            options={facturiEmise.map((factura) => ({
+              value: String(factura.id),
+              label: `${factura.numar} - ${factura.client} (${factura.total} RON)`,
+            }))}
+          />
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">Tipul Operațiunii</label>
-          <div className="flex space-x-4">
-            <label className="flex items-center space-x-2 cursor-pointer p-3 border border-slate-200 rounded-lg flex-1 hover:bg-slate-50">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Tipul Operațiunii
+            </label>
+            <div className="flex space-x-4">
+              <label className="flex flex-1 cursor-pointer items-center space-x-2 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
               <input 
                 type="radio" 
                 name="tipOp" 
@@ -63,7 +72,7 @@ export default function Oferta() {
               />
               <span className="text-sm font-medium text-slate-700">Aplicare Discount Extra</span>
             </label>
-            <label className="flex items-center space-x-2 cursor-pointer p-3 border border-slate-200 rounded-lg flex-1 hover:bg-slate-50">
+              <label className="flex flex-1 cursor-pointer items-center space-x-2 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
               <input 
                 type="radio" 
                 name="tipOp" 
@@ -77,10 +86,11 @@ export default function Oferta() {
           </div>
         </div>
 
-        <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl shadow-md font-semibold transition-colors mt-4">
-          Procesează Operațiunea
-        </button>
-      </form>
-    </div>
+          <Button type="submit" fullWidth size="lg">
+            Procesează Operațiunea
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

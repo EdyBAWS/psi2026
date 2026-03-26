@@ -1,4 +1,10 @@
 import { useState } from 'react';
+import { ReceiptText } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '../../componente/ui/Button';
+import { Card, CardContent, CardHeader } from '../../componente/ui/Card';
+import { EmptyState } from '../../componente/ui/EmptyState';
+import { PageHeader } from '../../componente/ui/PageHeader';
 import type { ComandaService } from '../02operational/types';
 
 interface FacturareProps {
@@ -27,23 +33,30 @@ export default function Facturare({ comenzi }: FacturareProps) {
     const totalEstimat = comanda.totalEstimat;
     const totalFinal = areDiscount ? totalEstimat * 0.9 : totalEstimat; // Ex: 10% discount
 
-    alert(
-      `Factură generată pentru Comanda ${comanda.nrComanda}!\nTotal: ${totalFinal.toFixed(
-        2,
-      )} RON ${areDiscount ? '(Discount 10% aplicat)' : ''}`,
+    toast.success(
+      `Factură generată pentru ${comanda.nrComanda}. Total: ${totalFinal.toFixed(2)} RON ${areDiscount ? '(Discount 10% aplicat)' : ''}`,
     );
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-      <h2 className="text-2xl font-bold mb-2 text-slate-800">Facturare Comenzi (Așteptare)</h2>
-      <p className="text-slate-500 mb-6 text-sm">
-        Aici apar automat comenzile de service care au primit statusul "Gata de livrare"
-        sau "Livrat" în modulul Operațional.
-      </p>
-
-      <div className="overflow-hidden rounded-xl border border-slate-200">
-        <table className="min-w-full bg-white text-left text-sm">
+    <Card>
+      <CardHeader className="p-6 pb-0">
+        <PageHeader
+          className="mb-0"
+          title="Facturare Comenzi (Așteptare)"
+          description='Aici apar automat comenzile de service care au primit statusul "Gata de livrare" sau "Livrat" în modulul Operațional.'
+        />
+      </CardHeader>
+      <CardContent className="p-6 pt-6">
+        {comenziGata.length === 0 ? (
+          <EmptyState
+            icon={<ReceiptText className="h-5 w-5" />}
+            title="Nicio comandă eligibilă"
+            description="Trimite comenzile finalizate din Operațional pentru a le putea factura aici."
+          />
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-slate-200">
+            <table className="min-w-full bg-white text-left text-sm">
           <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
             <tr>
               <th className="py-3 px-4">Nr. Comandă</th>
@@ -54,14 +67,7 @@ export default function Facturare({ comenzi }: FacturareProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {comenziGata.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-6 text-center text-slate-500">
-                  Nicio comandă eligibilă pentru facturare.
-                </td>
-              </tr>
-            ) : (
-              comenziGata.map((comanda) => (
+            {comenziGata.map((comanda) => (
                 <tr key={comanda.idComanda} className="hover:bg-slate-50 transition-colors">
                   <td className="py-3 px-4 font-medium text-slate-800">{comanda.nrComanda}</td>
                   <td className="py-3 px-4 text-slate-500">{comanda.idVehicul}</td>
@@ -78,19 +84,20 @@ export default function Facturare({ comenzi }: FacturareProps) {
                     </label>
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <button 
+                    <Button
                       onClick={() => emiteFactura(comanda)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded shadow-sm text-xs font-semibold transition-colors"
+                      size="sm"
                     >
                       Emite Factură
-                    </button>
+                    </Button>
                   </td>
                 </tr>
-              ))
-            )}
+              ))}
           </tbody>
-        </table>
-      </div>
-    </div>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

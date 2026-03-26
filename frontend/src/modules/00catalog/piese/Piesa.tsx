@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 type TipPiesa = 'NOUA' | 'SH';
 
@@ -31,7 +32,7 @@ export default function Piesa() {
   const handleSalvare = (e: React.FormEvent) => {
     e.preventDefault();
     if (!codPiesa || !producator || !pretBaza) {
-      alert("Te rog completează câmpurile obligatorii (Cod, Producător, Preț)!");
+      toast.error('Te rog completează câmpurile obligatorii (Cod, Producător, Preț).');
       return;
     }
 
@@ -45,6 +46,7 @@ export default function Piesa() {
     };
 
     setPiese([nouaPiesa, ...piese]);
+    toast.success('Piesa a fost adăugată în catalog.');
     
     // Reset form
     setCodPiesa(''); setProducator(''); setPretBaza(''); setLuniGarantie(''); setGradUzura('');
