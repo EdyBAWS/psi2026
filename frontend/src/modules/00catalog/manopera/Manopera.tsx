@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface ManoperaItem {
   idManopera: number;
@@ -23,7 +24,7 @@ export default function Manopera() {
   const handleSalvare = (e: React.FormEvent) => {
     e.preventDefault();
     if (!codManopera || !durataStd) {
-      alert("Te rog completează ambele câmpuri!");
+      toast.error('Te rog completează ambele câmpuri.');
       return;
     }
 
@@ -35,6 +36,7 @@ export default function Manopera() {
 
     // Adăugăm în listă și resetăm formularul
     setListaManopera([nouaManopera, ...listaManopera]);
+    toast.success('Operațiunea de manoperă a fost adăugată.');
     setCodManopera('');
     setDurataStd('');
     setArataFormular(false);

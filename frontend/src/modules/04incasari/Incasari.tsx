@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import { toast } from 'sonner';
+import { Button } from '../../componente/ui/Button';
 
 interface FacturaRestanta {
   idFactura: number;
@@ -28,15 +30,17 @@ export default function Incasari() {
   const handleSalvare = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!clientSelectat || sumaIncasata === '') {
-      alert("Te rog completează clientul și suma încasată!");
+      toast.error('Te rog completează clientul și suma încasată.');
       return;
     }
     const totalAlocat = facturiRestante.reduce((acc, factura) => acc + (Number(factura.sumaAlocata) || 0), 0);
     if (totalAlocat > Number(sumaIncasata)) {
-      alert("Eroare! Suma alocată depășește suma totală încasată.");
+      toast.error('Suma alocată depășește suma totală încasată.');
       return;
     }
-    alert(`Tranzacție salvată cu succes!\nTotal încasat: ${sumaIncasata} RON.\nAlocat pe facturi: ${totalAlocat} RON.`);
+    toast.success(
+      `Tranzacție salvată. Total încasat: ${sumaIncasata} RON, alocat: ${totalAlocat} RON.`,
+    );
   };
 
   return (
@@ -140,12 +144,12 @@ export default function Incasari() {
 
         {/* Buton Salvare */}
         <div className="pt-6 flex justify-end">
-          <button 
+          <Button
             type="submit" 
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 hover:-translate-y-0.5 transition-all font-semibold text-sm tracking-wide"
+            size="lg"
           >
             Finalizează Tranzacția
-          </button>
+          </Button>
         </div>
       </form>
     </div>

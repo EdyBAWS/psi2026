@@ -1,122 +1,258 @@
 import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { Button } from '../../../componente/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../componente/ui/Card';
+import { EmptyState } from '../../../componente/ui/EmptyState';
+import { Field } from '../../../componente/ui/Field';
+import { PageHeader } from '../../../componente/ui/PageHeader';
+import { SelectField } from '../../../componente/ui/SelectField';
 import type { Client as ClientType } from '../../../types/entitati';
+import { clientSchema, type ClientFormValues } from '../schemas';
+
+const valoriInitiale: ClientFormValues = {
+  tipClient: 'PF',
+  telefon: '',
+  email: '',
+  adresa: '',
+  soldDebitor: 0,
+  CNP: '',
+  serieCI: '',
+  CUI: '',
+  IBAN: '',
+  nrRegCom: '',
+};
+
+const calculeazaUrmatorulIdClient = (clienti: ClientType[]) =>
+  clienti.reduce((maximCurent, client) => Math.max(maximCurent, client.idClient), 0) + 1;
 
 export default function Client() {
   const [clienti, setClienti] = useState<ClientType[]>([]);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
-  const [clientCurent, setClientCurent] = useState<Partial<ClientType>>({});
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [tipClientSelectat, setTipClientSelectat] = useState<ClientFormValues['tipClient']>('PF');
 
-  const handleSalvare = () => {
-    if (clientCurent.idClient) {
-      setClienti(clienti.map(c => c.idClient === clientCurent.idClient ? (clientCurent as ClientType) : c));
-    } else {
-      setClienti([...clienti, { ...clientCurent, idClient: Date.now() } as ClientType]);
-    }
-    setModLucru('vizualizare');
-    setClientCurent({});
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+    reset,
+  } = useForm<ClientFormValues>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: valoriInitiale,
+  });
+
+  const incepeAdaugare = () => {
+    setModLucru('adaugare');
+    setEditingId(null);
+    setTipClientSelectat('PF');
+    reset(valoriInitiale);
   };
+
+  const incepeEditare = (client: ClientType) => {
+    setModLucru('modificare');
+    setEditingId(client.idClient);
+    setTipClientSelectat(client.tipClient);
+    reset({
+      tipClient: client.tipClient,
+      telefon: client.telefon,
+      email: client.email,
+      adresa: client.adresa,
+      soldDebitor: client.soldDebitor,
+      CNP: client.CNP ?? '',
+      serieCI: client.serieCI ?? '',
+      CUI: client.CUI ?? '',
+      IBAN: client.IBAN ?? '',
+      nrRegCom: client.nrRegCom ?? '',
+    });
+  };
+
+  const revinoLaLista = () => {
+    setModLucru('vizualizare');
+    setEditingId(null);
+    setTipClientSelectat('PF');
+    reset(valoriInitiale);
+  };
+
+  const handleSalvare = handleSubmit((values) => {
+    const clientSalvat: ClientType = {
+      idClient: editingId ?? calculeazaUrmatorulIdClient(clienti),
+      ...values,
+      CNP: values.tipClient === 'PF' ? values.CNP || undefined : undefined,
+      serieCI: values.tipClient === 'PF' ? values.serieCI || undefined : undefined,
+      CUI: values.tipClient === 'PJ' ? values.CUI || undefined : undefined,
+      IBAN: values.tipClient === 'PJ' ? values.IBAN || undefined : undefined,
+      nrRegCom: values.tipClient === 'PJ' ? values.nrRegCom || undefined : undefined,
+    };
+
+    if (editingId !== null) {
+      setClienti((previous) =>
+        previous.map((client) => (client.idClient === editingId ? clientSalvat : client)),
+      );
+      toast.success('Clientul a fost actualizat.');
+    } else {
+      setClienti((previous) => [...previous, clientSalvat]);
+      toast.success('Clientul a fost adăugat.');
+    }
+
+    revinoLaLista();
+  });
 
   const handleStergere = (id: number) => {
     if (window.confirm('Sigur dorești să ștergi acest client?')) {
-      setClienti(clienti.filter(c => c.idClient !== id));
+      setClienti((previous) => previous.filter((client) => client.idClient !== id));
+      toast.success('Clientul a fost șters.');
     }
   };
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Gestiune Clienți</h1>
-        {modLucru === 'vizualizare' && (
-          <button 
-            onClick={() => { setModLucru('adaugare'); setClientCurent({ tipClient: 'PF', soldDebitor: 0 }); }}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-sm hover:bg-indigo-700 transition-colors"
-          >
-            + Adaugă Client
-          </button>
-        )}
-      </div>
+    <Card className="p-8">
+      <PageHeader
+        title="Gestiune Clienți"
+        description="Administrează clienții și datele necesare pentru facturare și relația comercială."
+        actions={
+          modLucru === 'vizualizare' ? (
+            <Button onClick={incepeAdaugare}>+ Adaugă Client</Button>
+          ) : null
+        }
+      />
 
       {modLucru === 'vizualizare' ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
-                <th className="p-4 font-semibold">Nume / CUI</th>
-                <th className="p-4 font-semibold">Tip</th>
-                <th className="p-4 font-semibold">Telefon</th>
-                <th className="p-4 font-semibold">Email</th>
-                <th className="p-4 font-semibold">Sold Debitor</th>
-                <th className="p-4 font-semibold text-center">Acțiuni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clienti.length === 0 ? (
-                <tr><td colSpan={6} className="p-8 text-center text-slate-400">Nu există clienți înregistrați.</td></tr>
-              ) : (
-                clienti.map(c => (
-                  <tr key={c.idClient} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="p-4 font-medium text-slate-700">{c.tipClient === 'PF' ? c.CNP : c.CUI}</td>
-                    <td className="p-4"><span className="bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs font-bold">{c.tipClient}</span></td>
-                    <td className="p-4 text-slate-600">{c.telefon}</td>
-                    <td className="p-4 text-slate-600">{c.email}</td>
-                    <td className="p-4 font-semibold text-slate-700">{c.soldDebitor} RON</td>
-                    <td className="p-4 flex justify-center gap-2">
-                      <button onClick={() => { setModLucru('modificare'); setClientCurent(c); }} className="text-indigo-600 hover:bg-indigo-50 px-3 py-1 rounded transition-colors text-sm font-medium">Editează</button>
-                      <button onClick={() => handleStergere(c.idClient)} className="text-red-600 hover:bg-red-50 px-3 py-1 rounded transition-colors text-sm font-medium">Șterge</button>
+        clienti.length === 0 ? (
+          <EmptyState
+            title="Nu există clienți"
+            description="Adaugă primul client pentru a începe gestiunea entităților."
+          />
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                <tr>
+                  <th className="p-4 font-semibold">Nume / CUI</th>
+                  <th className="p-4 font-semibold">Tip</th>
+                  <th className="p-4 font-semibold">Telefon</th>
+                  <th className="p-4 font-semibold">Email</th>
+                  <th className="p-4 font-semibold">Sold Debitor</th>
+                  <th className="p-4 text-center font-semibold">Acțiuni</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {clienti.map((client) => (
+                  <tr key={client.idClient} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-4 font-medium text-slate-700">
+                      {client.tipClient === 'PF' ? client.CNP : client.CUI}
+                    </td>
+                    <td className="p-4">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                        {client.tipClient}
+                      </span>
+                    </td>
+                    <td className="p-4 text-slate-600">{client.telefon}</td>
+                    <td className="p-4 text-slate-600">{client.email}</td>
+                    <td className="p-4 font-semibold text-slate-700">{client.soldDebitor} RON</td>
+                    <td className="p-4">
+                      <div className="flex justify-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => incepeEditare(client)}>
+                          Editează
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                          onClick={() => handleStergere(client.idClient)}
+                        >
+                          Șterge
+                        </Button>
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       ) : (
-        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-          <h2 className="text-xl font-semibold mb-4 text-slate-800">{modLucru === 'adaugare' ? 'Adăugare Client Nou' : 'Modificare Client'}</h2>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Tip Client</label>
-              <select value={clientCurent.tipClient} onChange={e => setClientCurent({...clientCurent, tipClient: e.target.value as 'PF'|'PJ'})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                <option value="PF">Persoană Fizică (PF)</option>
-                <option value="PJ">Persoană Juridică (PJ)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Telefon</label>
-              <input type="text" value={clientCurent.telefon || ''} onChange={e => setClientCurent({...clientCurent, telefon: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <input type="email" value={clientCurent.email || ''} onChange={e => setClientCurent({...clientCurent, email: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Adresă</label>
-              <input type="text" value={clientCurent.adresa || ''} onChange={e => setClientCurent({...clientCurent, adresa: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-            </div>
+        <Card className="border-slate-200 bg-slate-50 shadow-none">
+          <CardHeader>
+            <CardTitle className="text-xl">
+              {modLucru === 'adaugare' ? 'Adăugare Client Nou' : 'Modificare Client'}
+            </CardTitle>
+            <CardDescription>
+              Folosim `react-hook-form` și `zod` pentru validare predictibilă și mesaje clare de eroare.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSalvare} className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <SelectField
+                  label="Tip Client"
+                  value={tipClientSelectat}
+                  options={[
+                    { label: 'Persoană Fizică (PF)', value: 'PF' },
+                    { label: 'Persoană Juridică (PJ)', value: 'PJ' },
+                  ]}
+                  error={errors.tipClient?.message}
+                  {...register('tipClient', {
+                    onChange: (event) =>
+                      setTipClientSelectat(event.target.value as ClientFormValues['tipClient']),
+                  })}
+                />
+                <Field
+                  label="Telefon"
+                  error={errors.telefon?.message}
+                  {...register('telefon')}
+                />
+                <Field
+                  label="Email"
+                  type="email"
+                  error={errors.email?.message}
+                  {...register('email')}
+                />
+                <Field
+                  label="Adresă"
+                  error={errors.adresa?.message}
+                  {...register('adresa')}
+                />
+                {tipClientSelectat === 'PF' ? (
+                  <>
+                    <Field label="CNP" error={errors.CNP?.message} {...register('CNP')} />
+                    <Field
+                      label="Serie CI"
+                      error={errors.serieCI?.message}
+                      {...register('serieCI')}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Field label="CUI" error={errors.CUI?.message} {...register('CUI')} />
+                    <Field
+                      label="Nr. Reg. Comerțului"
+                      error={errors.nrRegCom?.message}
+                      {...register('nrRegCom')}
+                    />
+                    <Field label="IBAN" error={errors.IBAN?.message} {...register('IBAN')} />
+                  </>
+                )}
+                  <Field
+                    label="Sold Debitor (RON)"
+                    type="number"
+                    step="0.01"
+                    error={errors.soldDebitor?.message}
+                    {...register('soldDebitor', { valueAsNumber: true })}
+                />
+              </div>
 
-            {clientCurent.tipClient === 'PF' ? (
-              <>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">CNP</label><input type="text" value={clientCurent.CNP || ''} onChange={e => setClientCurent({...clientCurent, CNP: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">Serie CI</label><input type="text" value={clientCurent.serieCI || ''} onChange={e => setClientCurent({...clientCurent, serieCI: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
-              </>
-            ) : (
-              <>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">CUI</label><input type="text" value={clientCurent.CUI || ''} onChange={e => setClientCurent({...clientCurent, CUI: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">Nr. Reg. Comerțului</label><input type="text" value={clientCurent.nrRegCom || ''} onChange={e => setClientCurent({...clientCurent, nrRegCom: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1">IBAN</label><input type="text" value={clientCurent.IBAN || ''} onChange={e => setClientCurent({...clientCurent, IBAN: e.target.value})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
-              </>
-            )}
-            
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Sold Debitor (RON)</label><input type="number" value={clientCurent.soldDebitor || 0} onChange={e => setClientCurent({...clientCurent, soldDebitor: Number(e.target.value)})} className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
-          </div>
-
-          <div className="mt-6 flex gap-3">
-            <button onClick={handleSalvare} className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium">Salvează Datele</button>
-            <button onClick={() => setModLucru('vizualizare')} className="bg-white border border-slate-300 text-slate-700 px-6 py-2 rounded-lg hover:bg-slate-50 transition-colors font-medium">Renunță</button>
-          </div>
-        </div>
+              <div className="flex flex-wrap gap-3">
+                <Button type="submit">Salvează Datele</Button>
+                <Button type="button" variant="outline" onClick={revinoLaLista}>
+                  Renunță
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
-    </div>
+    </Card>
   );
 }

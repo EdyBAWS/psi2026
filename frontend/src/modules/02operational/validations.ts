@@ -11,6 +11,7 @@ import type {
   DetaliiPreluareForm,
   StareDosarAsigurare,
 } from './formState';
+import { detaliiPreluareSchema, dosarNouSchema } from './schemas';
 
 export interface ValidarePreluareInput {
   comandaActivaExistenta: ComandaService | null;
@@ -63,16 +64,7 @@ const dosarEsteValid = (
     return stareDosar.idDosarSelectat !== null;
   }
 
-  return (
-    stareDosar.idAsigurator !== null &&
-    stareDosar.numarReferintaAsigurator.trim() !== '' &&
-    stareDosar.inspectorDauna.trim() !== '' &&
-    stareDosar.dataConstatare !== '' &&
-    esteNumarCompletat(stareDosar.sumaAprobata) &&
-    stareDosar.sumaAprobata > 0 &&
-    esteNumarCompletat(stareDosar.franciza) &&
-    stareDosar.franciza >= 0
-  );
+  return dosarNouSchema.safeParse(stareDosar).success;
 };
 
 export function valideazaPreluare({
@@ -86,6 +78,7 @@ export function valideazaPreluare({
   vehiculSelectat,
 }: ValidarePreluareInput): ValidarePreluareResult {
   const dosarValid = dosarEsteValid(esteLucrareAsigurare, stareDosar);
+  const detaliiValide = detaliiPreluareSchema.safeParse(detaliiPreluare).success;
   const mesajeBlocare: string[] = [];
 
   if (!vehiculSelectat) {
@@ -99,16 +92,13 @@ export function valideazaPreluare({
   if (idMecanicSelectat === null) {
     mesajeBlocare.push('Alege mecanicul responsabil pentru lucrare.');
   }
-  if (
-    !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) ||
-    detaliiPreluare.kilometrajPreluare <= 0
-  ) {
+  if (!detaliiValide && (!esteNumarCompletat(detaliiPreluare.kilometrajPreluare) || detaliiPreluare.kilometrajPreluare <= 0)) {
     mesajeBlocare.push('Completează kilometrajul de preluare.');
   }
-  if (detaliiPreluare.simptomeReclamate.trim().length < 10) {
+  if (!detaliiValide && detaliiPreluare.simptomeReclamate.trim().length < 10) {
     mesajeBlocare.push('Descrie simptomele reclamate în minimum 10 caractere.');
   }
-  if (detaliiPreluare.termenPromis === '') {
+  if (!detaliiValide && detaliiPreluare.termenPromis === '') {
     mesajeBlocare.push('Setează un termen promis pentru livrare.');
   }
   if (

@@ -4,6 +4,7 @@
 // Un începător poate privi acest fișier ca pe "containerul" modulului:
 // el nu implementează fiecare pas din flux, ci doar coordonează paginile și datele comune.
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
   mockAsiguratori,
   mockCatalogKituri,
@@ -50,6 +51,7 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
       setDosare((previous) => [...previous, dosarNou]);
     }
     setPozitii((previous) => [...previous, ...pozitiiNoi]);
+    toast.success(`Comanda ${comanda.nrComanda} a fost deschisă cu succes.`);
     onNavigate('operational-comenzi');
   };
 
