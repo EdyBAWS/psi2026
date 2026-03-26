@@ -1,5 +1,8 @@
 import { useState } from 'react';
 
+// Centrul de notificări este momentan o listă de mesaje mock.
+// Nu are acțiuni complexe, dar oferă un loc vizibil unde pot ajunge
+// evenimente importante din celelalte module.
 export default function Notificare() {
   const [notificari] = useState([
     { id: 1, data: '2026-03-20', mesaj: 'Factura F-2026-001 a depășit scadența.', tip: 'Avertizare' },

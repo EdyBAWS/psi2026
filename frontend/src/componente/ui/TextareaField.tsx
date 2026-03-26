@@ -1,6 +1,9 @@
 import type { TextareaHTMLAttributes } from 'react';
 import { cn } from '../../lib/cn';
 
+// `TextareaField` completează familia de câmpuri comune.
+// Îl folosim pentru explicații mai lungi, observații sau descrieri,
+// păstrând același stil vizual ca la celelalte componente de formular.
 interface TextareaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   error?: string;
   hint?: string;

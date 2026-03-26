@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+// Acesta este un catalog local de operațiuni de manoperă.
+// Fluxul este intenționat simplu: utilizatorul adaugă rapid un cod și o durată standard.
 interface ManoperaItem {
   idManopera: number;
   codManopera: string;
@@ -28,13 +30,14 @@ export default function Manopera() {
       return;
     }
 
+    // În MVP folosim un id temporar și stocăm totul local în listă.
     const nouaManopera: ManoperaItem = {
       idManopera: Date.now(), // Generăm un ID temporar
       codManopera: codManopera.toUpperCase(),
       durataStd: Number(durataStd),
     };
 
-    // Adăugăm în listă și resetăm formularul
+    // Toast-ul înlocuiește vechiul `alert(...)` și lasă utilizatorul să continue fluxul.
     setListaManopera([nouaManopera, ...listaManopera]);
     toast.success('Operațiunea de manoperă a fost adăugată.');
     setCodManopera('');

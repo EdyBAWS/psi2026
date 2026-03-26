@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+// Aici ținem validările de "formă" pentru fluxul operațional.
+// Cu alte cuvinte, schema verifică dacă datele arată corect:
+// - dacă un câmp este completat
+// - dacă un număr este pozitiv
+// - dacă un text are lungimea minimă
+// Regulile mai "de business" rămân în `validations.ts`.
 export const detaliiPreluareSchema = z.object({
   kilometrajPreluare: z.union([
     z.number().positive('Completează kilometrajul de preluare.'),
@@ -18,6 +24,9 @@ export const detaliiPreluareSchema = z.object({
   tipPlata: z.enum(['Client Direct', 'Asigurare', 'Flota']),
 });
 
+// Schema de dosar nou validează doar cazul în care utilizatorul creează
+// un dosar de daună de la zero. Pentru dosarul existent, verificarea este mai simplă
+// și se face separat în flux.
 export const dosarNouSchema = z.object({
   idAsigurator: z.number().nullable().refine((value) => value !== null, {
     message: 'Selectează asiguratorul pentru dosarul nou.',

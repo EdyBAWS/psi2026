@@ -10,12 +10,16 @@ import { PageHeader } from '../../../componente/ui/PageHeader';
 import type { Asigurator as AsiguratorType } from '../../../types/entitati';
 import { asiguratorSchema, type AsiguratorFormValues } from '../schemas';
 
+// Formularul de asiguratori este cel mai simplu dintre entități,
+// dar folosește aceeași structură modernă ca restul: schema, RHF și toast-uri.
 const valoriInitiale: AsiguratorFormValues = {
   denumire: '',
   CUI: '',
   telefon: '',
 };
 
+// Și aici evităm `Date.now()` în logica de salvare și generăm id-ul
+// plecând de la elementele existente în listă.
 const calculeazaUrmatorulIdAsigurator = (asiguratori: AsiguratorType[]) =>
   asiguratori.reduce(
     (maximCurent, asigurator) => Math.max(maximCurent, asigurator.idAsigurator),
@@ -37,6 +41,8 @@ export default function Asigurator() {
     defaultValues: valoriInitiale,
   });
 
+  // `reset` readuce formularul la valorile inițiale, indiferent dacă am adăugat
+  // sau am editat un element.
   const incepeAdaugare = () => {
     setModLucru('adaugare');
     setEditingId(null);
@@ -60,6 +66,8 @@ export default function Asigurator() {
   };
 
   const handleSalvare = handleSubmit((values) => {
+    // Pentru asigurator nu avem câmpuri condiționale, deci obiectul final
+    // este aproape identic cu valorile validate din formular.
     const asiguratorSalvat: AsiguratorType = {
       idAsigurator: editingId ?? calculeazaUrmatorulIdAsigurator(asiguratori),
       ...values,

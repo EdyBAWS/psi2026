@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '../../../componente/ui/Button';
 
-// Interfețe pentru Penalizări
+// Modulul calculează o factură de penalizare pornind de la o factură restantă.
+// Este încă un ecran local/demo, dar explică bine cum ar arăta un flux comercial
+// separat de operațional.
+
+// Interfețele locale de mai jos descriu doar datele necesare acestui ecran.
 interface Client {
   idClient: number;
   nume: string;
@@ -19,7 +23,7 @@ interface FacturaRestanta {
 }
 
 const Penalizare: React.FC = () => {
-  // State-uri
+  // State-ul ține selecția utilizatorului și valorile pentru formula de calcul.
   const [clientSelectat, setClientSelectat] = useState<number | ''>('');
   const [facturaSelectata, setFacturaSelectata] = useState<FacturaRestanta | null>(null);
   const [zileIntarziere, setZileIntarziere] = useState<number>(0);
@@ -63,13 +67,14 @@ const Penalizare: React.FC = () => {
       toast.error('Te rog selectează o factură și introdu zilele de întârziere.');
       return;
     }
-    // Aici va veni INSERT în FACTURA și FACTURA_PENALIZARE
+    // Într-o versiune cu backend, aici ar veni salvarea documentului de penalizare.
     console.log('Factură Penalizare Generată:', {
       idFacturaRest: facturaSelectata.idFactura,
       zileIntarziere,
       procentPenalizare,
       valoareTotala: valoarePenalizare
     });
+    // Până la integrarea reală, toast-ul este confirmarea vizuală a operațiunii simulate.
     toast.success(
       `Factura de penalizare în valoare de ${valoarePenalizare.toFixed(2)} RON a fost generată.`,
     );

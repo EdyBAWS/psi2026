@@ -77,10 +77,16 @@ export function valideazaPreluare({
   totalEstimat,
   vehiculSelectat,
 }: ValidarePreluareInput): ValidarePreluareResult {
+  // Separăm rezultatul în două categorii:
+  // - blocări: utilizatorul nu poate salva
+  // - avertizări: utilizatorul poate salva, dar merită atenționat
   const dosarValid = dosarEsteValid(esteLucrareAsigurare, stareDosar);
   const detaliiValide = detaliiPreluareSchema.safeParse(detaliiPreluare).success;
   const mesajeBlocare: string[] = [];
 
+  // Validările de mai jos combină reguli de structură cu reguli de business.
+  // De exemplu, schema știe dacă un text este prea scurt,
+  // dar aici decidem dacă lipsa lui chiar blochează salvarea fluxului.
   if (!vehiculSelectat) {
     mesajeBlocare.push('Selectează un vehicul înainte de a continua fluxul.');
   }
@@ -122,6 +128,8 @@ export function valideazaPreluare({
 
   const mesajeAvertizare: string[] = [];
   if (pozitiiDraft.some((pozitie) => !pozitie.disponibilitateStoc)) {
+    // Lipsa de stoc nu blochează deschiderea comenzii,
+    // dar este important să semnalăm riscul din timp.
     mesajeAvertizare.push(
       'Există poziții fără stoc local. Comanda poate fi salvată, dar va intra cel mai probabil în status Așteaptă piese.',
     );

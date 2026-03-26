@@ -2,6 +2,9 @@ import type { ReactNode } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/cn';
 
+// `StatCard` este folosit pentru mici rezumate numerice din dashboard-uri și liste.
+// Tonul (`info`, `warning`, `success` etc.) schimbă doar aspectul,
+// nu și logica din spate a valorii afișate.
 const statCardVariants = cva('rounded-xl border px-4 py-3', {
   variants: {
     tone: {

@@ -1,6 +1,9 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 
+// `PageHeader` standardizează antetul paginilor și al secțiunilor mari.
+// În stânga punem titlul și descrierea, iar în dreapta putem trimite butoane
+// sau alte acțiuni prin prop-ul `actions`.
 interface PageHeaderProps extends HTMLAttributes<HTMLDivElement> {
   actions?: ReactNode;
   description?: string;

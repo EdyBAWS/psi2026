@@ -11,6 +11,7 @@ import { SelectField } from '../../../componente/ui/SelectField';
 import type { Angajat as AngajatType } from '../../../types/entitati';
 import { angajatSchema, type AngajatFormValues } from '../schemas';
 
+// Valorile inițiale sunt sursa unică pentru resetarea formularului.
 const valoriInitiale: AngajatFormValues = {
   nume: '',
   prenume: '',
@@ -26,13 +27,16 @@ const valoriInitiale: AngajatFormValues = {
   tura: '',
 };
 
+// Calculăm următorul id în mod determinist din lista curentă.
 const calculeazaUrmatorulIdAngajat = (angajati: AngajatType[]) =>
   angajati.reduce((maximCurent, angajat) => Math.max(maximCurent, angajat.idAngajat), 0) + 1;
 
+// Pagina gestionează local lista de angajați și formularul de adăugare/editare.
 export default function Angajat() {
   const [angajati, setAngajati] = useState<AngajatType[]>([]);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Rolul selectat influențează direct ce grup de câmpuri este vizibil.
   const [tipAngajatSelectat, setTipAngajatSelectat] =
     useState<AngajatFormValues['tipAngajat']>('Mecanic');
 
@@ -46,6 +50,7 @@ export default function Angajat() {
     defaultValues: valoriInitiale,
   });
 
+  // Adăugarea pornește dintr-un formular gol.
   const incepeAdaugare = () => {
     setModLucru('adaugare');
     setEditingId(null);
@@ -54,6 +59,7 @@ export default function Angajat() {
   };
 
   const incepeEditare = (angajat: AngajatType) => {
+    // La editare populăm formularul cu datele deja existente.
     setModLucru('modificare');
     setEditingId(angajat.idAngajat);
     setTipAngajatSelectat(angajat.tipAngajat);
@@ -81,6 +87,8 @@ export default function Angajat() {
   };
 
   const handleSalvare = handleSubmit((values) => {
+    // Aici convertim datele de formular în obiectul final salvat în listă.
+    // Câmpurile opționale sunt păstrate doar dacă au sens pentru rolul ales.
     const angajatSalvat: AngajatType = {
       idAngajat: editingId ?? calculeazaUrmatorulIdAngajat(angajati),
       ...values,
@@ -231,6 +239,7 @@ export default function Angajat() {
 
                 {tipAngajatSelectat === 'Manager' ? (
                   <>
+                    {/* Managerul are propriile câmpuri specifice. */}
                     <Field
                       label="Departament"
                       error={errors.departament?.message}
@@ -249,6 +258,7 @@ export default function Angajat() {
 
                 {tipAngajatSelectat === 'Mecanic' ? (
                   <>
+                    {/* Pentru mecanic ne interesează specializarea și costul orar. */}
                     <Field
                       label="Specializare"
                       error={errors.specializare?.message}
@@ -267,6 +277,7 @@ export default function Angajat() {
 
                 {tipAngajatSelectat === 'Receptioner' ? (
                   <>
+                    {/* Recepționerul are alte date relevante decât mecanicul sau managerul. */}
                     <Field
                       label="Nr. Birou"
                       error={errors.nrBirou?.message}

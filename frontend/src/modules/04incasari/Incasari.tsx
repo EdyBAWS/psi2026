@@ -2,6 +2,11 @@ import { useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { Button } from '../../componente/ui/Button';
 
+// Ecranul de încasări simulează alocarea unei sume primite pe mai multe facturi restante.
+// Este un exemplu bun pentru colegii începători de flux cu:
+// - antet de tranzacție
+// - listă de linii editabile
+// - validare înainte de salvare
 interface FacturaRestanta {
   idFactura: number;
   numar: string;
@@ -21,6 +26,8 @@ export default function Incasari() {
   ]);
 
   const handleAlocareSuma = (idFactura: number, valoare: string) => {
+    // Păstrăm `''` cât timp input-ul este gol, ca să nu forțăm automat valoarea 0
+    // în timp ce utilizatorul editează câmpul.
     const valoareNumerica = valoare === '' ? '' : Number(valoare);
     setFacturiRestante(facturiRestante.map(factura => 
       factura.idFactura === idFactura ? { ...factura, sumaAlocata: valoareNumerica } : factura
@@ -38,6 +45,7 @@ export default function Incasari() {
       toast.error('Suma alocată depășește suma totală încasată.');
       return;
     }
+    // Confirmarea rămâne locală și non-blocantă, fără `alert(...)`.
     toast.success(
       `Tranzacție salvată. Total încasat: ${sumaIncasata} RON, alocat: ${totalAlocat} RON.`,
     );
