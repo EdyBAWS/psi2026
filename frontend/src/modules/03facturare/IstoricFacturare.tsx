@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 
-// Structura pentru tranzacțiile tale de facturare
 interface TranzactieIstoric {
   id: string;
   dataOra: string;
@@ -45,10 +44,9 @@ export default function IstoricFacturare() {
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
       <div className="flex justify-between items-end mb-8 border-b border-slate-100 pb-6">
         <div>
-          {/* AM MODIFICAT TITLURILE AICI */}
           <h2 className="text-2xl font-bold text-slate-800">Istoric Facturare</h2>
           <p className="text-slate-500 mt-1 text-sm">
-            Monitorizarea documentelor emise în modulul de facturare (Facturi, Storno, Penalizări, Oferte).
+            Monitorizarea documentelor emise în modulul de facturare.
           </p>
         </div>
         <div className="text-right">
@@ -60,20 +58,10 @@ export default function IstoricFacturare() {
       <div className="flex flex-col md:flex-row gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
         <div className="flex-1 relative">
           <svg className="w-5 h-5 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          <input 
-            type="text" 
-            placeholder="Caută după client sau număr document (ex: F-SAG...)"
-            className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <input type="text" placeholder="Caută după client sau număr document..." className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
         <div className="w-full md:w-64">
-          <select 
-            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm font-medium text-slate-700"
-            value={filtruTip}
-            onChange={(e) => setFiltruTip(e.target.value)}
-          >
+          <select className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm font-medium text-slate-700" value={filtruTip} onChange={(e) => setFiltruTip(e.target.value)}>
             <option value="Toate">Toate Operațiunile</option>
             <option value="Facturare Comandă">Doar Facturări</option>
             <option value="Penalizare">Doar Penalizări</option>

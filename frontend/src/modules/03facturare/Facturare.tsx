@@ -1,8 +1,15 @@
 import { useState, useMemo } from 'react';
-import { mockComenzi } from '../02operational/mockData';
-import type { ComandaService } from '../02operational/types';
 
-// Simulăm structura pentru detaliile unei comenzi (ce se aduce din POZITIE_COMANDA)
+// Am definit tipul exact în loc de 'any'
+interface ComandaAsteptare {
+  idComanda: number;
+  nrComanda: string;
+  dataComanda: string;
+  idVehicul: number;
+  status: string;
+  totalEstimat: number;
+}
+
 interface LinieFactura {
   id: number;
   tip: 'Piesă' | 'Manoperă';
@@ -12,22 +19,18 @@ interface LinieFactura {
 }
 
 export default function Facturare() {
-  // Punem date manuale doar ca să vedem formularul cum funcționează
-const [comenziGata, setComenziGata] = useState<any[]>([
-  { idComanda: 991, nrComanda: 'CMD-2026-088', dataComanda: '2026-03-24', idVehicul: 12, status: 'Finalizat', totalEstimat: 1550 },
-  { idComanda: 992, nrComanda: 'CMD-2026-089', dataComanda: '2026-03-25', idVehicul: 5, status: 'Finalizat', totalEstimat: 840 }
-]);
+  const [comenziGata, setComenziGata] = useState<ComandaAsteptare[]>([
+    { idComanda: 991, nrComanda: 'CMD-2026-088', dataComanda: '2026-03-24', idVehicul: 12, status: 'Finalizat', totalEstimat: 1550 },
+    { idComanda: 992, nrComanda: 'CMD-2026-089', dataComanda: '2026-03-25', idVehicul: 5, status: 'Finalizat', totalEstimat: 840 }
+  ]);
   
-  // Starea pentru Master-Detail: dacă avem o comandă selectată, deschidem formularul complex
-  const [comandaSelectata, setComandaSelectata] = useState<ComandaService | null>(null);
+  const [comandaSelectata, setComandaSelectata] = useState<ComandaAsteptare | null>(null);
   
-  // Detaliile facturii
   const [serieFactura, setSerieFactura] = useState('F-SAG');
   const [numarFactura, setNumarFactura] = useState('');
-  const [termenPlata, setTermenPlata] = useState<number>(0); // 0 = pe loc, 15, 30 zile
+  const [termenPlata, setTermenPlata] = useState<number>(0); 
   const [discountProcent, setDiscountProcent] = useState<number>(0);
 
-  // Generăm niște linii "mock" (în realitate se fac JOIN-uri în baza de date cu POZITIE_COMANDA)
   const liniiFactura: LinieFactura[] = useMemo(() => {
     if (!comandaSelectata) return [];
     return [
@@ -38,14 +41,12 @@ const [comenziGata, setComenziGata] = useState<any[]>([
     ];
   }, [comandaSelectata]);
 
-  // Calcule Financiare Live
   const { subtotal, valoareTVA, valoareDiscount, totalPlata, dataScadenta } = useMemo(() => {
     const sub = liniiFactura.reduce((acc, linie) => acc + (linie.cantitate * linie.pretUnitar), 0);
     const disc = sub * (discountProcent / 100);
     const subDupaDiscount = sub - disc;
-    const tva = subDupaDiscount * 0.19; // TVA 19%
+    const tva = subDupaDiscount * 0.19;
     
-    // Calcul Data Scadentă
     const dataAzi = new Date();
     dataAzi.setDate(dataAzi.getDate() + termenPlata);
     
@@ -54,11 +55,10 @@ const [comenziGata, setComenziGata] = useState<any[]>([
       valoareDiscount: disc,
       valoareTVA: tva,
       totalPlata: subDupaDiscount + tva,
-      dataScadenta: dataAzi.toISOString().split('T')[0] // format YYYY-MM-DD
+      dataScadenta: dataAzi.toISOString().split('T')[0]
     };
   }, [liniiFactura, discountProcent, termenPlata]);
 
-  // Finalizarea Tranzacției
   const handleEmitereFactura = () => {
     if (!serieFactura || !numarFactura) {
       alert('Te rog completează seria și numărul facturii!');
@@ -66,16 +66,13 @@ const [comenziGata, setComenziGata] = useState<any[]>([
     }
 
     alert(`Tranzacție Finalizată!\nFactura ${serieFactura}-${numarFactura} emisă.\nTotal Creanță: ${totalPlata.toFixed(2)} RON.\nScadență: ${dataScadenta}`);
-    
-    // Eliminăm comanda din lista de "așteptare" simulând update-ul în baza de date
     setComenziGata(prev => prev.filter(c => c.idComanda !== comandaSelectata?.idComanda));
-    setComandaSelectata(null); // Închidem formularul
+    setComandaSelectata(null);
   };
 
   return (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
       
-      {/* HEADER DINAMIC */}
       <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">
@@ -88,16 +85,12 @@ const [comenziGata, setComenziGata] = useState<any[]>([
           </p>
         </div>
         {comandaSelectata && (
-          <button 
-            onClick={() => setComandaSelectata(null)}
-            className="text-slate-500 hover:text-slate-800 transition-colors font-medium bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg"
-          >
+          <button onClick={() => setComandaSelectata(null)} className="text-slate-500 hover:text-slate-800 transition-colors font-medium bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg">
             ← Înapoi la listă
           </button>
         )}
       </div>
 
-      {/* VIEW 1: LISTA COMENZILOR */}
       {!comandaSelectata ? (
         <div className="overflow-hidden rounded-xl border border-slate-200">
           <table className="min-w-full bg-white text-left text-sm">
@@ -121,14 +114,11 @@ const [comenziGata, setComenziGata] = useState<any[]>([
                 comenziGata.map((comanda) => (
                   <tr key={comanda.idComanda} className="hover:bg-indigo-50/50 transition-colors group">
                     <td className="py-4 px-6 font-bold text-slate-800">{comanda.nrComanda}</td>
-                    <td className="py-4 px-6 text-slate-500">24 Mar 2026</td>
+                    <td className="py-4 px-6 text-slate-500">26 Mar 2026</td>
                     <td className="py-4 px-6 text-slate-600">Vehicul #{comanda.idVehicul}</td>
                     <td className="py-4 px-6 text-right font-semibold text-slate-700">{comanda.totalEstimat.toFixed(2)} RON</td>
                     <td className="py-4 px-6 text-center">
-                      <button 
-                        onClick={() => setComandaSelectata(comanda)}
-                        className="text-indigo-600 hover:text-indigo-800 font-bold text-sm tracking-wide hover:underline"
-                      >
+                      <button onClick={() => setComandaSelectata(comanda)} className="text-indigo-600 hover:text-indigo-800 font-bold text-sm tracking-wide hover:underline">
                         Deschide Factura ➔
                       </button>
                     </td>
@@ -139,11 +129,7 @@ const [comenziGata, setComenziGata] = useState<any[]>([
           </table>
         </div>
       ) : (
-
-      /* VIEW 2: FORMULARUL COMPLEX DE FACTURARE (MASTER-DETAIL) */
         <div className="space-y-8 animate-fade-in">
-          
-          {/* SECȚIUNEA 1: Datele Facturii (Scadențar) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Seria</label>
@@ -167,7 +153,6 @@ const [comenziGata, setComenziGata] = useState<any[]>([
             </div>
           </div>
 
-          {/* SECȚIUNEA 2: Detaliile Comenzii (Liniile Facturii) */}
           <div>
             <h3 className="text-lg font-bold text-slate-800 mb-3">Linii Factură (Extrase din Deviz)</h3>
             <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -200,29 +185,15 @@ const [comenziGata, setComenziGata] = useState<any[]>([
             </div>
           </div>
 
-          {/* SECȚIUNEA 3: Totaluri și Salvare */}
           <div className="flex flex-col md:flex-row justify-between items-end gap-6 pt-4 border-t border-slate-100">
-            {/* Zona de Discount */}
             <div className="w-full md:w-1/3">
               <label className="block text-sm font-semibold text-slate-700 mb-1">Aplică Discount Comercial (%)</label>
               <div className="flex gap-2">
-                <input 
-                  type="number" 
-                  min="0" max="100" 
-                  value={discountProcent} 
-                  onChange={e => setDiscountProcent(Number(e.target.value))} 
-                  className="w-24 border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 text-center font-bold" 
-                />
-                <button 
-                  onClick={() => setDiscountProcent(0)}
-                  className="text-xs text-slate-500 hover:text-red-500 underline"
-                >
-                  Anulează Discount
-                </button>
+                <input type="number" min="0" max="100" value={discountProcent} onChange={e => setDiscountProcent(Number(e.target.value))} className="w-24 border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 text-center font-bold" />
+                <button onClick={() => setDiscountProcent(0)} className="text-xs text-slate-500 hover:text-red-500 underline">Anulează Discount</button>
               </div>
             </div>
 
-            {/* Zona de Calcule Totaluri */}
             <div className="w-full md:w-1/3 bg-slate-800 p-6 rounded-xl shadow-lg text-white space-y-2">
               <div className="flex justify-between text-sm text-slate-300">
                 <span>Subtotal (fără TVA):</span>
@@ -246,14 +217,10 @@ const [comenziGata, setComenziGata] = useState<any[]>([
           </div>
 
           <div className="flex justify-end pt-4">
-             <button 
-               onClick={handleEmitereFactura}
-               className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all font-bold text-lg tracking-wide"
-             >
+             <button onClick={handleEmitereFactura} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all font-bold text-lg tracking-wide">
                ✔ Emite și Salvează Factura
              </button>
           </div>
-
         </div>
       )}
     </div>
