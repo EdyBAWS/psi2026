@@ -9,8 +9,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
   const [meniuriDeschise, setMeniuriDeschise] = useState<string[]>(['Catalog', 'Facturare']);
 
   const toggleMeniu = (numeMeniu: string) => {
-    // Acesta este un operator ternar:
-    // `conditie ? variantaA : variantaB`.
     setMeniuriDeschise(prev => 
       prev.includes(numeMeniu) 
         ? prev.filter(m => m !== numeMeniu)
@@ -40,8 +38,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       titlu: 'Operațional',
       icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3a1.5 1.5 0 00-1.42 1.02l-.3.86a1.5 1.5 0 01-.95.95l-.86.3a1.5 1.5 0 000 2.84l.86.3a1.5 1.5 0 01.95.95l.3.86a1.5 1.5 0 002.84 0l.3-.86a1.5 1.5 0 01.95-.95l.86-.3a1.5 1.5 0 000-2.84l-.86-.3a1.5 1.5 0 01-.95-.95l-.3-.86A1.5 1.5 0 009.75 3zm8.25 9.75a1.5 1.5 0 00-1.42 1.02l-.12.33a1.5 1.5 0 01-.95.95l-.33.12a1.5 1.5 0 000 2.84l.33.12a1.5 1.5 0 01.95.95l.12.33a1.5 1.5 0 002.84 0l.12-.33a1.5 1.5 0 01.95-.95l.33-.12a1.5 1.5 0 000-2.84l-.33-.12a1.5 1.5 0 01-.95-.95l-.12-.33A1.5 1.5 0 0018 12.75z" />,
       subItems: [
-        { id: 'operational-preluare', label: 'Preluare Auto' },
-        { id: 'operational-comenzi', label: 'Gestiune Comenzi' }
+        { id: 'operational', label: 'Recepție & Comenzi' }
       ]
     },
     {
@@ -50,7 +47,9 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       subItems: [
         { id: 'facturare-comenzi', label: 'Comenzi (Emitere)' },
         { id: 'facturare-campanii', label: 'Campanii / Oferte' },
-        { id: 'facturare-penalizari', label: 'Penalizări Întârziere' }
+        { id: 'facturare-penalizari', label: 'Penalizări Întârziere' },
+        // L-AM ADĂUGAT AICI, ÎN PĂTRĂȚICA TA
+        { id: 'facturare-istoric', label: 'Istoric Facturare' } 
       ]
     },
     {
@@ -59,14 +58,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       subItems: [
         { id: 'incasari', label: 'Registru Încasări' }
       ]
-    },
-    {
-      titlu: 'Istoric & Audit',
-      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />,
-      subItems: [
-        { id: 'istoric', label: 'Jurnal Tranzacții' }
-      ]
     }
+    // AM ȘTERS COMPLET CATEGORIA VECHE DE "Istoric & Audit" DE AICI DE JOS
   ];
 
   return (
@@ -79,15 +72,12 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       </div>
 
       <nav className="flex-1 px-4 py-6 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        
-        {/* `map(...)` transformă lista de categorii în mai multe blocuri JSX. */}
         {categorii.map((categorie) => {
           const isDeschis = meniuriDeschise.includes(categorie.titlu);
           const hasActiveChild = categorie.subItems.some(item => item.id === paginaCurenta);
 
           return (
             <div key={categorie.titlu} className="space-y-1">
-              {/* `key` îl ajută pe React să recunoască fiecare element din listă. */}
               <button
                 onClick={() => toggleMeniu(categorie.titlu)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold text-sm ${
@@ -106,8 +96,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
               </button>
 
               {isDeschis && (
-                // `&&` în JSX înseamnă:
-                // "afișează partea din dreapta doar dacă stânga este adevărată".
                 <div className="pl-11 pr-2 py-1 space-y-1">
                   {categorie.subItems.map((item) => (
                     <button
@@ -128,7 +116,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
           );
         })}
 
-        {/* Notificări */}
         <button
           onClick={() => setPagina('notificari')}
           className={`w-full flex items-center px-4 py-3 rounded-xl transition-all font-semibold text-sm mt-4 ${
@@ -140,7 +127,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
           </svg>
           Notificări
         </button>
-
       </nav>
 
       <div className="p-6 text-sm text-slate-500 border-t border-slate-800/60 flex items-center">

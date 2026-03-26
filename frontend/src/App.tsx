@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import Sidebar from './componente/Sidebar';
 import Operational from './modules/02operational/Operational';
-import { mockComenzi } from './modules/02operational/mockData';
 import Facturare from './modules/03facturare/Facturare';
 import Incasari from './modules/04incasari/Incasari';
 import Penalizare from './modules/03facturare/penalizari/Penalizare';
@@ -9,43 +8,34 @@ import Oferta from './modules/03facturare/oferte/Oferta';
 import Piesa from './modules/00catalog/piese/Piesa';
 import Manopera from './modules/00catalog/manopera/Manopera';
 
-// Noile importuri
 import Client from './modules/01entitati/clienti/Client';
 import Angajat from './modules/01entitati/angajati/Angajat';
 import Asigurator from './modules/01entitati/asiguratori/Asigurator';
 import Notificare from './modules/05notificari/Notificare';
 
-// AICI AM ADĂUGAT IMPORTUL PENTRU ISTORIC
-import Istoric from './modules/06istoric/istoric';
+// IMPORTUL ACTUALIZAT CĂTRE NOUL TĂU ISTORIC IZOLAT
+import IstoricFacturare from './modules/03facturare/IstoricFacturare';
 
 export default function App() {
   const [paginaCurenta, setPaginaCurenta] = useState<string>('facturare-comenzi');
 
   const randeazaPagina = () => {
     switch (paginaCurenta) {
-      // Entitati
       case 'entitati-clienti': return <Client />;
       case 'entitati-angajati': return <Angajat />;
       case 'entitati-asiguratori': return <Asigurator />;
-      // Operational
-      case 'operational-preluare':
-        return <Operational view="preluare-auto" onNavigate={setPaginaCurenta} />;
-      case 'operational-comenzi':
-        return <Operational view="gestiune-comenzi" onNavigate={setPaginaCurenta} />;
-      // Facturare
-      case 'facturare-comenzi': return <Facturare comenzi={mockComenzi} />;
+      case 'operational': return <Operational onNavigate={setPaginaCurenta} view="preluare-auto" />;
+      
+      // AICI SUNT MODULELE TALE DIN PĂTRĂȚICA DE FACTURARE
+      case 'facturare-comenzi': return <Facturare />;
       case 'facturare-penalizari': return <Penalizare />;
       case 'facturare-campanii': return <Oferta />;
-      // Incasari
+      case 'facturare-istoric': return <IstoricFacturare />; // RUTA NOUĂ
+      
       case 'incasari': return <Incasari />;
-      // Catalog
       case 'catalog-piese': return <Piesa />;
       case 'catalog-manopera': return <Manopera />;
-      // Notificari
       case 'notificari': return <Notificare />;
-      
-      // AICI AM ADĂUGAT RUTA PENTRU ISTORIC
-      case 'istoric': return <Istoric />;
       
       default:
         return (
