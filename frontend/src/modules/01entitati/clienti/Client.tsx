@@ -11,10 +11,10 @@ import { SelectField } from '../../../componente/ui/SelectField';
 import type { Client as ClientType } from '../../../types/entitati';
 import { clientSchema, type ClientFormValues } from '../schemas';
 
-// Valorile inițiale sunt separate de componentă pentru a putea fi refolosite
-// la reset și pentru a păstra mai clar "cum arată formularul gol".
 const valoriInitiale: ClientFormValues = {
   tipClient: 'PF',
+  nume: '',
+  prenume: '',
   telefon: '',
   email: '',
   adresa: '',
@@ -26,22 +26,13 @@ const valoriInitiale: ClientFormValues = {
   nrRegCom: '',
 };
 
-// Generăm noul id pe baza datelor deja existente din listă.
-// Facem asta pentru că este o metodă stabilă și predictibilă în UI local,
-// iar lint-ul React nu mai semnalează funcții impure precum `Date.now()`
-// în logica de construire a obiectului.
 const calculeazaUrmatorulIdClient = (clienti: ClientType[]) =>
   clienti.reduce((maximCurent, client) => Math.max(maximCurent, client.idClient), 0) + 1;
 
-// Această pagină este un CRUD local pentru clienți.
-// Ea folosește `react-hook-form` pentru colectarea datelor
-// și `zod` pentru regulile de validare.
 export default function Client() {
   const [clienti, setClienti] = useState<ClientType[]>([]);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
   const [editingId, setEditingId] = useState<number | null>(null);
-  // Tipul selectat este ținut separat pentru că ne trebuie imediat în UI
-  // ca să știm ce câmpuri condiționale să afișăm.
   const [tipClientSelectat, setTipClientSelectat] = useState<ClientFormValues['tipClient']>('PF');
 
   const {
@@ -54,7 +45,6 @@ export default function Client() {
     defaultValues: valoriInitiale,
   });
 
-  // În modul de adăugare pornim de la formularul gol și revenim la tipul implicit.
   const incepeAdaugare = () => {
     setModLucru('adaugare');
     setEditingId(null);
@@ -63,12 +53,13 @@ export default function Client() {
   };
 
   const incepeEditare = (client: ClientType) => {
-    // La editare facem invers: luăm obiectul existent și îl "împingem" în formular.
     setModLucru('modificare');
     setEditingId(client.idClient);
     setTipClientSelectat(client.tipClient);
     reset({
       tipClient: client.tipClient,
+      nume: client.nume ?? '',
+      prenume: client.prenume ?? '',
       telefon: client.telefon,
       email: client.email,
       adresa: client.adresa,
@@ -89,12 +80,11 @@ export default function Client() {
   };
 
   const handleSalvare = handleSubmit((values) => {
-    // `handleSubmit` rulează validarea și ne dă aici doar valorile deja trecute
-    // prin schema `zod`.
-    // În acest pas construim obiectul final care va intra în lista locală.
     const clientSalvat: ClientType = {
       idClient: editingId ?? calculeazaUrmatorulIdClient(clienti),
       ...values,
+      // Curățăm datele nerelevante în funcție de tipul clientului
+      prenume: values.tipClient === 'PF' ? values.prenume || undefined : undefined,
       CNP: values.tipClient === 'PF' ? values.CNP || undefined : undefined,
       serieCI: values.tipClient === 'PF' ? values.serieCI || undefined : undefined,
       CUI: values.tipClient === 'PJ' ? values.CUI || undefined : undefined,
@@ -103,13 +93,11 @@ export default function Client() {
     };
 
     if (editingId !== null) {
-      // Editarea înlocuiește doar elementul cu același id.
       setClienti((previous) =>
         previous.map((client) => (client.idClient === editingId ? clientSalvat : client)),
       );
       toast.success('Clientul a fost actualizat.');
     } else {
-      // Adăugarea creează un element nou și îl pune în listă.
       setClienti((previous) => [...previous, clientSalvat]);
       toast.success('Clientul a fost adăugat.');
     }
@@ -147,10 +135,9 @@ export default function Client() {
             <table className="w-full text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
                 <tr>
-                  <th className="p-4 font-semibold">Nume / CUI</th>
-                  <th className="p-4 font-semibold">Tip</th>
-                  <th className="p-4 font-semibold">Telefon</th>
-                  <th className="p-4 font-semibold">Email</th>
+                  <th className="p-4 font-semibold">Nume Client / Companie</th>
+                  <th className="p-4 font-semibold text-center">Tip</th>
+                  <th className="p-4 font-semibold">Contact</th>
                   <th className="p-4 font-semibold">Sold Debitor</th>
                   <th className="p-4 text-center font-semibold">Acțiuni</th>
                 </tr>
@@ -158,17 +145,26 @@ export default function Client() {
               <tbody className="divide-y divide-slate-100">
                 {clienti.map((client) => (
                   <tr key={client.idClient} className="hover:bg-slate-50 transition-colors">
-                    <td className="p-4 font-medium text-slate-700">
-                      {client.tipClient === 'PF' ? client.CNP : client.CUI}
+                    <td className="p-4">
+                      <div className="font-bold text-slate-800">
+                        {client.tipClient === 'PF' ? `${client.nume} ${client.prenume || ''}` : client.nume}
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 mt-1">
+                        {client.tipClient === 'PF' ? `CNP: ${client.CNP}` : `CUI: ${client.CUI}`}
+                      </div>
+                    </td>
+                    <td className="p-4 align-middle">
+                      <div className="flex justify-center">
+                        <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">
+                          {client.tipClient}
+                        </span>
+                      </div>
                     </td>
                     <td className="p-4">
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                        {client.tipClient}
-                      </span>
+                      <div className="text-slate-700 font-medium">{client.telefon}</div>
+                      <div className="text-slate-500 text-xs">{client.email}</div>
                     </td>
-                    <td className="p-4 text-slate-600">{client.telefon}</td>
-                    <td className="p-4 text-slate-600">{client.email}</td>
-                    <td className="p-4 font-semibold text-slate-700">{client.soldDebitor} RON</td>
+                    <td className="p-4 font-bold text-slate-800">{client.soldDebitor} RON</td>
                     <td className="p-4">
                       <div className="flex justify-center gap-2">
                         <Button variant="ghost" size="sm" onClick={() => incepeEditare(client)}>
@@ -197,15 +193,13 @@ export default function Client() {
               {modLucru === 'adaugare' ? 'Adăugare Client Nou' : 'Modificare Client'}
             </CardTitle>
             <CardDescription>
-              Folosim `react-hook-form` și `zod` pentru validare predictibilă și mesaje clare de eroare.
+              Alege tipul clientului pentru a afișa câmpurile corespunzătoare.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSalvare} className="space-y-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {/* Câmpurile PF / PJ se schimbă în funcție de tipul selectat.
-                    Ținem această logică aici pentru ca utilizatorul să vadă
-                    doar câmpurile relevante pentru cazul lui. */}
+                
                 <SelectField
                   label="Tip Client"
                   value={tipClientSelectat}
@@ -219,44 +213,38 @@ export default function Client() {
                       setTipClientSelectat(event.target.value as ClientFormValues['tipClient']),
                   })}
                 />
-                <Field
-                  label="Telefon"
-                  error={errors.telefon?.message}
-                  {...register('telefon')}
-                />
-                <Field
-                  label="Email"
-                  type="email"
-                  error={errors.email?.message}
-                  {...register('email')}
-                />
-                <Field
-                  label="Adresă"
-                  error={errors.adresa?.message}
-                  {...register('adresa')}
-                />
+                
+                {/* Spațiu gol pentru a alinia frumos grid-ul */}
+                <div className="hidden md:block"></div>
+
                 {tipClientSelectat === 'PF' ? (
                   <>
+                    <Field label="Nume (Familie)" error={errors.nume?.message} {...register('nume')} />
+                    <Field label="Prenume" error={errors.prenume?.message} {...register('prenume')} />
                     <Field label="CNP" error={errors.CNP?.message} {...register('CNP')} />
-                    <Field
-                      label="Serie CI"
-                      error={errors.serieCI?.message}
-                      {...register('serieCI')}
-                    />
+                    <Field label="Serie CI" error={errors.serieCI?.message} {...register('serieCI')} />
                   </>
                 ) : (
                   <>
+                    <div className="md:col-span-2">
+                      <Field label="Denumire Companie" error={errors.nume?.message} {...register('nume')} />
+                    </div>
                     <Field label="CUI" error={errors.CUI?.message} {...register('CUI')} />
-                    <Field
-                      label="Nr. Reg. Comerțului"
-                      error={errors.nrRegCom?.message}
-                      {...register('nrRegCom')}
-                    />
-                    <Field label="IBAN" error={errors.IBAN?.message} {...register('IBAN')} />
+                    <Field label="Nr. Reg. Comerțului" error={errors.nrRegCom?.message} {...register('nrRegCom')} />
+                    <div className="md:col-span-2">
+                      <Field label="Cont IBAN" error={errors.IBAN?.message} {...register('IBAN')} />
+                    </div>
                   </>
                 )}
-                {/* `valueAsNumber` face conversia din text în număr înainte ca
-                    datele să ajungă în schema de validare. */}
+
+                <div className="md:col-span-2 mt-2 mb-2"><hr className="border-slate-200"/></div>
+
+                <Field label="Telefon" error={errors.telefon?.message} {...register('telefon')} />
+                <Field label="Email" type="email" error={errors.email?.message} {...register('email')} />
+                <div className="md:col-span-2">
+                  <Field label="Adresă" error={errors.adresa?.message} {...register('adresa')} />
+                </div>
+                
                 <Field
                   label="Sold Debitor (RON)"
                   type="number"
@@ -266,7 +254,7 @@ export default function Client() {
                 />
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 pt-4">
                 <Button type="submit">Salvează Datele</Button>
                 <Button type="button" variant="outline" onClick={revinoLaLista}>
                   Renunță

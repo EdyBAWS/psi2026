@@ -11,9 +11,11 @@ const mesajTelefon = 'Introdu un număr de telefon valid.';
 export const clientSchema = z
   .object({
     tipClient: z.enum(['PF', 'PJ']),
+    nume: z.string().min(2, 'Numele trebuie să aibă minim 2 caractere'),      
+    prenume: z.string().optional(),
     telefon: z.string().trim().min(6, mesajTelefon),
     email: z.string().trim().email(mesajEmail),
-    adresa: z.string().trim().min(5, 'Adresa este obligatorie.'),
+    adresa: z.string().trim().min(4, 'Adresa este obligatorie.'),
     soldDebitor: z.number().min(0, 'Soldul debitor nu poate fi negativ.'),
     CNP: z.string().trim().optional(),
     serieCI: z.string().trim().optional(),

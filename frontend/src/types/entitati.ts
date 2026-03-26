@@ -4,6 +4,8 @@
 export interface Client {
   idClient: number;
   tipClient: 'PF' | 'PJ';
+  nume: string;      
+  prenume?: string;
   telefon: string;
   email: string;
   adresa: string;
