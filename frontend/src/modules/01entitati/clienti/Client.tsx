@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import { Building2, Users } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '../../../componente/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../componente/ui/Card';
+import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
 import { EmptyState } from '../../../componente/ui/EmptyState';
 import { Field } from '../../../componente/ui/Field';
 import { PageHeader } from '../../../componente/ui/PageHeader';
 import { SelectField } from '../../../componente/ui/SelectField';
+import { StatCard } from '../../../componente/ui/StatCard';
+import { clientiEntitateMock } from '../../../mock/entitati';
 import type { Client as ClientType } from '../../../types/entitati';
 import { clientSchema, type ClientFormValues } from '../schemas';
 
@@ -37,9 +41,10 @@ const calculeazaUrmatorulIdClient = (clienti: ClientType[]) =>
 // Ea folosește `react-hook-form` pentru colectarea datelor
 // și `zod` pentru regulile de validare.
 export default function Client() {
-  const [clienti, setClienti] = useState<ClientType[]>([]);
+  const [clienti, setClienti] = useState<ClientType[]>(clientiEntitateMock);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [idClientPentruStergere, setIdClientPentruStergere] = useState<number | null>(null);
   // Tipul selectat este ținut separat pentru că ne trebuie imediat în UI
   // ca să știm ce câmpuri condiționale să afișăm.
   const [tipClientSelectat, setTipClientSelectat] = useState<ClientFormValues['tipClient']>('PF');
@@ -117,12 +122,18 @@ export default function Client() {
     revinoLaLista();
   });
 
-  const handleStergere = (id: number) => {
-    if (window.confirm('Sigur dorești să ștergi acest client?')) {
-      setClienti((previous) => previous.filter((client) => client.idClient !== id));
-      toast.success('Clientul a fost șters.');
-    }
+  const handleStergere = () => {
+    if (idClientPentruStergere === null) return;
+    setClienti((previous) =>
+      previous.filter((client) => client.idClient !== idClientPentruStergere),
+    );
+    setIdClientPentruStergere(null);
+    toast.success('Clientul a fost șters.');
   };
+
+  const totalPf = clienti.filter((client) => client.tipClient === 'PF').length;
+  const totalPj = clienti.length - totalPf;
+  const soldTotal = clienti.reduce((total, client) => total + client.soldDebitor, 0);
 
   return (
     <Card className="p-8">
@@ -136,11 +147,19 @@ export default function Client() {
         }
       />
 
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <StatCard label="Total clienți" value={clienti.length} icon={<Users className="h-4 w-4" />} />
+        <StatCard label="Persoane juridice" value={totalPj} tone="info" icon={<Building2 className="h-4 w-4" />} />
+        <StatCard label="Sold total" value={`${soldTotal} RON`} tone="warning" />
+      </div>
+
       {modLucru === 'vizualizare' ? (
         clienti.length === 0 ? (
           <EmptyState
             title="Nu există clienți"
             description="Adaugă primul client pentru a începe gestiunea entităților."
+            actionLabel="Adaugă client"
+            onAction={incepeAdaugare}
           />
         ) : (
           <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -178,7 +197,7 @@ export default function Client() {
                           variant="outline"
                           size="sm"
                           className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                          onClick={() => handleStergere(client.idClient)}
+                          onClick={() => setIdClientPentruStergere(client.idClient)}
                         >
                           Șterge
                         </Button>
@@ -276,6 +295,15 @@ export default function Client() {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        isOpen={idClientPentruStergere !== null}
+        title="Ștergi clientul?"
+        description="Acțiunea elimină clientul din lista demo locală a modulului de entități."
+        confirmLabel="Șterge"
+        onCancel={() => setIdClientPentruStergere(null)}
+        onConfirm={handleStergere}
+      />
     </Card>
   );
 }

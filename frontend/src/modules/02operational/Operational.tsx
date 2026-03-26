@@ -12,7 +12,7 @@ import {
   mockMecanici,
   mockPozitii,
   mockVehicule,
-} from './mockData';
+} from '../../mock/operational';
 import { comandaEsteActiva } from './calculations';
 import GestiuneComenzi from './pages/GestiuneComenzi';
 import PreluareAuto, { type SalvarePreluarePayload } from './pages/PreluareAuto';
