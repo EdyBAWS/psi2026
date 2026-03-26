@@ -123,6 +123,9 @@ export default function SelectorDosar({
         </div>
       ) : null}
 
+      {/* Aici folosim randare condițională cu `? :`.
+          Dacă modul este `existent`, afișăm selectorul de dosare existente.
+          Altfel, afișăm formularul pentru dosar nou. */}
       {value.mod === 'existent' ? (
         <div className="space-y-4">
           {/* În acest mod, utilizatorul doar alege un dosar deja cunoscut. */}
@@ -131,11 +134,14 @@ export default function SelectorDosar({
               Selectează dosarul existent
             </label>
             <select
+              // `?? ''` este un fallback: dacă nu avem un id selectat, dropdown-ul rămâne gol.
               value={value.idDosarSelectat ?? ''}
               onChange={(event) =>
                 onChange({
                   ...value,
                   idDosarSelectat:
+                    // `event.target.value` vine ca text din browser.
+                    // Îl transformăm în `null` sau `number`, după caz.
                     event.target.value === '' ? null : Number(event.target.value),
                 })
               }

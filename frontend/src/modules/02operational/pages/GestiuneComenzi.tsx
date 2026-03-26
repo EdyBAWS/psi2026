@@ -151,6 +151,7 @@ export default function GestiuneComenzi({
   ).length;
 
   return (
+    // React va afișa exact interfața pe care această componentă o întoarce prin `return`.
     <section className="space-y-6">
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -253,6 +254,7 @@ export default function GestiuneComenzi({
         </div>
       </div>
 
+      {/* Și aici folosim randare condițională cu operatorul ternar. */}
       {comenziFiltrate.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
           Nu există comenzi care să corespundă filtrelor aplicate.

@@ -169,6 +169,133 @@ Exemplu:
 
 Această separare permite cod mai clar și mai ușor de testat.
 
+## Mini-ghid de onboarding pentru începători
+
+### Ce este JSX
+
+JSX este felul în care React descrie interfața. Arată ca HTML, dar este scris în interiorul codului JavaScript/TypeScript.
+
+Exemplu:
+
+```tsx
+return <div>Salut</div>;
+```
+
+Aici:
+- `return` înseamnă "întoarce această interfață"
+- `div` este un container generic
+- textul `Salut` va fi afișat în pagină
+
+### Ce înseamnă `return (...)` într-o componentă
+
+O componentă React este o funcție. Ce întoarce acea funcție prin `return` este interfața pe care React o afișează.
+
+### Tag-uri HTML/JSX întâlnite des
+
+- `div`: container generic pentru gruparea elementelor
+- `span`: container mic, bun pentru texte scurte sau badge-uri inline
+- `p`: paragraf de text
+- `button`: buton pe care utilizatorul poate da click
+- `input`: câmp în care utilizatorul scrie o valoare
+- `select`: dropdown din care utilizatorul alege o opțiune
+- `option`: o opțiune dintr-un `select`
+- `table`: tabel pentru date pe coloane
+- `thead`: capul tabelului
+- `tbody`: corpul tabelului
+- `tr`: un rând din tabel
+- `th`: o celulă de header
+- `td`: o celulă normală
+
+Structura tipică a unui tabel este:
+
+```tsx
+<table>
+  <thead>
+    <tr>
+      <th>Coloană</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Valoare</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+### Ce înseamnă acoladele `{ ... }` în JSX
+
+În JSX, acoladele înseamnă: "execută aici o expresie JavaScript și afișează rezultatul".
+
+Exemple:
+
+```tsx
+<p>{numeClient}</p>
+<p>{formatSuma(total)}</p>
+```
+
+### Operatori frecvenți în cod
+
+- `conditie ? A : B`
+  - operator ternar
+  - dacă condiția este adevărată, folosește `A`, altfel `B`
+- `valoareA || valoareB`
+  - folosește `valoareB` dacă `valoareA` este goală / falsy
+- `valoareA ?? valoareB`
+  - folosește `valoareB` doar dacă `valoareA` este `null` sau `undefined`
+- `conditie && rezultat`
+  - afișează / evaluează partea din dreapta doar dacă stânga este adevărată
+
+### Ce face `.map(...)`
+
+`.map(...)` este o metodă de array care transformă fiecare element dintr-o listă în altceva.
+
+În React, este folosită foarte des pentru a genera mai multe bucăți de interfață:
+
+```tsx
+{pozitii.map((pozitie) => (
+  <tr key={pozitie.id}>
+    <td>{pozitie.nume}</td>
+  </tr>
+))}
+```
+
+Aici, pentru fiecare `pozitie`, React creează câte un rând de tabel.
+
+### De ce există `key={...}` în liste
+
+Când generăm mai multe elemente cu `.map(...)`, React are nevoie de un identificator stabil pentru fiecare element. Acesta este `key`.
+
+Fără `key`, React nu poate actualiza lista corect și apare warning.
+
+### Ce este `event.target.value`
+
+Când utilizatorul schimbă un `input` sau un `select`, React trimite un `event`.
+
+`event.target.value` este valoarea curentă din acel câmp.
+
+Exemplu:
+
+```tsx
+onChange={(event) => setNume(event.target.value)}
+```
+
+### Ce este un callback
+
+Un callback este o funcție trimisă altei componente, ca acea componentă să poată anunța ceva înapoi.
+
+Exemplu:
+
+```tsx
+<SelectorVehicul onSelecteaza={setIdVehiculSelectat} />
+```
+
+Aici, `SelectorVehicul` nu decide singur ce face aplicația mai departe. El doar apelează callback-ul `onSelecteaza(...)`, iar componenta părinte decide ce actualizează.
+
+### De ce folosim `className` și nu `class`
+
+În React/JSX folosim `className` pentru clase CSS, deoarece `class` este un cuvânt special în JavaScript.
+
 ## Feedback în UI
 
 Proiectul folosește `sonner` pentru feedback non-blocant:
