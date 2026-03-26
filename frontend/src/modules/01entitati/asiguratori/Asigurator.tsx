@@ -79,21 +79,21 @@ export default function Asigurator() {
           asigurator.idAsigurator === editingId ? asiguratorSalvat : asigurator,
         ),
       );
-      toast.success('Asigurătorul a fost actualizat.');
+      toast.success('Asiguratorul a fost actualizat.');
     } else {
       setAsiguratori((previous) => [...previous, asiguratorSalvat]);
-      toast.success('Asigurătorul a fost adăugat.');
+      toast.success('Asiguratorul a fost adăugat.');
     }
 
     revinoLaLista();
   });
 
   const handleStergere = (id: number) => {
-    if (window.confirm('Ștergi acest asigurător?')) {
+    if (window.confirm('Ștergi acest asigurator?')) {
       setAsiguratori((previous) =>
         previous.filter((asigurator) => asigurator.idAsigurator !== id),
       );
-      toast.success('Asigurătorul a fost șters.');
+      toast.success('Asiguratorul a fost șters.');
     }
   };
 
@@ -101,11 +101,11 @@ export default function Asigurator() {
     <Card className="p-8">
       <PageHeader
         title="Societăți Asigurare"
-        description="Gestionează asigurătorii folosiți în dosarele de daună și fluxurile comerciale."
+        description="Gestionează asiguratorii folosiți în dosarele de daună și fluxurile comerciale."
         actions={
           modLucru === 'vizualizare' ? (
             <Button type="button" onClick={incepeAdaugare}>
-              + Adaugă Asigurător
+              + Adaugă Asigurator
             </Button>
           ) : null
         }
@@ -114,8 +114,8 @@ export default function Asigurator() {
       {modLucru === 'vizualizare' ? (
         asiguratori.length === 0 ? (
           <EmptyState
-            title="Nu există asigurători"
-            description="Adaugă primul asigurător pentru a-l putea lega de dosarele de daună."
+            title="Nu există asiguratori"
+            description="Adaugă primul asigurator pentru a-l putea lega de dosarele de daună."
           />
         ) : (
           <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -170,7 +170,7 @@ export default function Asigurator() {
         <Card className="max-w-2xl border-slate-200 bg-slate-50 shadow-none">
           <CardHeader>
             <CardTitle className="text-xl">
-              {modLucru === 'adaugare' ? 'Adăugare Asigurător' : 'Modificare Asigurător'}
+              {modLucru === 'adaugare' ? 'Adăugare Asigurator' : 'Modificare Asigurator'}
             </CardTitle>
             <CardDescription>
               Formularul folosește schema `zod` pentru câmpurile esențiale.

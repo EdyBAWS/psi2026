@@ -31,7 +31,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       subItems: [
         { id: 'entitati-clienti', label: 'Clienți' },
         { id: 'entitati-angajati', label: 'Angajați' },
-        { id: 'entitati-asiguratori', label: 'Asigurători' }
+        { id: 'entitati-asiguratori', label: 'Asiguratori' }
       ]
     },
     {
