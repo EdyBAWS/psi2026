@@ -31,9 +31,67 @@ const valoriInitiale: AngajatFormValues = {
 const calculeazaUrmatorulIdAngajat = (angajati: AngajatType[]) =>
   angajati.reduce((maximCurent, angajat) => Math.max(maximCurent, angajat.idAngajat), 0) + 1;
 
+const angajatiInitiali: AngajatType[] = [
+  {
+    idAngajat: 1,
+    nume: 'Ionescu',
+    prenume: 'Mihai',
+    CNP: '1820101223344',
+    telefon: '0721 100 201',
+    email: 'mihai.ionescu@serviceautog.ro',
+    tipAngajat: 'Mecanic',
+    specializare: 'Mecanică generală',
+    costOrar: 170,
+  },
+  {
+    idAngajat: 2,
+    nume: 'Popa',
+    prenume: 'Andrei',
+    CNP: '1840615223344',
+    telefon: '0721 100 202',
+    email: 'andrei.popa@serviceautog.ro',
+    tipAngajat: 'Mecanic',
+    specializare: 'Tinichigerie și vopsitorie',
+    costOrar: 210,
+  },
+  {
+    idAngajat: 3,
+    nume: 'Marin',
+    prenume: 'Elena',
+    CNP: '2860226223344',
+    telefon: '0721 100 203',
+    email: 'elena.marin@serviceautog.ro',
+    tipAngajat: 'Receptioner',
+    nrBirou: 'R-02',
+    tura: 'Dimineață',
+  },
+  {
+    idAngajat: 4,
+    nume: 'Dumitrescu',
+    prenume: 'Sorin',
+    CNP: '1811111223344',
+    telefon: '0721 100 204',
+    email: 'sorin.dumitrescu@serviceautog.ro',
+    tipAngajat: 'Manager',
+    departament: 'Operațional',
+    sporConducere: 1500,
+  },
+  {
+    idAngajat: 5,
+    nume: 'Neagu',
+    prenume: 'Alexandra',
+    CNP: '2890305223344',
+    telefon: '0721 100 205',
+    email: 'alexandra.neagu@serviceautog.ro',
+    tipAngajat: 'Mecanic',
+    specializare: 'Electrică și AC',
+    costOrar: 230,
+  },
+];
+
 // Pagina gestionează local lista de angajați și formularul de adăugare/editare.
 export default function Angajat() {
-  const [angajati, setAngajati] = useState<AngajatType[]>([]);
+  const [angajati, setAngajati] = useState<AngajatType[]>(angajatiInitiali);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
   const [editingId, setEditingId] = useState<number | null>(null);
   // Rolul selectat influențează direct ce grup de câmpuri este vizibil.
