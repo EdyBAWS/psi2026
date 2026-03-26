@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ import { clientSchema, type ClientFormValues } from '../schemas';
 
 const valoriInitiale: ClientFormValues = {
   tipClient: 'PF',
+  status: 'Activ',
   nume: '',
   prenume: '',
   telefon: '',
@@ -35,15 +36,70 @@ export default function Client() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [tipClientSelectat, setTipClientSelectat] = useState<ClientFormValues['tipClient']>('PF');
 
-  const {
-    formState: { errors },
-    handleSubmit,
-    register,
-    reset,
-  } = useForm<ClientFormValues>({
+  // --- STATURI NOI PENTRU FUNCȚIONALITĂȚI AVANSATE ---
+  const [searchTerm, setSearchTerm] = useState('');
+  const [arataInactivi, setArataInactivi] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof ClientType; direction: 'asc' | 'desc' } | null>(null);
+  const [paginaCurenta, setPaginaCurenta] = useState(1);
+  const inregistrariPePagina = 10;
+
+  const { formState: { errors }, handleSubmit, register, reset } = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
     defaultValues: valoriInitiale,
   });
+
+  // --- LOGICA DE PROCESARE A DATELOR (Filtrare -> Sortare -> Paginare) ---
+  const dateProcesate = useMemo(() => {
+    // 1. Filtrare (Căutare + Status)
+    const prelucrate = clienti.filter(c => {
+      const matchStatus = arataInactivi ? true : c.status === 'Activ';
+      const term = searchTerm.toLowerCase();
+      const matchCautare = 
+        c.nume.toLowerCase().includes(term) ||
+        (c.prenume && c.prenume.toLowerCase().includes(term)) ||
+        (c.CUI && c.CUI.toLowerCase().includes(term)) ||
+        (c.CNP && c.CNP.toLowerCase().includes(term)) ||
+        c.telefon.includes(term);
+      
+      return matchStatus && matchCautare;
+    });
+
+    // 2. Sortare
+    if (sortConfig !== null) {
+      prelucrate.sort((a, b) => {
+        const aValue = a[sortConfig.key] ?? '';
+        const bValue = b[sortConfig.key] ?? '';
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        }
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+        return 0;
+      });
+    }
+    return prelucrate;
+  }, [clienti, searchTerm, sortConfig, arataInactivi]);
+
+  // 3. Paginare
+  const totalPagini = Math.ceil(dateProcesate.length / inregistrariPePagina) || 1;
+  const clientiPaginati = dateProcesate.slice((paginaCurenta - 1) * inregistrariPePagina, paginaCurenta * inregistrariPePagina);
+
+  // Funcție de sortare la click pe capul de tabel
+  const handleSort = (key: keyof ClientType) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Săgeți pentru UI Sortare
+  const getSortIcon = (key: keyof ClientType) => {
+    if (sortConfig?.key !== key) return <span className="text-slate-300 ml-1">↕</span>;
+    return sortConfig.direction === 'asc' ? <span className="text-indigo-600 ml-1">↑</span> : <span className="text-indigo-600 ml-1">↓</span>;
+  };
 
   const incepeAdaugare = () => {
     setModLucru('adaugare');
@@ -57,13 +113,9 @@ export default function Client() {
     setEditingId(client.idClient);
     setTipClientSelectat(client.tipClient);
     reset({
-      tipClient: client.tipClient,
-      nume: client.nume ?? '',
+      ...client,
+      status: client.status ?? 'Activ',
       prenume: client.prenume ?? '',
-      telefon: client.telefon,
-      email: client.email,
-      adresa: client.adresa,
-      soldDebitor: client.soldDebitor,
       CNP: client.CNP ?? '',
       serieCI: client.serieCI ?? '',
       CUI: client.CUI ?? '',
@@ -83,7 +135,6 @@ export default function Client() {
     const clientSalvat: ClientType = {
       idClient: editingId ?? calculeazaUrmatorulIdClient(clienti),
       ...values,
-      // Curățăm datele nerelevante în funcție de tipul clientului
       prenume: values.tipClient === 'PF' ? values.prenume || undefined : undefined,
       CNP: values.tipClient === 'PF' ? values.CNP || undefined : undefined,
       serieCI: values.tipClient === 'PF' ? values.serieCI || undefined : undefined,
@@ -93,23 +144,27 @@ export default function Client() {
     };
 
     if (editingId !== null) {
-      setClienti((previous) =>
-        previous.map((client) => (client.idClient === editingId ? clientSalvat : client)),
-      );
+      setClienti((prev) => prev.map((c) => (c.idClient === editingId ? clientSalvat : c)));
       toast.success('Clientul a fost actualizat.');
     } else {
-      setClienti((previous) => [...previous, clientSalvat]);
+      setClienti((prev) => [...prev, clientSalvat]);
       toast.success('Clientul a fost adăugat.');
     }
-
     revinoLaLista();
   });
 
-  const handleStergere = (id: number) => {
-    if (window.confirm('Sigur dorești să ștergi acest client?')) {
-      setClienti((previous) => previous.filter((client) => client.idClient !== id));
-      toast.success('Clientul a fost șters.');
-    }
+  // --- Funcția de SOFT DELETE ---
+  const handleToggleStatus = (id: number) => {
+    setClienti((prev) =>
+      prev.map((c) => {
+        if (c.idClient === id) {
+          const noulStatus = c.status === 'Activ' ? 'Inactiv' : 'Activ';
+          toast.success(`Clientul a fost marcat ca ${noulStatus}.`);
+          return { ...c, status: noulStatus };
+        }
+        return c;
+      })
+    );
   };
 
   return (
@@ -125,81 +180,151 @@ export default function Client() {
       />
 
       {modLucru === 'vizualizare' ? (
-        clienti.length === 0 ? (
-          <EmptyState
-            title="Nu există clienți"
-            description="Adaugă primul client pentru a începe gestiunea entităților."
-          />
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
-                <tr>
-                  <th className="p-4 font-semibold">Nume Client / Companie</th>
-                  <th className="p-4 font-semibold text-center">Tip</th>
-                  <th className="p-4 font-semibold">Contact</th>
-                  <th className="p-4 font-semibold">Sold Debitor</th>
-                  <th className="p-4 text-center font-semibold">Acțiuni</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {clienti.map((client) => (
-                  <tr key={client.idClient} className="hover:bg-slate-50 transition-colors">
-                    <td className="p-4">
-                      <div className="font-bold text-slate-800">
-                        {client.tipClient === 'PF' ? `${client.nume} ${client.prenume || ''}` : client.nume}
-                      </div>
-                      <div className="text-xs font-medium text-slate-500 mt-1">
-                        {client.tipClient === 'PF' ? `CNP: ${client.CNP}` : `CUI: ${client.CUI}`}
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div className="flex justify-center">
-                        <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">
-                          {client.tipClient}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="text-slate-700 font-medium">{client.telefon}</div>
-                      <div className="text-slate-500 text-xs">{client.email}</div>
-                    </td>
-                    <td className="p-4 font-bold text-slate-800">{client.soldDebitor} RON</td>
-                    <td className="p-4">
-                      <div className="flex justify-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => incepeEditare(client)}>
-                          Editează
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                          onClick={() => handleStergere(client.idClient)}
-                        >
-                          Șterge
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          {/* BARA DE CĂUTARE ȘI FILTRE */}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="w-full sm:w-96 relative">
+              <svg className="w-5 h-5 absolute left-3 top-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Caută nume, CUI, CNP, telefon..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setPaginaCurenta(1); }}
+                className="w-full border border-slate-200 pl-10 p-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="arataInactivi" 
+                checked={arataInactivi} 
+                onChange={(e) => { setArataInactivi(e.target.checked); setPaginaCurenta(1); }}
+                className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+              />
+              <label htmlFor="arataInactivi" className="text-sm text-slate-600 cursor-pointer font-medium">
+                Afișează și clienții inactivi
+              </label>
+            </div>
           </div>
-        )
+
+          {clientiPaginati.length === 0 ? (
+            <EmptyState
+              title="Niciun rezultat găsit"
+              description="Nu am găsit clienți care să corespundă filtrelor tale."
+            />
+          ) : (
+            <>
+              {/* TABELUL CU SORTARE */}
+              <div className="overflow-x-auto rounded-xl border border-slate-200 mb-4">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                    <tr>
+                      <th className="p-4 font-semibold cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('nume')}>
+                        Nume Client / Companie {getSortIcon('nume')}
+                      </th>
+                      <th className="p-4 font-semibold text-center cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('tipClient')}>
+                        Tip {getSortIcon('tipClient')}
+                      </th>
+                      <th className="p-4 font-semibold">Contact</th>
+                      <th className="p-4 font-semibold cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('soldDebitor')}>
+                        Sold Debitor {getSortIcon('soldDebitor')}
+                      </th>
+                      <th className="p-4 font-semibold text-center">Status</th>
+                      <th className="p-4 text-center font-semibold">Acțiuni</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {clientiPaginati.map((client) => (
+                      <tr key={client.idClient} className={`transition-colors ${client.status === 'Inactiv' ? 'bg-slate-50 opacity-60' : 'hover:bg-slate-50'}`}>
+                        <td className="p-4">
+                          <div className="font-bold text-slate-800">
+                            {client.tipClient === 'PF' ? `${client.nume} ${client.prenume || ''}` : client.nume}
+                          </div>
+                          <div className="text-xs font-medium text-slate-500 mt-1">
+                            {client.tipClient === 'PF' ? `CNP: ${client.CNP}` : `CUI: ${client.CUI}`}
+                          </div>
+                        </td>
+                        <td className="p-4 align-middle">
+                          <div className="flex justify-center">
+                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">
+                              {client.tipClient}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="text-slate-700 font-medium">{client.telefon}</div>
+                          <div className="text-slate-500 text-xs">{client.email}</div>
+                        </td>
+                        <td className="p-4 font-bold text-slate-800">{client.soldDebitor} RON</td>
+                        <td className="p-4 text-center">
+                           <span className={`px-2 py-1 rounded text-xs font-bold ${client.status === 'Activ' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                             {client.status}
+                           </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex justify-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => incepeEditare(client)}>
+                              Editează
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={client.status === 'Activ' ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'}
+                              onClick={() => handleToggleStatus(client.idClient)}
+                            >
+                              {client.status === 'Activ' ? 'Dezactivează' : 'Reactivează'}
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* PAGINARE */}
+              <div className="flex items-center justify-between border-t border-slate-200 pt-4">
+                <span className="text-sm text-slate-500">
+                  Se afișează {((paginaCurenta - 1) * inregistrariPePagina) + 1} - {Math.min(paginaCurenta * inregistrariPePagina, dateProcesate.length)} din {dateProcesate.length} clienți
+                </span>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setPaginaCurenta(p => Math.max(1, p - 1))}
+                    disabled={paginaCurenta === 1}
+                  >
+                    Înapoi
+                  </Button>
+                  <span className="flex items-center px-4 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg border border-slate-200">
+                    Pagina {paginaCurenta} din {totalPagini}
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setPaginaCurenta(p => Math.min(totalPagini, p + 1))}
+                    disabled={paginaCurenta === totalPagini}
+                  >
+                    Înainte
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </>
       ) : (
         <Card className="border-slate-200 bg-slate-50 shadow-none">
           <CardHeader>
             <CardTitle className="text-xl">
               {modLucru === 'adaugare' ? 'Adăugare Client Nou' : 'Modificare Client'}
             </CardTitle>
-            <CardDescription>
-              Alege tipul clientului pentru a afișa câmpurile corespunzătoare.
-            </CardDescription>
+            <CardDescription>Alege tipul clientului pentru a afișa câmpurile corespunzătoare.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSalvare} className="space-y-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                
                 <SelectField
                   label="Tip Client"
                   value={tipClientSelectat}
@@ -209,12 +334,13 @@ export default function Client() {
                   ]}
                   error={errors.tipClient?.message}
                   {...register('tipClient', {
-                    onChange: (event) =>
-                      setTipClientSelectat(event.target.value as ClientFormValues['tipClient']),
+                    onChange: (event) => setTipClientSelectat(event.target.value as ClientFormValues['tipClient']),
                   })}
                 />
                 
-                {/* Spațiu gol pentru a alinia frumos grid-ul */}
+                {/* Status-ul se setează ascuns, clienții noi sunt activi implicit */}
+                <input type="hidden" value="Activ" {...register('status')} />
+
                 <div className="hidden md:block"></div>
 
                 {tipClientSelectat === 'PF' ? (
