@@ -24,7 +24,14 @@ export default function App() {
       case 'entitati-clienti': return <Client />;
       case 'entitati-angajati': return <Angajat />;
       case 'entitati-asiguratori': return <Asigurator />;
-      case 'operational': return <Operational onNavigate={setPaginaCurenta} view="preluare-auto" />;
+      
+      // --- AICI AM ADĂUGAT CELE 2 RUTE NOI PENTRU OPERAȚIONAL ---
+      case 'operational-receptie': 
+        return <Operational onNavigate={setPaginaCurenta} view="preluare-auto" />;
+      case 'operational-comenzi': 
+        // Am presupus că view-ul din interiorul lui Operational se numește "gestiune-comenzi"
+        // Dacă în interiorul lui Operational.tsx foloseai alt cuvânt (ex: "comenzi"), îl poți schimba mai jos.
+        return <Operational onNavigate={setPaginaCurenta} view="gestiune-comenzi" />;
       
       // AICI SUNT MODULELE TALE DIN PĂTRĂȚICA DE FACTURARE
       case 'facturare-comenzi': return <Facturare />;

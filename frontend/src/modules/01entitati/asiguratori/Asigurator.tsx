@@ -105,7 +105,7 @@ export default function Asigurator() {
         actions={
           modLucru === 'vizualizare' ? (
             <Button type="button" onClick={incepeAdaugare}>
-              + Adaugă Asigurator
+              + Adaugă asigurator
             </Button>
           ) : null
         }
@@ -170,10 +170,10 @@ export default function Asigurator() {
         <Card className="max-w-2xl border-slate-200 bg-slate-50 shadow-none">
           <CardHeader>
             <CardTitle className="text-xl">
-              {modLucru === 'adaugare' ? 'Adăugare Asigurator' : 'Modificare Asigurator'}
+              {modLucru === 'adaugare' ? 'Adăugare asigurator' : 'Modificare asigurator'}
             </CardTitle>
             <CardDescription>
-              Formularul folosește schema `zod` pentru câmpurile esențiale.
+              Adaugă detalii despre Asigurator.
             </CardDescription>
           </CardHeader>
           <CardContent>
