@@ -1,32 +1,14 @@
 import { useState } from 'react';
-import {
-  Bell,
-  ChevronDown,
-  FileText,
-  Package2,
-  Settings2,
-  Users,
-  Wallet,
-} from 'lucide-react';
-import { cn } from '../lib/cn';
 
-// Sidebar-ul este meniul lateral global al aplicației.
-// El nu randă paginile propriu-zise și nu folosește router.
-// Rolul lui este doar să grupeze intrările din meniu și să anunțe `App.tsx`
-// ce id de pagină a fost selectat.
 interface SidebarProps {
   setPagina: (pagina: string) => void;
   paginaCurenta: string;
 }
 
 export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
-  // Păstrăm local doar ce secțiuni sunt deschise/închise.
-  // Pagina activă rămâne controlată de componenta părinte (`App`).
   const [meniuriDeschise, setMeniuriDeschise] = useState<string[]>(['Catalog', 'Facturare']);
 
   const toggleMeniu = (numeMeniu: string) => {
-    // Acesta este un operator ternar:
-    // `conditie ? variantaA : variantaB`.
     setMeniuriDeschise(prev => 
       prev.includes(numeMeniu) 
         ? prev.filter(m => m !== numeMeniu)
@@ -37,48 +19,47 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
   const categorii = [
     {
       titlu: 'Catalog',
-      icon: Package2,
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />,
       subItems: [
         { id: 'catalog-piese', label: 'Piese Auto' },
-        { id: 'catalog-manopera', label: 'Manoperă' },
-      ],
+        { id: 'catalog-manopera', label: 'Manoperă' }
+      ]
     },
     {
       titlu: 'Entități',
-      icon: Users,
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />,
       subItems: [
         { id: 'entitati-clienti', label: 'Clienți' },
         { id: 'entitati-angajati', label: 'Angajați' },
-        { id: 'entitati-asiguratori', label: 'Asigurători' },
-      ],
+        { id: 'entitati-asiguratori', label: 'Asigurători' }
+      ]
     },
     {
       titlu: 'Operațional',
-      icon: Settings2,
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3a1.5 1.5 0 00-1.42 1.02l-.3.86a1.5 1.5 0 01-.95.95l-.86.3a1.5 1.5 0 000 2.84l.86.3a1.5 1.5 0 01.95.95l.3.86a1.5 1.5 0 002.84 0l.3-.86a1.5 1.5 0 01.95-.95l.86-.3a1.5 1.5 0 000-2.84l-.86-.3a1.5 1.5 0 01-.95-.95l-.3-.86A1.5 1.5 0 009.75 3zm8.25 9.75a1.5 1.5 0 00-1.42 1.02l-.12.33a1.5 1.5 0 01-.95.95l-.33.12a1.5 1.5 0 000 2.84l.33.12a1.5 1.5 0 01.95.95l.12.33a1.5 1.5 0 002.84 0l.12-.33a1.5 1.5 0 01.95-.95l.33-.12a1.5 1.5 0 000-2.84l-.33-.12a1.5 1.5 0 01-.95-.95l-.12-.33A1.5 1.5 0 0018 12.75z" />,
       subItems: [
-        // Cele două intrări sunt separate intenționat.
-        // Astfel, recepția și gestiunea comenzilor sunt două ecrane distincte,
-        // nu două tab-uri din aceeași pagină.
-        { id: 'operational-preluare', label: 'Preluare Auto' },
-        { id: 'operational-comenzi', label: 'Gestiune Comenzi' },
-      ],
+        { id: 'operational', label: 'Recepție & Comenzi' }
+      ]
     },
     {
       titlu: 'Facturare',
-      icon: FileText,
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
       subItems: [
         { id: 'facturare-comenzi', label: 'Comenzi (Emitere)' },
         { id: 'facturare-campanii', label: 'Campanii / Oferte' },
         { id: 'facturare-penalizari', label: 'Penalizări Întârziere' },
-      ],
+        // L-AM ADĂUGAT AICI, ÎN PĂTRĂȚICA TA
+        { id: 'facturare-istoric', label: 'Istoric Facturare' } 
+      ]
     },
     {
       titlu: 'Încasări',
-      icon: Wallet,
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
       subItems: [
-        { id: 'incasari', label: 'Registru Încasări' },
-      ],
-    },
+        { id: 'incasari', label: 'Registru Încasări' }
+      ]
+    }
+    // AM ȘTERS COMPLET CATEGORIA VECHE DE "Istoric & Audit" DE AICI DE JOS
   ];
 
   return (
@@ -90,53 +71,35 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
         <p className="text-slate-400 text-xs mt-1 font-medium tracking-wider uppercase">Sistem Creanțe</p>
       </div>
 
-      {/* Ascundem scrollbar-ul pentru un aspect mai curat, dar păstrăm scroll-ul funcțional. */}
       <nav className="flex-1 px-4 py-6 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        
-        {/* `map(...)` transformă lista de categorii în mai multe blocuri JSX. */}
         {categorii.map((categorie) => {
           const isDeschis = meniuriDeschise.includes(categorie.titlu);
           const hasActiveChild = categorie.subItems.some(item => item.id === paginaCurenta);
-          const Icon = categorie.icon;
 
           return (
             <div key={categorie.titlu} className="space-y-1">
-              {/* `key` îl ajută pe React să recunoască fiecare element din listă. */}
               <button
                 onClick={() => toggleMeniu(categorie.titlu)}
-                className={cn(
-                  'w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-all',
-                  isDeschis || hasActiveChild
-                    ? 'bg-slate-800 text-white'
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200',
-                )}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold text-sm ${
+                  isDeschis || hasActiveChild ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                }`}
               >
                 <div className="flex items-center">
-                  <Icon
-                    className={cn(
-                      'mr-3 h-5 w-5',
-                      isDeschis || hasActiveChild ? 'text-indigo-400' : 'text-slate-500',
-                    )}
-                  />
+                  <svg className={`w-5 h-5 mr-3 ${isDeschis || hasActiveChild ? 'text-indigo-400' : 'text-slate-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {categorie.icon}
+                  </svg>
                   {categorie.titlu}
                 </div>
-                <ChevronDown
-                  className={cn(
-                    'h-4 w-4 transition-transform duration-200',
-                    isDeschis && 'rotate-180',
-                  )}
-                />
+                <svg className={`w-4 h-4 transition-transform duration-200 ${isDeschis ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
 
               {isDeschis && (
-                // `&&` în JSX înseamnă:
-                // "afișează partea din dreapta doar dacă stânga este adevărată".
                 <div className="pl-11 pr-2 py-1 space-y-1">
                   {categorie.subItems.map((item) => (
                     <button
                       key={item.id}
-                      // Click-ul trimite mai departe id-ul paginii.
-                      // `App.tsx` decide apoi ce componentă se afișează în zona principală.
                       onClick={() => setPagina(item.id)}
                       className={`w-full text-left px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                         paginaCurenta === item.id 
@@ -153,25 +116,17 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
           );
         })}
 
-        {/* Notificările sunt o intrare singulară, nu o categorie expandabilă. */}
         <button
           onClick={() => setPagina('notificari')}
-          className={cn(
-            'mt-4 flex w-full items-center rounded-xl px-4 py-3 text-sm font-semibold transition-all',
-            paginaCurenta === 'notificari'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200',
-          )}
+          className={`w-full flex items-center px-4 py-3 rounded-xl transition-all font-semibold text-sm mt-4 ${
+            paginaCurenta === 'notificari' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+          }`}
         >
-          <Bell
-            className={cn(
-              'mr-3 h-5 w-5',
-              paginaCurenta === 'notificari' ? 'text-indigo-200' : 'text-slate-500',
-            )}
-          />
+          <svg className={`w-5 h-5 mr-3 ${paginaCurenta === 'notificari' ? 'text-indigo-200' : 'text-slate-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
           Notificări
         </button>
-
       </nav>
 
       <div className="p-6 text-sm text-slate-500 border-t border-slate-800/60 flex items-center">
