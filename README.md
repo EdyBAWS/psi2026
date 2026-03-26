@@ -1,11 +1,12 @@
 # Service Auto G
 
-Frontend admin pentru un service auto, construit ca aplicatie React + TypeScript + Vite. Proiectul modeleaza fluxuri uzuale dintr-un sistem intern de service: catalog de piese/manopera, entitati de baza, receptie si comenzi service, facturare, incasari si notificari.
+`Service Auto G` este un frontend administrativ pentru un service auto. Proiectul este construit ca aplicație `React + TypeScript + Vite` și modelează fluxuri interne precum catalogul de piese și manoperă, gestiunea entităților de bază, recepția auto, comenzile de service, facturarea, încasările și notificările.
 
-Aplicatia este in stadiu de MVP extins:
-- navigatia este deja functionala
-- modulul `02operational` este cel mai matur si cel mai apropiat de un flux real
-- restul modulelor sunt in mare parte ecrane demo / CRUD local, fara backend
+În forma actuală, proiectul este un MVP frontend-only:
+- nu are backend
+- nu persistă datele după refresh
+- folosește în principal `useState` și date mock
+- are un modul operațional mai avansat decât restul aplicației
 
 ## Stack
 
@@ -14,18 +15,22 @@ Aplicatia este in stadiu de MVP extins:
 - Vite
 - Tailwind CSS v4
 - ESLint
+- `lucide-react` pentru iconografie
+- `clsx` + `tailwind-merge` + `class-variance-authority` pentru compunerea claselor și a variantelor UI
+- `react-hook-form` + `zod` pentru formularele moderne
+- `sonner` pentru toast-uri
 
-Observatie importanta:
-- pachetul `react-router-dom` exista in dependinte, dar aplicatia nu foloseste React Router in acest moment
-- navigatia este bazata pe stare locala in `App.tsx`
+Observații:
+- `react-router-dom` există în dependințe, dar aplicația nu folosește React Router în acest moment
+- navigația este controlată prin stare locală în `frontend/src/App.tsx`
 
-## Pornire rapida
+## Pornire rapidă
 
-Cerintele minime:
+Cerințe:
 - Node.js 20+
 - npm
 
-Comenzi:
+Instalare și rulare:
 
 ```bash
 cd frontend
@@ -33,7 +38,7 @@ npm install
 npm run dev
 ```
 
-Verificare calitate:
+Verificări:
 
 ```bash
 cd frontend
@@ -41,48 +46,54 @@ npm run lint
 npm run build
 ```
 
-## Cum este organizata aplicatia
+## Arhitectură generală
 
-Intrarea in frontend este:
+Frontend-ul pornește din:
 - `frontend/src/main.tsx`
 
-Shell-ul principal este:
+Shell-ul principal este format din:
 - `frontend/src/App.tsx`
 - `frontend/src/componente/Sidebar.tsx`
 
-Aplicatia nu foloseste router. `App.tsx` tine un `paginaCurenta` in `useState` si decide ce pagina se afiseaza printr-un `switch`. `Sidebar.tsx` schimba acea stare prin `setPagina(...)`.
+Aplicația nu folosește router. `App.tsx` păstrează un `paginaCurenta` în `useState` și alege pagina activă printr-un `switch`. `Sidebar.tsx` doar schimbă acea stare prin `setPagina(...)`.
 
 ## Module principale
 
 ### `00catalog`
-Contine ecrane simple pentru:
+Conține ecrane pentru:
 - piese auto
-- manopera
+- manoperă
 
-Aceste pagini folosesc stare locala si permit adaugare / afisare de date de test.
+Aceste pagini sunt încă simple, locale, și folosesc date ținute în componentă. Au primit însă feedback modernizat cu toast-uri și unele elemente UI comune.
 
 ### `01entitati`
-Contine ecrane pentru:
-- clienti
-- angajati
-- asiguratori
+Conține ecrane pentru:
+- clienți
+- angajați
+- asigurători
 
-Sunt pagini de tip CRUD local, fara persistenta intre navigari si fara backend.
+Aceste pagini folosesc acum:
+- `react-hook-form`
+- `zod`
+- componente UI comune
+- toast-uri pentru operațiile principale
+
+În continuare, datele sunt locale și nu se păstrează între refresh-uri.
 
 ### `02operational`
-Acesta este modulul central al proiectului in acest moment.
+Acesta este modulul cel mai matur și cel mai apropiat de un flux real de business.
 
-Acopera:
+Acoperă:
 - preluare auto
-- selectie vehicul
-- context client
-- dosar de dauna
-- creare comanda service
-- pozitii de deviz
-- calcul subtotal / TVA / total
-- gestiune comenzi cu filtre si panou de detalii
+- selecție vehicul și context client
+- dosar de daună
+- creare comandă service
+- poziții de deviz
+- calcule financiare
+- validări de business
+- gestiune comenzi cu filtre și panou de detalii
 
-Structura interna:
+Structura lui internă:
 
 ```text
 frontend/src/modules/02operational/
@@ -91,6 +102,7 @@ frontend/src/modules/02operational/
 ├── formState.ts
 ├── calculations.ts
 ├── validations.ts
+├── schemas.ts
 ├── mockData.ts
 ├── components/
 ├── pages/
@@ -100,72 +112,72 @@ frontend/src/modules/02operational/
 ```
 
 Puncte importante:
-- `Operational.tsx` este containerul modulului
-- `PreluareAuto.tsx` este pagina de receptie
-- `GestiuneComenzi.tsx` este pagina de listare / inspectare comenzi
-- `types.ts` separa modelul de domeniu
-- `formState.ts` separa starea de formular
-- `calculations.ts` centralizeaza formulele financiare
-- `validations.ts` centralizeaza regulile de validare pentru fluxul de preluare
-- `mockData.ts` alimenteaza tot modulul cu date locale realiste
-
-Modulul foloseste doua intrari separate in sidebar:
-- `Preluare Auto`
-- `Gestiune Comenzi`
+- `Operational.tsx` este containerul principal al modulului
+- în sidebar există două intrări separate:
+  - `Preluare Auto`
+  - `Gestiune Comenzi`
+- `PreluareAuto.tsx` orchestrează fluxul de recepție
+- `GestiuneComenzi.tsx` este pagina de listare și inspecție
+- `types.ts` definește tipurile de domeniu
+- `formState.ts` definește starea de formular și draft-urile
+- `calculations.ts` centralizează formulele
+- `validations.ts` centralizează regulile de business
+- `schemas.ts` introduce validări `zod` pentru formele relevante
+- `mockData.ts` oferă date locale realiste pentru demo
 
 ### `03facturare`
-Contine:
+Conține:
 - facturare comenzi
 - campanii / oferte
-- penalizari de intarziere
+- penalizări
 
-`Facturare.tsx` este deja conectat la lista de comenzi transmisa din `App.tsx`, dar inca functioneaza pe date locale, fara backend.
+Modulul folosește acum feedback prin toast-uri și componente UI comune. `Facturare.tsx` primește comenzile prin `App.tsx`, dar în prezent acestea sunt tot date mock, nu stare comună live cu modulul operațional.
 
 ### `04incasari`
-Contine ecranul de inregistrare a incasarilor si alocare pe facturi restante.
+Conține un ecran pentru înregistrarea încasărilor și alocarea sumelor pe facturi. Folosește toast-uri pentru feedback și păstrează datele local.
 
 ### `05notificari`
-Contine un centru simplu de notificari, bazat pe date mock.
+Conține un centru simplu de notificări, bazat pe date mock și afișare locală.
 
-## Ce este implementat mai bine acum
+## Sistem UI comun
 
-Zona cea mai avansata este `02operational`. Acolo exista deja:
-- modelare clara a tipurilor
-- separare intre date finale si draft-uri de UI
-- validari de business
-- date mock coerente
-- comentarii explicative pentru colegi mai incepatori
-- separare intre logica de calcul, validare si componente de UI
+Frontend-ul are acum o bază comună de UI în:
 
-Cateva reguli operationale deja implementate:
-- nu poti deschide o comanda noua daca vehiculul are deja o comanda activa
-- fluxul de asigurare forteaza tipul de plata la `Asigurare`
-- lipsa stocului pe o pozitie poate schimba statusul initial in `Asteapta piese`
-- totalurile financiare sunt calculate centralizat
+```text
+frontend/src/componente/ui/
+```
 
-## Starea curenta a datelor
+Aici există componente reutilizabile precum:
+- `Button`
+- `Card`
+- `Field`
+- `SelectField`
+- `TextareaField`
+- `PageHeader`
+- `EmptyState`
+- `StatCard`
 
-In prezent, aplicatia este frontend-only:
-- nu exista backend
-- nu exista API calls
-- majoritatea modulelor folosesc `useState` local
-- `02operational` foloseste mock data mai structurata
+Există și utilitarul:
+- `frontend/src/lib/cn.ts`
 
-Asta inseamna:
-- datele nu se persista dupa refresh
-- unele module nu impart inca aceeasi sursa de adevar
-- proiectul este potrivit pentru demo, prototipare si clarificare de fluxuri
+Acesta unifică folosirea `clsx` și `tailwind-merge` pentru compunerea claselor.
 
-## Observatii pentru dezvoltare
+## Starea actuală a aplicației
 
-- codul este scris in principal in romana
-- naming-ul modulelor urmareste zone functionale de business
-- `02operational` poate fi folosit ca model de organizare pentru modulele care vor deveni mai complexe
-- daca adaugi pagini noi, trebuie actualizate manual:
-  - `App.tsx`
-  - `Sidebar.tsx`
+Ce este bine definit acum:
+- navigația pe module este clară și funcțională
+- `02operational` are structură coerentă și reguli de business separate
+- formularele din `01entitati` folosesc deja `react-hook-form` și `zod`
+- feedback-ul vizual a fost modernizat prin toast-uri în loc de `alert(...)`
+- există o bază comună de componente UI reutilizabile
 
-## Structura pe scurt
+Ce rămâne de făcut mai târziu:
+- unificarea surselor de date între module
+- persistarea datelor
+- conectarea la backend
+- alinierea tuturor modulelor la nivelul de structură din `02operational`
+
+## Structura repo-ului
 
 ```text
 psi2026/
@@ -178,14 +190,14 @@ psi2026/
         ├── main.tsx
         ├── componente/
         ├── modules/
+        ├── lib/
         └── types/
 ```
 
-## Directie urmatoare recomandata
+## Direcție recomandată
 
-Daca proiectul continua, urmatorii pasi logici sunt:
-- legarea modulelor la o sursa comuna de date
-- unificarea treptata a tipurilor comune dintre `types/entitati.ts` si `02operational/types.ts`
-- extinderea modulelor non-operational la acelasi nivel de structura ca `02operational`
-- adaugarea unui backend sau a unui strat de persistenta
-
+Pașii naturali pentru etapa următoare sunt:
+- conectarea modulelor la o sursă comună de date
+- unificarea treptată a tipurilor comune dintre `types/entitati.ts` și `02operational/types.ts`
+- extinderea modulelor non-operaționale cu aceeași disciplină de structură
+- adăugarea unui backend sau a unui strat de persistență
