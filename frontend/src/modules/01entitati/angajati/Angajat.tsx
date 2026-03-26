@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import { BriefcaseBusiness, Users } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '../../../componente/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../componente/ui/Card';
+import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
 import { EmptyState } from '../../../componente/ui/EmptyState';
 import { Field } from '../../../componente/ui/Field';
 import { PageHeader } from '../../../componente/ui/PageHeader';
 import { SelectField } from '../../../componente/ui/SelectField';
+import { StatCard } from '../../../componente/ui/StatCard';
+import { angajatiEntitateMock } from '../../../mock/entitati';
 import type { Angajat as AngajatType } from '../../../types/entitati';
 import { angajatSchema, type AngajatFormValues } from '../schemas';
 
@@ -31,69 +35,12 @@ const valoriInitiale: AngajatFormValues = {
 const calculeazaUrmatorulIdAngajat = (angajati: AngajatType[]) =>
   angajati.reduce((maximCurent, angajat) => Math.max(maximCurent, angajat.idAngajat), 0) + 1;
 
-const angajatiInitiali: AngajatType[] = [
-  {
-    idAngajat: 1,
-    nume: 'Ionescu',
-    prenume: 'Mihai',
-    CNP: '1820101223344',
-    telefon: '0721 100 201',
-    email: 'mihai.ionescu@serviceautog.ro',
-    tipAngajat: 'Mecanic',
-    specializare: 'Mecanică generală',
-    costOrar: 170,
-  },
-  {
-    idAngajat: 2,
-    nume: 'Popa',
-    prenume: 'Andrei',
-    CNP: '1840615223344',
-    telefon: '0721 100 202',
-    email: 'andrei.popa@serviceautog.ro',
-    tipAngajat: 'Mecanic',
-    specializare: 'Tinichigerie și vopsitorie',
-    costOrar: 210,
-  },
-  {
-    idAngajat: 3,
-    nume: 'Marin',
-    prenume: 'Elena',
-    CNP: '2860226223344',
-    telefon: '0721 100 203',
-    email: 'elena.marin@serviceautog.ro',
-    tipAngajat: 'Receptioner',
-    nrBirou: 'R-02',
-    tura: 'Dimineață',
-  },
-  {
-    idAngajat: 4,
-    nume: 'Dumitrescu',
-    prenume: 'Sorin',
-    CNP: '1811111223344',
-    telefon: '0721 100 204',
-    email: 'sorin.dumitrescu@serviceautog.ro',
-    tipAngajat: 'Manager',
-    departament: 'Operațional',
-    sporConducere: 1500,
-  },
-  {
-    idAngajat: 5,
-    nume: 'Neagu',
-    prenume: 'Alexandra',
-    CNP: '2890305223344',
-    telefon: '0721 100 205',
-    email: 'alexandra.neagu@serviceautog.ro',
-    tipAngajat: 'Mecanic',
-    specializare: 'Electrică și AC',
-    costOrar: 230,
-  },
-];
-
 // Pagina gestionează local lista de angajați și formularul de adăugare/editare.
 export default function Angajat() {
-  const [angajati, setAngajati] = useState<AngajatType[]>(angajatiInitiali);
+  const [angajati, setAngajati] = useState<AngajatType[]>(angajatiEntitateMock);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [idAngajatPentruStergere, setIdAngajatPentruStergere] = useState<number | null>(null);
   // Rolul selectat influențează direct ce grup de câmpuri este vizibil.
   const [tipAngajatSelectat, setTipAngajatSelectat] =
     useState<AngajatFormValues['tipAngajat']>('Mecanic');
@@ -176,12 +123,17 @@ export default function Angajat() {
     revinoLaLista();
   });
 
-  const handleStergere = (id: number) => {
-    if (window.confirm('Ștergi acest angajat?')) {
-      setAngajati((previous) => previous.filter((angajat) => angajat.idAngajat !== id));
-      toast.success('Angajatul a fost șters.');
-    }
+  const handleStergere = () => {
+    if (idAngajatPentruStergere === null) return;
+    setAngajati((previous) =>
+      previous.filter((angajat) => angajat.idAngajat !== idAngajatPentruStergere),
+    );
+    setIdAngajatPentruStergere(null);
+    toast.success('Angajatul a fost șters.');
   };
+
+  const totalMecanici = angajati.filter((angajat) => angajat.tipAngajat === 'Mecanic').length;
+  const totalManageri = angajati.filter((angajat) => angajat.tipAngajat === 'Manager').length;
 
   return (
     <Card className="p-8">
@@ -195,11 +147,19 @@ export default function Angajat() {
         }
       />
 
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <StatCard label="Total angajați" value={angajati.length} icon={<Users className="h-4 w-4" />} />
+        <StatCard label="Mecanici" value={totalMecanici} tone="info" icon={<BriefcaseBusiness className="h-4 w-4" />} />
+        <StatCard label="Manageri" value={totalManageri} tone="warning" />
+      </div>
+
       {modLucru === 'vizualizare' ? (
         angajati.length === 0 ? (
           <EmptyState
             title="Nu există angajați"
             description="Adaugă primul angajat pentru a popula modulele operaționale."
+            actionLabel="Adaugă angajat"
+            onAction={incepeAdaugare}
           />
         ) : (
           <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -235,7 +195,7 @@ export default function Angajat() {
                           variant="outline"
                           size="sm"
                           className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                          onClick={() => handleStergere(angajat.idAngajat)}
+                          onClick={() => setIdAngajatPentruStergere(angajat.idAngajat)}
                         >
                           Șterge
                         </Button>
@@ -356,6 +316,15 @@ export default function Angajat() {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        isOpen={idAngajatPentruStergere !== null}
+        title="Ștergi angajatul?"
+        description="Acțiunea elimină angajatul doar din lista demo locală a modulului de entități."
+        confirmLabel="Șterge"
+        onCancel={() => setIdAngajatPentruStergere(null)}
+        onConfirm={handleStergere}
+      />
     </Card>
   );
 }
