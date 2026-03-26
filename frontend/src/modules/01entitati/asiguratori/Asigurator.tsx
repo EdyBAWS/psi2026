@@ -1,12 +1,16 @@
 import { useState } from 'react';
+import { ShieldCheck, Users } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '../../../componente/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../componente/ui/Card';
+import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
 import { EmptyState } from '../../../componente/ui/EmptyState';
 import { Field } from '../../../componente/ui/Field';
 import { PageHeader } from '../../../componente/ui/PageHeader';
+import { StatCard } from '../../../componente/ui/StatCard';
+import { asiguratoriEntitateMock } from '../../../mock/entitati';
 import type { Asigurator as AsiguratorType } from '../../../types/entitati';
 import { asiguratorSchema, type AsiguratorFormValues } from '../schemas';
 
@@ -26,43 +30,11 @@ const calculeazaUrmatorulIdAsigurator = (asiguratori: AsiguratorType[]) =>
     0,
   ) + 1;
 
-const asiguratoriInitiali: AsiguratorType[] = [
-  {
-    idAsigurator: 1,
-    denumire: 'Allianz-Țiriac Asigurări',
-    CUI: 'RO6120740',
-    telefon: '021 208 22 22',
-  },
-  {
-    idAsigurator: 2,
-    denumire: 'Groupama Asigurări',
-    CUI: 'RO6291812',
-    telefon: '021 302 92 00',
-  },
-  {
-    idAsigurator: 3,
-    denumire: 'Omniasig Vienna Insurance Group',
-    CUI: 'RO5587260',
-    telefon: '021 405 74 20',
-  },
-  {
-    idAsigurator: 4,
-    denumire: 'Asirom Vienna Insurance Group',
-    CUI: 'RO336290',
-    telefon: '021 9146',
-  },
-  {
-    idAsigurator: 5,
-    denumire: 'Generali România',
-    CUI: 'RO2884407',
-    telefon: '021 312 36 35',
-  },
-];
-
 export default function Asigurator() {
-  const [asiguratori, setAsiguratori] = useState<AsiguratorType[]>(asiguratoriInitiali);
+  const [asiguratori, setAsiguratori] = useState<AsiguratorType[]>(asiguratoriEntitateMock);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [idAsiguratorPentruStergere, setIdAsiguratorPentruStergere] = useState<number | null>(null);
 
   const {
     formState: { errors },
@@ -121,13 +93,13 @@ export default function Asigurator() {
     revinoLaLista();
   });
 
-  const handleStergere = (id: number) => {
-    if (window.confirm('Ștergi acest asigurator?')) {
-      setAsiguratori((previous) =>
-        previous.filter((asigurator) => asigurator.idAsigurator !== id),
-      );
-      toast.success('Asiguratorul a fost șters.');
-    }
+  const handleStergere = () => {
+    if (idAsiguratorPentruStergere === null) return;
+    setAsiguratori((previous) =>
+      previous.filter((asigurator) => asigurator.idAsigurator !== idAsiguratorPentruStergere),
+    );
+    setIdAsiguratorPentruStergere(null);
+    toast.success('Asiguratorul a fost șters.');
   };
 
   return (
@@ -144,11 +116,19 @@ export default function Asigurator() {
         }
       />
 
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <StatCard label="Total asiguratori" value={asiguratori.length} icon={<ShieldCheck className="h-4 w-4" />} />
+        <StatCard label="Cu date complete" value={asiguratori.filter((item) => item.telefon && item.CUI).length} tone="success" />
+        <StatCard label="Parteneri activi" value={asiguratori.length} tone="info" icon={<Users className="h-4 w-4" />} />
+      </div>
+
       {modLucru === 'vizualizare' ? (
         asiguratori.length === 0 ? (
           <EmptyState
             title="Nu există asiguratori"
             description="Adaugă primul asigurator pentru a-l putea lega de dosarele de daună."
+            actionLabel="Adaugă asigurator"
+            onAction={incepeAdaugare}
           />
         ) : (
           <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -187,7 +167,7 @@ export default function Asigurator() {
                           variant="outline"
                           size="sm"
                           className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                          onClick={() => handleStergere(asigurator.idAsigurator)}
+                          onClick={() => setIdAsiguratorPentruStergere(asigurator.idAsigurator)}
                         >
                           Șterge
                         </Button>
@@ -233,6 +213,15 @@ export default function Asigurator() {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        isOpen={idAsiguratorPentruStergere !== null}
+        title="Ștergi asiguratorul?"
+        description="Acțiunea elimină asiguratorul doar din lista demo locală a modulului de entități."
+        confirmLabel="Șterge"
+        onCancel={() => setIdAsiguratorPentruStergere(null)}
+        onConfirm={handleStergere}
+      />
     </Card>
   );
 }

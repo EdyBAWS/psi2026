@@ -1,9 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { ArrowDownWideNarrow, FileText, TriangleAlert } from 'lucide-react';
+import { EmptyState } from '../../componente/ui/EmptyState';
+import { StatCard } from '../../componente/ui/StatCard';
+import { usePageSessionState } from '../../lib/pageState';
 import { istoricFacturareMock } from '../../mock/facturare';
 
 export default function IstoricFacturare() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filtruTip, setFiltruTip] = useState<string>('Toate');
+  const [searchTerm, setSearchTerm] = usePageSessionState('istoric-facturare-search', '');
+  const [filtruTip, setFiltruTip] = usePageSessionState<string>('istoric-facturare-tip', 'Toate');
 
   const getBadgeColor = (tip: string) => {
     switch (tip) {
@@ -30,6 +34,13 @@ export default function IstoricFacturare() {
     });
   }, [searchTerm, filtruTip]);
 
+  const totalFacturari = istoricFacturareMock.filter(
+    (trx) => trx.tipOperatiune === 'Facturare Comandă',
+  ).length;
+  const totalPenalizari = istoricFacturareMock.filter(
+    (trx) => trx.tipOperatiune === 'Penalizare',
+  ).length;
+
   return (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
       <div className="flex justify-between items-end mb-8 border-b border-slate-100 pb-6">
@@ -45,6 +56,12 @@ export default function IstoricFacturare() {
           </p>
           <p className="text-2xl font-bold text-indigo-600">{tranzactiiFiltrate.length}</p>
         </div>
+      </div>
+
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <StatCard label="Documente emise" value={istoricFacturareMock.length} icon={<FileText className="h-4 w-4" />} />
+        <StatCard label="Facturări" value={totalFacturari} tone="success" />
+        <StatCard label="Penalizări" value={totalPenalizari} tone="warning" icon={<TriangleAlert className="h-4 w-4" />} />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -83,10 +100,32 @@ export default function IstoricFacturare() {
             <option value="Discount Extra">Doar Discounturi</option>
           </select>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            setSearchTerm('');
+            setFiltruTip('Toate');
+          }}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+        >
+          <ArrowDownWideNarrow className="h-4 w-4" />
+          Reset
+        </button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
-        <table className="min-w-full bg-white text-left text-sm whitespace-nowrap">
+      {tranzactiiFiltrate.length === 0 ? (
+        <EmptyState
+          title="Nu există tranzacții pentru filtrele curente"
+          description="Încearcă să resetezi căutarea sau filtrul de tip operațiune."
+          actionLabel="Resetează filtrele"
+          onAction={() => {
+            setSearchTerm('');
+            setFiltruTip('Toate');
+          }}
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+          <table className="min-w-full bg-white text-left text-sm whitespace-nowrap">
           <thead className="bg-slate-800 text-white font-medium">
             <tr>
               <th className="py-4 px-6">Dată & Oră</th>
@@ -99,14 +138,7 @@ export default function IstoricFacturare() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {tranzactiiFiltrate.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="py-8 text-center text-slate-500">
-                  Nu a fost găsită nicio înregistrare.
-                </td>
-              </tr>
-            ) : (
-              tranzactiiFiltrate.map((trx) => (
+            {tranzactiiFiltrate.map((trx) => (
                 <tr key={trx.id} className="hover:bg-slate-50 transition-colors">
                   <td className="py-4 px-6 text-slate-500 font-medium">{trx.dataOra}</td>
                   <td className="py-4 px-6">
@@ -129,11 +161,11 @@ export default function IstoricFacturare() {
                   <td className="py-4 px-6 text-slate-500 truncate max-w-xs">{trx.detalii}</td>
                   <td className="py-4 px-6 text-slate-500">{trx.utilizator}</td>
                 </tr>
-              ))
-            )}
+              ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

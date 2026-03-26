@@ -1,10 +1,17 @@
 import { useMemo, useState } from 'react';
+import { FileClock, Receipt, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyState } from '../../componente/ui/EmptyState';
+import { StatCard } from '../../componente/ui/StatCard';
+import { usePageSessionState } from '../../lib/pageState';
 import {
   obtineComenziFacturabileDinMock,
   obtineLiniiFacturaDinComandaMock,
 } from '../../mock/facturare';
 import type { ComandaFacturabilaMock, LinieFacturaMock } from '../../mock/types';
+
+type FacturareSortField = 'data' | 'nrComanda' | 'valoare';
+type FacturareSortDir = 'asc' | 'desc';
 
 export default function Facturare() {
   // Lista inițială vine din stratul comun de mock-uri.
@@ -18,6 +25,53 @@ export default function Facturare() {
   const [numarFactura, setNumarFactura] = useState('');
   const [termenPlata, setTermenPlata] = useState<number>(0);
   const [discountProcent, setDiscountProcent] = useState<number>(0);
+  const [cautare, setCautare] = usePageSessionState('facturare-cautare', '');
+  const [sortField, setSortField] = usePageSessionState<FacturareSortField>(
+    'facturare-sort-field',
+    'data',
+  );
+  const [sortDir, setSortDir] = usePageSessionState<FacturareSortDir>(
+    'facturare-sort-dir',
+    'desc',
+  );
+
+  const handleSort = (field: FacturareSortField) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+
+    setSortField(field);
+    setSortDir(field === 'data' ? 'desc' : 'asc');
+  };
+
+  const comenziFiltrate = useMemo(() => {
+    const termen = cautare.trim().toLowerCase();
+
+    return [...comenziGata]
+      .filter((comanda) => {
+        if (termen === '') return true;
+        return [comanda.nrComanda, comanda.client, comanda.vehicul]
+          .some((camp) => camp.toLowerCase().includes(termen));
+      })
+      .sort((a, b) => {
+        let comparison = 0;
+        if (sortField === 'data') {
+          comparison = a.dataComanda.localeCompare(b.dataComanda);
+        } else if (sortField === 'nrComanda') {
+          comparison = a.nrComanda.localeCompare(b.nrComanda);
+        } else {
+          comparison = a.totalEstimat - b.totalEstimat;
+        }
+
+        return sortDir === 'asc' ? comparison : -comparison;
+      });
+  }, [cautare, comenziGata, sortDir, sortField]);
+
+  const totalValoareFacturabila = comenziGata.reduce(
+    (total, comanda) => total + comanda.totalEstimat,
+    0,
+  );
 
   const liniiFactura: LinieFacturaMock[] = useMemo(() => {
     if (!comandaSelectata) return [];
@@ -88,8 +142,69 @@ export default function Facturare() {
       </div>
 
       {!comandaSelectata ? (
-        <div className="overflow-hidden rounded-xl border border-slate-200">
-          <table className="min-w-full bg-white text-left text-sm">
+        <div className="mb-6 grid gap-3 md:grid-cols-3">
+          <StatCard label="Comenzi facturabile" value={comenziGata.length} icon={<Receipt className="h-4 w-4" />} />
+          <StatCard label="Valoare totală" value={`${totalValoareFacturabila.toFixed(2)} RON`} tone="info" icon={<Wallet className="h-4 w-4" />} />
+          <StatCard label="În așteptare" value={comenziFiltrate.length} tone="warning" icon={<FileClock className="h-4 w-4" />} />
+        </div>
+      ) : null}
+
+      {!comandaSelectata ? (
+        <>
+          <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:flex-row md:items-center md:justify-between">
+            <input
+              type="text"
+              value={cautare}
+              onChange={(e) => setCautare(e.target.value)}
+              placeholder="Caută după comandă, client sau vehicul..."
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 md:max-w-md"
+            />
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+              <button
+                type="button"
+                onClick={() => handleSort('data')}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50"
+              >
+                Data {sortField === 'data' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSort('nrComanda')}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50"
+              >
+                Comandă {sortField === 'nrComanda' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSort('valoare')}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50"
+              >
+                Valoare {sortField === 'valoare' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCautare('')}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          {comenziFiltrate.length === 0 ? (
+            <EmptyState
+              title={comenziGata.length === 0 ? 'Nu există comenzi facturabile' : 'Nu există rezultate'}
+              description={
+                comenziGata.length === 0
+                  ? 'Comenzile livrate sau gata de livrare vor apărea aici pentru emiterea facturii.'
+                  : 'Încearcă să relaxezi căutarea sau să resetezi filtrele de sortare și căutare.'
+              }
+              actionLabel={comenziGata.length === 0 ? undefined : 'Resetează căutarea'}
+              onAction={comenziGata.length === 0 ? undefined : () => setCautare('')}
+            />
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-slate-200">
+              <table className="min-w-full bg-white text-left text-sm">
             <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
               <tr>
                 <th className="py-4 px-6">Nr. Comandă</th>
@@ -100,14 +215,7 @@ export default function Facturare() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {comenziGata.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-500 font-medium">
-                    Nicio comandă eligibilă pentru facturare în acest moment.
-                  </td>
-                </tr>
-              ) : (
-                comenziGata.map((comanda) => (
+              {comenziFiltrate.map((comanda) => (
                   <tr key={comanda.idComanda} className="hover:bg-indigo-50/50 transition-colors group">
                     <td className="py-4 px-6 font-bold text-slate-800">{comanda.nrComanda}</td>
                     <td className="py-4 px-6 text-slate-500">{comanda.dataComanda}</td>
@@ -127,11 +235,12 @@ export default function Facturare() {
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
+                ))}
             </tbody>
           </table>
-        </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="space-y-8 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200">

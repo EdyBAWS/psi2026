@@ -1,6 +1,10 @@
 import { useMemo, useState, type FormEvent } from 'react';
+import { ClipboardList, CreditCard, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../componente/ui/Button';
+import { EmptyState } from '../../componente/ui/EmptyState';
+import { StatCard } from '../../componente/ui/StatCard';
+import { usePageSessionState } from '../../lib/pageState';
 import { facturiRestanteMock } from '../../mock/incasari';
 
 interface FacturaRestanta {
@@ -14,7 +18,7 @@ interface FacturaRestanta {
 }
 
 export default function Incasari() {
-  const [clientSelectat, setClientSelectat] = useState<string>('');
+  const [clientSelectat, setClientSelectat] = usePageSessionState('incasari-client-filter', '');
   const [sumaIncasata, setSumaIncasata] = useState<number | ''>('');
   const [modalitate, setModalitate] = useState<string>('Transfer Bancar');
 
@@ -50,6 +54,8 @@ export default function Incasari() {
       ),
     [clientSelectat, facturiRestante],
   );
+
+  const totalRestant = facturiRestante.reduce((total, factura) => total + factura.restDePlata, 0);
 
   const handleAlocareSuma = (idFactura: number, valoare: string) => {
     const valoareNumerica = valoare === '' ? '' : Number(valoare);
@@ -90,6 +96,12 @@ export default function Incasari() {
         </p>
       </div>
 
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <StatCard label="Facturi restante" value={facturiRestante.length} icon={<ClipboardList className="h-4 w-4" />} />
+        <StatCard label="Valoare restantă" value={`${totalRestant.toFixed(2)} RON`} tone="warning" icon={<Wallet className="h-4 w-4" />} />
+        <StatCard label="Client selectat" value={clientSelectat === '' ? 'Toți' : clientiDisponibili.find((item) => String(item.idClient) === clientSelectat)?.nume ?? 'Filtrat'} tone="info" icon={<CreditCard className="h-4 w-4" />} />
+      </div>
+
       <form onSubmit={handleSalvare} className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-2">
@@ -108,6 +120,13 @@ export default function Incasari() {
                 </option>
               ))}
             </select>
+            <button
+              type="button"
+              onClick={() => setClientSelectat('')}
+              className="mt-2 text-xs font-semibold text-slate-500 underline hover:text-slate-700"
+            >
+              Resetează filtrul client
+            </button>
           </div>
 
           <div>
@@ -151,7 +170,16 @@ export default function Incasari() {
           </div>
 
           <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table className="min-w-full bg-white text-left text-sm">
+            {facturiFiltrate.length === 0 ? (
+              <EmptyState
+                className="m-4"
+                title="Nu există facturi pentru filtrul ales"
+                description="Resetează filtrul de client pentru a vedea toate facturile restante."
+                actionLabel="Resetează filtrul"
+                onAction={() => setClientSelectat('')}
+              />
+            ) : (
+              <table className="min-w-full bg-white text-left text-sm">
               <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold text-xs border-b border-slate-200">
                 <tr>
                   <th className="py-4 px-6">Nr. Factură</th>
@@ -185,7 +213,8 @@ export default function Incasari() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            )}
           </div>
         </div>
 
