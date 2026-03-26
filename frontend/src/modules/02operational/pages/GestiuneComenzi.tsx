@@ -485,7 +485,7 @@ export default function GestiuneComenzi({
                       className={`cursor-pointer align-middle transition-all duration-200 ease-out relative group/row ${
                         esteSelectata 
                           ? 'bg-indigo-50/60 shadow-[inset_4px_0_0_0_rgba(99,102,241,1)]' 
-                          : 'hover:bg-slate-50/80 hover:-translate-y-[1px] hover:shadow-sm'
+                          : 'hover:bg-slate-50/80 hover:-translate-y-px hover:shadow-sm'
                       }`}
                       onClick={() => {
                         // Deselectare și scrol automat înapoi sus pentru UX fluid
