@@ -25,6 +25,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
   const [meniuriDeschise, setMeniuriDeschise] = useState<string[]>(['Catalog', 'Facturare']);
 
   const toggleMeniu = (numeMeniu: string) => {
+    // Acesta este un operator ternar:
+    // `conditie ? variantaA : variantaB`.
     setMeniuriDeschise(prev => 
       prev.includes(numeMeniu) 
         ? prev.filter(m => m !== numeMeniu)
@@ -91,6 +93,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       {/* Ascundem scrollbar-ul pentru un aspect mai curat, dar păstrăm scroll-ul funcțional. */}
       <nav className="flex-1 px-4 py-6 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         
+        {/* `map(...)` transformă lista de categorii în mai multe blocuri JSX. */}
         {categorii.map((categorie) => {
           const isDeschis = meniuriDeschise.includes(categorie.titlu);
           const hasActiveChild = categorie.subItems.some(item => item.id === paginaCurenta);
@@ -98,6 +101,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
 
           return (
             <div key={categorie.titlu} className="space-y-1">
+              {/* `key` îl ajută pe React să recunoască fiecare element din listă. */}
               <button
                 onClick={() => toggleMeniu(categorie.titlu)}
                 className={cn(
@@ -125,6 +129,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
               </button>
 
               {isDeschis && (
+                // `&&` în JSX înseamnă:
+                // "afișează partea din dreapta doar dacă stânga este adevărată".
                 <div className="pl-11 pr-2 py-1 space-y-1">
                   {categorie.subItems.map((item) => (
                     <button

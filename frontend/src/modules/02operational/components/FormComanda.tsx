@@ -59,6 +59,8 @@ export default function FormComanda({
   onPozitiiChange,
 }: FormComandaProps) {
   return (
+    // JSX-ul de mai jos descrie interfața componentei.
+    // Tag-uri precum `div`, `p`, `select` și `input` sunt elemente de UI.
     <div className="space-y-5">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -104,8 +106,11 @@ export default function FormComanda({
               Mecanic responsabil
             </label>
             <select
+              // `?? ''` înseamnă:
+              // dacă valoarea din stânga este `null` sau `undefined`, folosim stringul gol.
               value={idMecanicSelectat ?? ''}
               onChange={(event) =>
+                // `event.target.value` este valoarea curentă aleasă de utilizator în select.
                 onMecanicChange(event.target.value === '' ? null : Number(event.target.value))
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"

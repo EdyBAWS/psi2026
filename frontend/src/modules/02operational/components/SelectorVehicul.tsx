@@ -77,6 +77,8 @@ export default function SelectorVehicul({
       />
 
       <div className="grid gap-3 lg:grid-cols-3">
+        {/* `vehiculeFiltrate.map(...)` înseamnă:
+            "pentru fiecare vehicul din listă, desenează un card". */}
         {vehiculeFiltrate.map((vehicul) => {
           // Pentru fiecare card derivăm context suplimentar din alte liste.
           // Nu duplicăm aceste date în `Vehicul`, ci le calculăm la afișare.
@@ -95,6 +97,8 @@ export default function SelectorVehicul({
               // Ea anunță pagina părinte prin callback-ul `onSelecteaza`.
               onClick={() => onSelecteaza(vehicul.idVehicul)}
               className={`rounded-2xl border p-5 text-left transition-all ${
+                // Operatorul ternar alege un set de clase dacă vehiculul este selectat
+                // și alt set dacă nu este selectat.
                 esteSelectat
                   ? 'border-indigo-500 bg-indigo-50 shadow-sm shadow-indigo-500/10'
                   : 'border-slate-200 bg-white hover:border-indigo-200 hover:bg-slate-50'
@@ -124,6 +128,8 @@ export default function SelectorVehicul({
               </div>
 
               <dl className="mt-4 space-y-2 text-sm text-slate-500">
+                {/* `dl` / `dt` / `dd` formează o listă de descrieri:
+                    etichetă + valoarea ei. */}
                 <div className="flex items-center justify-between gap-2">
                   <dt className="font-medium text-slate-600">Client</dt>
                   <dd className="text-right">{client?.nume ?? `#${vehicul.idClient}`}</dd>

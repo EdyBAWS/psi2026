@@ -60,6 +60,8 @@ export default function App() {
   };
 
   return (
+    // `return (...)` înseamnă că această funcție întoarce interfața care trebuie afișată.
+    // JSX-ul dintre paranteze seamănă cu HTML, dar poate conține expresii JavaScript.
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       {/* Sidebar-ul nu știe ce pagină să afișeze.
           El doar schimbă valoarea lui `paginaCurenta` prin callback-ul primit. */}
@@ -67,7 +69,8 @@ export default function App() {
       
       <main className="flex-1 p-10 overflow-y-scroll">
         <div className="max-w-6xl mx-auto">
-          {/* Tot conținutul din dreapta vine din alegerea făcută în `randeazaPagina`. */}
+          {/* Acoladele `{ ... }` în JSX înseamnă:
+              "afișează aici rezultatul unei expresii JavaScript". */}
           {randeazaPagina()}
         </div>
       </main>

@@ -337,6 +337,8 @@ export default function PreluareAuto({
           : 5;
 
   return (
+    // JSX-ul de mai jos descrie tot ecranul de recepție.
+    // Aici combinăm elemente de interfață cu componente React și expresii JavaScript.
     <section className="space-y-6">
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
