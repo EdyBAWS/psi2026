@@ -9,12 +9,17 @@ interface ManoperaItem {
   durataStd: number;
 }
 
+const listaManoperaInitiala: ManoperaItem[] = [
+  { idManopera: 1, codManopera: 'MAN-SCHIMB-ULEI', durataStd: 0.5 },
+  { idManopera: 2, codManopera: 'MAN-DISTRIBUTIE', durataStd: 4.0 },
+  { idManopera: 3, codManopera: 'MAN-DIAGNOZA', durataStd: 1.0 },
+  { idManopera: 4, codManopera: 'MAN-FRANE-FATA', durataStd: 2.0 },
+  { idManopera: 5, codManopera: 'MAN-TINICHIGERIE-ELEMENT', durataStd: 5.5 },
+  { idManopera: 6, codManopera: 'MAN-SERVICE-AC', durataStd: 1.8 },
+];
+
 export default function Manopera() {
-  const [listaManopera, setListaManopera] = useState<ManoperaItem[]>([
-    { idManopera: 1, codManopera: 'MAN-SCHIMB-ULEI', durataStd: 0.5 },
-    { idManopera: 2, codManopera: 'MAN-DISTRIBUTIE', durataStd: 4.0 },
-    { idManopera: 3, codManopera: 'MAN-DIAGNOZA', durataStd: 1.0 },
-  ]);
+  const [listaManopera, setListaManopera] = useState<ManoperaItem[]>(listaManoperaInitiala);
 
   // State pentru a afișa/ascunde formularul
   const [arataFormular, setArataFormular] = useState(false);

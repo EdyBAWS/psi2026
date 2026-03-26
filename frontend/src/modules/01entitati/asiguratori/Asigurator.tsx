@@ -26,8 +26,41 @@ const calculeazaUrmatorulIdAsigurator = (asiguratori: AsiguratorType[]) =>
     0,
   ) + 1;
 
+const asiguratoriInitiali: AsiguratorType[] = [
+  {
+    idAsigurator: 1,
+    denumire: 'Allianz-Țiriac Asigurări',
+    CUI: 'RO6120740',
+    telefon: '021 208 22 22',
+  },
+  {
+    idAsigurator: 2,
+    denumire: 'Groupama Asigurări',
+    CUI: 'RO6291812',
+    telefon: '021 302 92 00',
+  },
+  {
+    idAsigurator: 3,
+    denumire: 'Omniasig Vienna Insurance Group',
+    CUI: 'RO5587260',
+    telefon: '021 405 74 20',
+  },
+  {
+    idAsigurator: 4,
+    denumire: 'Asirom Vienna Insurance Group',
+    CUI: 'RO336290',
+    telefon: '021 9146',
+  },
+  {
+    idAsigurator: 5,
+    denumire: 'Generali România',
+    CUI: 'RO2884407',
+    telefon: '021 312 36 35',
+  },
+];
+
 export default function Asigurator() {
-  const [asiguratori, setAsiguratori] = useState<AsiguratorType[]>([]);
+  const [asiguratori, setAsiguratori] = useState<AsiguratorType[]>(asiguratoriInitiali);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
   const [editingId, setEditingId] = useState<number | null>(null);
 

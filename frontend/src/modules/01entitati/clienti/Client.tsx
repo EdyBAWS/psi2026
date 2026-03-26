@@ -33,11 +33,66 @@ const valoriInitiale: ClientFormValues = {
 const calculeazaUrmatorulIdClient = (clienti: ClientType[]) =>
   clienti.reduce((maximCurent, client) => Math.max(maximCurent, client.idClient), 0) + 1;
 
+const clientiInitiali: ClientType[] = [
+  {
+    idClient: 1,
+    tipClient: 'PF',
+    telefon: '0722 445 781',
+    email: 'ion.popescu@gmail.com',
+    adresa: 'Str. Păcurari 18, Iași',
+    soldDebitor: 0,
+    CNP: '1800101223344',
+    serieCI: 'MX123456',
+  },
+  {
+    idClient: 2,
+    tipClient: 'PJ',
+    telefon: '021 440 55 90',
+    email: 'service@autofleet.ro',
+    adresa: 'Bd. Timișoara 101, București',
+    soldDebitor: 1550,
+    CUI: 'RO9876543',
+    IBAN: 'RO49AAAA1B31007593840000',
+    nrRegCom: 'J40/1234/2018',
+  },
+  {
+    idClient: 3,
+    tipClient: 'PF',
+    telefon: '0744 118 620',
+    email: 'ana.marinescu@yahoo.com',
+    adresa: 'Str. Observatorului 74, Cluj-Napoca',
+    soldDebitor: 0,
+    CNP: '2870306123456',
+    serieCI: 'CJ654321',
+  },
+  {
+    idClient: 4,
+    tipClient: 'PJ',
+    telefon: '031 808 44 12',
+    email: 'office@tehnoparts.ro',
+    adresa: 'Șos. Industriilor 22, București',
+    soldDebitor: 4200,
+    CUI: 'RO44556677',
+    IBAN: 'RO95INGB0000999912345678',
+    nrRegCom: 'J40/7788/2016',
+  },
+  {
+    idClient: 5,
+    tipClient: 'PF',
+    telefon: '0733 905 118',
+    email: 'marius.ilie@gmail.com',
+    adresa: 'Str. Romană 11, Piatra-Neamț',
+    soldDebitor: 380,
+    CNP: '1900714223345',
+    serieCI: 'NT778899',
+  },
+];
+
 // Această pagină este un CRUD local pentru clienți.
 // Ea folosește `react-hook-form` pentru colectarea datelor
 // și `zod` pentru regulile de validare.
 export default function Client() {
-  const [clienti, setClienti] = useState<ClientType[]>([]);
+  const [clienti, setClienti] = useState<ClientType[]>(clientiInitiali);
   const [modLucru, setModLucru] = useState<'vizualizare' | 'adaugare' | 'modificare'>('vizualizare');
   const [editingId, setEditingId] = useState<number | null>(null);
   // Tipul selectat este ținut separat pentru că ne trebuie imediat în UI
