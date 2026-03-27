@@ -8,6 +8,9 @@ export const clientiEntitateMock: ClientEntitate[] = [
   {
     idClient: 1,
     tipClient: 'PF',
+    status: 'Activ', // Adăugat
+    nume: 'Popescu', // Adăugat (lipsea și apărea "-" în tabel)
+    prenume: 'Ion',
     telefon: '0722 445 781',
     email: 'ion.popescu@gmail.com',
     adresa: 'Str. Păcurari 18, Iași',
@@ -18,6 +21,8 @@ export const clientiEntitateMock: ClientEntitate[] = [
   {
     idClient: 2,
     tipClient: 'PJ',
+    status: 'Activ',
+    nume: 'SC Auto Fleet SRL', // Adăugat
     telefon: '021 440 55 90',
     email: 'service@autofleet.ro',
     adresa: 'Bd. Timișoara 101, București',
@@ -29,6 +34,9 @@ export const clientiEntitateMock: ClientEntitate[] = [
   {
     idClient: 3,
     tipClient: 'PF',
+    status: 'Activ',
+    nume: 'Marinescu', // Adăugat
+    prenume: 'Ana',
     telefon: '0744 118 620',
     email: 'ana.marinescu@yahoo.com',
     adresa: 'Str. Observatorului 74, Cluj-Napoca',
@@ -39,6 +47,8 @@ export const clientiEntitateMock: ClientEntitate[] = [
   {
     idClient: 4,
     tipClient: 'PJ',
+    status: 'Activ',
+    nume: 'Tehnoparts Solutions', // Adăugat
     telefon: '031 808 44 12',
     email: 'office@tehnoparts.ro',
     adresa: 'Șos. Industriilor 22, București',
@@ -50,6 +60,9 @@ export const clientiEntitateMock: ClientEntitate[] = [
   {
     idClient: 5,
     tipClient: 'PF',
+    status: 'Inactiv', // Exemplu de client inactiv conform imaginii tale
+    nume: 'Ilie', // Adăugat
+    prenume: 'Marius',
     telefon: '0733 905 118',
     email: 'marius.ilie@gmail.com',
     adresa: 'Str. Romană 11, Piatra-Neamț',
@@ -62,6 +75,7 @@ export const clientiEntitateMock: ClientEntitate[] = [
 export const angajatiEntitateMock: AngajatEntitate[] = [
   {
     idAngajat: 1,
+    status: 'Activ',
     nume: 'Ionescu',
     prenume: 'Mihai',
     CNP: '1820101223344',
@@ -73,6 +87,7 @@ export const angajatiEntitateMock: AngajatEntitate[] = [
   },
   {
     idAngajat: 2,
+    status: 'Activ',
     nume: 'Popa',
     prenume: 'Andrei',
     CNP: '1840615223344',
@@ -84,6 +99,7 @@ export const angajatiEntitateMock: AngajatEntitate[] = [
   },
   {
     idAngajat: 3,
+    status: 'Activ',
     nume: 'Marin',
     prenume: 'Elena',
     CNP: '2860226223344',
@@ -95,6 +111,7 @@ export const angajatiEntitateMock: AngajatEntitate[] = [
   },
   {
     idAngajat: 4,
+    status: 'Activ',
     nume: 'Dumitrescu',
     prenume: 'Sorin',
     CNP: '1811111223344',
@@ -106,6 +123,7 @@ export const angajatiEntitateMock: AngajatEntitate[] = [
   },
   {
     idAngajat: 5,
+    status: 'Activ',
     nume: 'Neagu',
     prenume: 'Alexandra',
     CNP: '2890305223344',
@@ -120,30 +138,35 @@ export const angajatiEntitateMock: AngajatEntitate[] = [
 export const asiguratoriEntitateMock: AsiguratorEntitate[] = [
   {
     idAsigurator: 1,
+    status: 'Activ',
     denumire: 'Allianz-Țiriac Asigurări',
     CUI: 'RO6120740',
     telefon: '021 208 22 22',
   },
   {
     idAsigurator: 2,
+    status: 'Activ',
     denumire: 'Groupama Asigurări',
     CUI: 'RO6291812',
     telefon: '021 302 92 00',
   },
   {
     idAsigurator: 3,
+    status: 'Activ',
     denumire: 'Omniasig Vienna Insurance Group',
     CUI: 'RO5587260',
     telefon: '021 405 74 20',
   },
   {
     idAsigurator: 4,
+    status: 'Activ',
     denumire: 'Asirom Vienna Insurance Group',
     CUI: 'RO336290',
     telefon: '021 9146',
   },
   {
     idAsigurator: 5,
+    status: 'Activ',
     denumire: 'Generali România',
     CUI: 'RO2884407',
     telefon: '021 312 36 35',
