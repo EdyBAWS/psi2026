@@ -6,6 +6,9 @@ export type TipClientCrud = 'PF' | 'PJ';
 export type TipClientOperational = 'Persoana Fizica' | 'Persoana Juridica' | 'Flota';
 export type TipAngajatCore = 'Manager' | 'Mecanic' | 'Receptioner';
 
+// --- TIP NOU ADAUGAT PENTRU SOFT-DELETE ---
+export type StatusEntitate = 'Activ' | 'Inactiv';
+
 export interface ContactCore {
   telefon: string;
   email: string;
@@ -13,6 +16,9 @@ export interface ContactCore {
 
 export interface ClientCoreBase extends ContactCore {
   idClient: number;
+  nume: string;              // <-- Obligatoriu pentru toți clienții
+  prenume?: string;          // <-- Opțional (doar pentru PF)
+  status: StatusEntitate;    // <-- Pentru funcția de Dezactivare
 }
 
 export interface AsiguratorCore {
@@ -21,6 +27,7 @@ export interface AsiguratorCore {
   CUI: string;
   telefon: string;
   email?: string;
+  status: StatusEntitate;    // <-- Pentru funcția de Dezactivare
 }
 
 export interface AngajatCore extends ContactCore {
@@ -29,6 +36,7 @@ export interface AngajatCore extends ContactCore {
   prenume: string;
   CNP: string;
   tipAngajat: TipAngajatCore;
+  status: StatusEntitate;    // <-- Pentru funcția de Dezactivare
 }
 
 export const tipClientCrudLaOperational: Record<TipClientCrud, TipClientOperational> = {
