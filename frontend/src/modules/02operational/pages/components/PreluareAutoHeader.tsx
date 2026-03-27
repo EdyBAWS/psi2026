@@ -128,7 +128,7 @@ export default function PreluareAutoHeader({
           {esteStickyActiv ? (
             <>
               <div className="absolute inset-0 -z-10 rounded-2xl bg-white/38 backdrop-blur-[32px] backdrop-saturate-150" />
-              <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-b from-white/50 via-white/34 to-white/30" />
+              <div className="absolute inset-0 -z-10 rounded-2xl bg-linear-to-b from-white/50 via-white/34 to-white/30" />
             </>
           ) : null}
 
