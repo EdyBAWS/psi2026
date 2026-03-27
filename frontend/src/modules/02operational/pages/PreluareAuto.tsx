@@ -115,6 +115,7 @@ export default function PreluareAuto({
     dosarValid,
     esteLucrareAsigurare,
     idMecanicSelectat,
+    poateSalva,
     pozitiiDraft,
     vehiculSelectat,
   });

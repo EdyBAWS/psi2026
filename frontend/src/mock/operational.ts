@@ -20,6 +20,7 @@ export const mockClienti: Client[] = [
   {
     idClient: 1001,
     nume: 'Ion Popescu',
+    status: 'Activ',
     telefon: '0722 445 781',
     email: 'ion.popescu@gmail.com',
     tipClient: 'Persoana Fizica',
@@ -28,6 +29,7 @@ export const mockClienti: Client[] = [
   {
     idClient: 1002,
     nume: 'Auto Fleet Solutions',
+    status: 'Activ',
     telefon: '021 440 55 90',
     email: 'service@autofleet.ro',
     tipClient: 'Flota',
@@ -36,6 +38,7 @@ export const mockClienti: Client[] = [
   {
     idClient: 1003,
     nume: 'Ana Marinescu',
+    status: 'Activ',
     telefon: '0744 118 620',
     email: 'ana.marinescu@yahoo.com',
     tipClient: 'Persoana Fizica',
@@ -44,6 +47,7 @@ export const mockClienti: Client[] = [
   {
     idClient: 1004,
     nume: 'Tehno Parts Distribution',
+    status: 'Activ',
     telefon: '031 808 44 12',
     email: 'office@tehnoparts.ro',
     tipClient: 'Persoana Juridica',
@@ -52,6 +56,7 @@ export const mockClienti: Client[] = [
   {
     idClient: 1005,
     nume: 'Marius Ilie',
+    status: 'Activ',
     telefon: '0733 905 118',
     email: 'marius.ilie@gmail.com',
     tipClient: 'Persoana Fizica',
@@ -60,6 +65,7 @@ export const mockClienti: Client[] = [
   {
     idClient: 1006,
     nume: 'Urban Courier Fleet',
+    status: 'Activ',
     telefon: '021 9988 777',
     email: 'operational@urbancourier.ro',
     tipClient: 'Flota',
@@ -68,6 +74,7 @@ export const mockClienti: Client[] = [
   {
     idClient: 1007,
     nume: 'Roxana Dumitru',
+    status: 'Activ',
     telefon: '0729 551 240',
     email: 'roxana.dumitru@gmail.com',
     tipClient: 'Persoana Fizica',
@@ -76,6 +83,7 @@ export const mockClienti: Client[] = [
   {
     idClient: 1008,
     nume: 'Construct Fleet Management',
+    status: 'Activ',
     telefon: '031 999 12 12',
     email: 'claims@constructfleet.ro',
     tipClient: 'Flota',
