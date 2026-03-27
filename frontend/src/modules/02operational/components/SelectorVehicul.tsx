@@ -78,7 +78,7 @@ export default function SelectorVehicul({
                 onClick={() => onSelecteaza(esteSelectat ? null : vehicul.idVehicul)}
                 className={`relative flex flex-col items-start gap-4 rounded-xl border p-4 text-left transition-all ${
                   esteSelectat
-                    ? 'border-indigo-600 bg-indigo-50 shadow-md ring-1 ring-indigo-600'
+                    ? 'border-slate-200 bg-indigo-50 shadow-md ring-2 ring-inset ring-indigo-600'
                     : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'
                 }`}
               >
