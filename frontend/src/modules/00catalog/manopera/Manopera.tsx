@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { StatCard } from '../../../componente/ui/StatCard';
+import { manoperaCatalogMock } from '../../../mock/catalog';
 
 // Acesta este un catalog local de operațiuni de manoperă.
 // Fluxul este intenționat simplu: utilizatorul adaugă rapid un cod și o durată standard.
@@ -10,11 +12,7 @@ interface ManoperaItem {
 }
 
 export default function Manopera() {
-  const [listaManopera, setListaManopera] = useState<ManoperaItem[]>([
-    { idManopera: 1, codManopera: 'MAN-SCHIMB-ULEI', durataStd: 0.5 },
-    { idManopera: 2, codManopera: 'MAN-DISTRIBUTIE', durataStd: 4.0 },
-    { idManopera: 3, codManopera: 'MAN-DIAGNOZA', durataStd: 1.0 },
-  ]);
+  const [listaManopera, setListaManopera] = useState<ManoperaItem[]>(manoperaCatalogMock);
 
   // State pentru a afișa/ascunde formularul
   const [arataFormular, setArataFormular] = useState(false);
@@ -22,6 +20,11 @@ export default function Manopera() {
   // State pentru câmpurile formularului
   const [codManopera, setCodManopera] = useState('');
   const [durataStd, setDurataStd] = useState('');
+
+  const durataMedie =
+    listaManopera.length === 0
+      ? 0
+      : listaManopera.reduce((total, item) => total + item.durataStd, 0) / listaManopera.length;
 
   const handleSalvare = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +61,16 @@ export default function Manopera() {
         >
           {arataFormular ? 'Anulează' : '+ Adaugă Operațiune'}
         </button>
+      </div>
+
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <StatCard label="Operațiuni" value={listaManopera.length} />
+        <StatCard label="Durată medie" value={`${durataMedie.toFixed(1)}h`} tone="info" />
+        <StatCard
+          label="Durată maximă"
+          value={`${Math.max(...listaManopera.map((item) => item.durataStd), 0).toFixed(1)}h`}
+          tone="warning"
+        />
       </div>
 
       {/* Formularul de Adăugare (vizibil doar dacă arataFormular e true) */}

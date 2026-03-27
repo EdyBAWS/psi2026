@@ -1,3 +1,10 @@
+import type {
+  AngajatCore,
+  AsiguratorCore,
+  ClientCoreBase,
+  TipClientOperational,
+} from '../../types/domain';
+
 // Tipurile din acest fișier descriu modelul domeniului operațional.
 // Am păstrat nucleul schemei inițiale și am adăugat câmpuri uzuale pentru
 // recepția auto, astfel încât fluxul să semene mai mult cu un service real.
@@ -5,7 +12,7 @@
 // Aceste tipuri simple sunt folosite ca liste de valori permise.
 // Avantajul pentru TypeScript este că prindem mai repede greșeli de scriere
 // și știm exact ce opțiuni poate avea un câmp din formular sau din datele salvate.
-export type TipClient = 'Persoana Fizica' | 'Persoana Juridica' | 'Flota';
+export type TipClient = TipClientOperational;
 export type TipPlata = 'Client Direct' | 'Asigurare' | 'Flota';
 export type PrioritateComanda = 'Scazuta' | 'Normala' | 'Ridicata' | 'Urgenta';
 export type NivelCombustibil = 'Rezerva' | '1/4' | '1/2' | '3/4' | 'Plin';
@@ -27,11 +34,8 @@ export type StatusComanda =
 // `Client` este entitatea care deține vehiculul.
 // În UI o folosim pentru a afișa rapid cine aduce mașina în service
 // și pentru a decide din start anumite valori, cum ar fi tipul de plată.
-export interface Client {
-  idClient: number;
+export interface Client extends ClientCoreBase {
   nume: string;
-  telefon: string;
-  email: string;
   tipClient: TipClient;
   denumireCompanie: string | null;
 }
@@ -113,14 +117,10 @@ export interface PozitieComanda {
   observatiiPozitie: string;
 }
 
-export interface Asigurator {
-  idAsigurator: number;
-  denumire: string;
-}
+export type Asigurator = Pick<AsiguratorCore, 'idAsigurator' | 'denumire'>;
 
-export interface Mecanic {
+export interface Mecanic extends Pick<AngajatCore, 'nume'> {
   idMecanic: number;
-  nume: string;
   specialitate: string;
 }
 
