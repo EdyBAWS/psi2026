@@ -1,3 +1,6 @@
+// Ecranul de manoperă este un exemplu simplu de CRUD local.
+// Datele pornesc din mock-uri comune, iar apoi utilizatorul lucrează doar
+// cu starea din browser, fără backend sau persistență reală.
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { manoperaCatalogMock, type ManoperaCatalogMock, type CategorieManopera } from '../../../mock/catalog';
@@ -9,13 +12,14 @@ export default function Manopera() {
   const [listaManopera, setListaManopera] = useState<ManoperaCatalogMock[]>(manoperaCatalogMock);
   const [arataFormular, setArataFormular] = useState(false);
   
-  // Filtre și Sortare
+  // Filtrele și sortarea schimbă doar ce vedem în tabel,
+  // nu lista brută de operațiuni.
   const [cautare, setCautare] = useState('');
   const [filtruCategorie, setFiltruCategorie] = useState<CategorieManopera | 'TOATE'>('TOATE');
   const [sortField, setSortField] = useState<SortField>('denumire');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  // Form State
+  // Aici păstrăm valorile temporare din formularul de adăugare.
   const [form, setForm] = useState<Partial<ManoperaCatalogMock>>({ categorie: 'Mecanică Ușoară' });
 
   const handleSort = (field: SortField) => {
@@ -24,11 +28,13 @@ export default function Manopera() {
   };
 
   const listaFiltrata = listaManopera
+    // Mai întâi filtrăm după categorie și termenul de căutare.
     .filter(m => 
       (filtruCategorie === 'TOATE' || m.categorie === filtruCategorie) &&
       (m.codManopera.toLowerCase().includes(cautare.toLowerCase()) || 
        m.denumire.toLowerCase().includes(cautare.toLowerCase()))
     )
+    // Abia după filtrare aplicăm sortarea cerută de utilizator.
     .sort((a, b) => {
       let comparison = 0;
       if (sortField === 'codManopera') comparison = a.codManopera.localeCompare(b.codManopera);
@@ -44,6 +50,7 @@ export default function Manopera() {
       return;
     }
 
+    // În varianta demo generăm un ID local, suficient pentru randare și editare.
     const nouaOp = { ...form, idManopera: Date.now() } as ManoperaCatalogMock;
     setListaManopera([nouaOp, ...listaManopera]);
     toast.success('Operațiunea a fost salvată în nomenclator.');

@@ -46,7 +46,11 @@ export interface IncasareMock {
 export interface NotificareMock {
   id: number;
   data: string;
+  ora?: string;
   mesaj: string;
+  paginaDestinatie?: string;
+  sursaModul?: string;
+  textActiune?: string;
   tip: 'Info' | 'Avertizare' | 'Succes';
 }
 

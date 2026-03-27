@@ -1,3 +1,5 @@
+// Ecranul de clienți combină mai multe concepte utile pentru un junior:
+// formular validat, filtrare, sortare, paginare și schimbarea statusului local.
 import { useState, useMemo } from 'react';
 import { Building2, Users } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,6 +55,7 @@ export default function Client() {
     defaultValues: valoriInitiale,
   });
 
+  // `useMemo` recalculază lista derivată doar când se schimbă dependențele importante.
   const dateProcesate = useMemo(() => {
     const prelucrate = clienti.filter(c => {
       const statusCurent = c.status || 'Activ';
@@ -90,6 +93,7 @@ export default function Client() {
   const clientiPaginati = dateProcesate.slice((paginaCurenta - 1) * inregistrariPePagina, paginaCurenta * inregistrariPePagina);
 
   const handleSort = (key: keyof ClientType) => {
+    // Dacă apăsăm din nou aceeași coloană, inversăm sensul sortării.
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
     setSortConfig({ key, direction });
@@ -108,6 +112,8 @@ export default function Client() {
   };
 
   const incepeEditare = (client: ClientType) => {
+    // La editare populăm formularul cu datele clientului existent.
+    // Pentru câmpurile opționale folosim fallback-uri, ca input-urile să rămână controlate.
     setModLucru('modificare');
     setEditingId(client.idClient);
     setTipClientSelectat(client.tipClient);

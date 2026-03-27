@@ -1,3 +1,7 @@
+// Helperii din acest fișier țin logica "de listă" și "de selecție"
+// pentru pagina `GestiuneComenzi`.
+// Scopul este ca pagina principală să rămână mai ușor de citit:
+// UI-ul stă în componentă, iar calculele și legăturile dintre entități stau aici.
 import { calculeazaRezumatPozitii, comandaEsteActiva, comandaEsteIntarziata } from '../calculations';
 import type {
   Asigurator,
@@ -62,6 +66,8 @@ export const formatData = (valoare: Date | null) =>
   valoare ? valoare.toLocaleDateString('ro-RO') : 'Nefinalizată';
 
 export function descriereSortare(sortField: GestiuneSortField, sortDir: GestiuneSortDir) {
+  // Acest text este util pentru a explica utilizatorului
+  // cum este ordonată lista în momentul curent.
   const etichete: Record<GestiuneSortField, string> = {
     data: 'data deschiderii',
     nrComanda: 'numărul comenzii',
@@ -87,6 +93,8 @@ export function filtreazaSiSorteazaComenzi(
 
   return comenzi
     .filter((comanda) => {
+      // Pentru fiecare comandă rezolvăm și contextul ei minim,
+      // adică vehiculul și clientul asociat.
       const vehicul = vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
       const client = clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
       const potrivireCautare =
@@ -118,6 +126,8 @@ export function filtreazaSiSorteazaComenzi(
       );
     })
     .sort((a, b) => {
+      // Sortarea rămâne într-un singur loc, ca să nu duplicăm
+      // aceeași logică în tabel și în pagina principală.
       let comparison = 0;
 
       if (sortField === 'data') {
@@ -143,6 +153,8 @@ export function construiesteLiniiLista(
   clienti: Client[],
   vehicule: Vehicul[],
 ): ComandaFiltrataContext[] {
+  // În listă vrem deja o structură "pregătită de afișare",
+  // nu doar comanda brută. De aceea construim aici contextul complet.
   return comenziFiltrate.map((comanda) => {
     const vehicul = vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
     const client = clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
@@ -166,6 +178,9 @@ export function rezolvaDetaliiComandaSelectata(
   asiguratori: Asigurator[],
   pozitii: PozitieComanda[],
 ): DetaliiComandaSelectata {
+  // Când utilizatorul selectează o comandă, pagina din dreapta are nevoie de
+  // multe legături rezolvate: client, vehicul, mecanic, dosar, asigurator, poziții.
+  // Helperul acesta centralizează toate aceste căutări într-un singur loc.
   const comandaSelectata =
     idComandaSelectata === null
       ? null
@@ -204,6 +219,8 @@ export function rezolvaDetaliiComandaSelectata(
 }
 
 export function calculeazaStatisticiComenzi(comenzi: ComandaService[]) {
+  // Cardurile de statistică folosesc aceeași sursă de date,
+  // deci este mai sigur să le calculăm centralizat aici.
   return {
     totalComenzi: comenzi.length,
     totalComenziActive: comenzi.filter((comanda) => comandaEsteActiva(comanda.status)).length,

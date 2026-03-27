@@ -1,3 +1,6 @@
+// Tabelul este componenta vizuală a listei de comenzi.
+// El nu filtrează și nu sortează singur datele; primește deja o listă pregătită
+// de pagina părinte și doar o afișează.
 import StatusBadge from '../../components/StatusBadge';
 import type { ComandaFiltrataContext, GestiuneSortDir, GestiuneSortField } from '../gestiuneComenzi.helpers';
 import { formatData, formatSuma } from '../gestiuneComenzi.helpers';
@@ -19,6 +22,7 @@ function SortIcon({
   sortDir: GestiuneSortDir;
   sortField: GestiuneSortField;
 }) {
+  // Iconul nu face sortarea; doar reflectă starea curentă a sortării.
   const active = sortField === field;
 
   return (
@@ -66,6 +70,8 @@ export default function GestiuneComenziTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
+        {/* Structura clasică de tabel HTML este:
+            `table` -> `thead` / `tbody` -> `tr` -> `th` / `td`. */}
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400">
             <tr>
@@ -76,6 +82,8 @@ export default function GestiuneComenziTable({
                     className={`group cursor-pointer select-none px-6 py-4 transition-colors hover:bg-slate-100 ${
                       field === 'valoare' ? 'text-right' : ''
                     }`}
+                    // Când utilizatorul apasă pe antetul unei coloane,
+                    // trimitem înapoi numele câmpului după care trebuie făcută sortarea.
                     onClick={() => onSort(field)}
                   >
                     {sortLabels[field]}
@@ -97,6 +105,8 @@ export default function GestiuneComenziTable({
                       ? 'bg-indigo-50/60 shadow-[inset_4px_0_0_0_rgba(99,102,241,1)]'
                       : 'hover:-translate-y-px hover:bg-slate-50/80 hover:shadow-sm'
                   }`}
+                  // Aici nu modificăm rândul local.
+                  // Spunem doar părintelui ce comandă a fost selectată.
                   onClick={() => onSelecteazaComanda(esteSelectata ? null : comanda.idComanda)}
                 >
                   <td className="px-6 py-4">
@@ -116,6 +126,8 @@ export default function GestiuneComenziTable({
                     <p className="mt-1 text-xs font-medium text-slate-600">{client?.nume ?? '-'}</p>
                   </td>
                   <td className="px-6 py-4">
+                    {/* Într-o singură coloană combinăm și badge-ul de status,
+                        și avertizarea de întârziere, pentru un rezumat rapid. */}
                     <div className="flex flex-col items-start gap-1.5">
                       <StatusBadge status={comanda.status} />
                       {intarziata ? (

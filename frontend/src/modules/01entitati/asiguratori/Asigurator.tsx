@@ -1,3 +1,5 @@
+// CRUD-ul de asiguratori este mai simplu, dar păstrează aceeași structură:
+// formular validat, listă filtrabilă și schimbare de status local.
 import { useState, useMemo } from 'react';
 import { ShieldCheck, Users } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,6 +44,7 @@ export default function Asigurator() {
     defaultValues: valoriInitiale,
   });
 
+  // Și aici lista tabelului este derivată, nu afișăm direct array-ul brut.
   const dateProcesate = useMemo(() => {
     const prelucrate = asiguratori.filter(a => {
       const statusCurent = a.status || 'Activ';

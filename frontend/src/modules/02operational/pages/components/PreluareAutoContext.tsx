@@ -1,3 +1,6 @@
+// Această componentă afișează contextul minim al recepției:
+// cine este clientul, ce vehicul a fost ales și dacă lucrarea merge pe asigurare.
+// Starea rămâne în componenta părinte; aici doar afișăm datele și trimitem evenimentele înapoi.
 import type { Client, ComandaService, Vehicul } from '../../types';
 import { formatData } from '../preluareAuto.helpers';
 
@@ -18,6 +21,7 @@ export default function PreluareAutoContext({
 }: PreluareAutoContextProps) {
   return (
     <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      {/* Cardul din stânga explică "pe cine" și "ce mașină" recepționăm. */}
       <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           Context client și vehicul
@@ -51,6 +55,8 @@ export default function PreluareAutoContext({
         </dl>
       </div>
 
+      {/* Cardul din dreapta controlează tipul fluxului:
+          client/flotă vs. daună pe asigurare. */}
       <div className="flex flex-col rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
@@ -73,6 +79,7 @@ export default function PreluareAutoContext({
         </div>
 
         {comandaActivaExistenta ? (
+          // Mesajul apare doar dacă există deja o comandă activă pentru același vehicul.
           <div className="mb-4 flex-1 rounded-xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-800">
             Există deja comanda activă <strong>{comandaActivaExistenta.nrComanda}</strong> pentru acest
             vehicul, cu status <strong>{comandaActivaExistenta.status}</strong> și termen promis{' '}

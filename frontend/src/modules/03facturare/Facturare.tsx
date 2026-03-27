@@ -1,3 +1,5 @@
+// Ecranul de facturare pornește din comenzi facturabile demo
+// și simulează emiterea unei facturi fiscale pe baza lor.
 import { useMemo, useState } from 'react';
 import { FileClock, Receipt, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,6 +38,7 @@ export default function Facturare() {
   );
 
   const handleSort = (field: FacturareSortField) => {
+    // Click repetat pe aceeași coloană = inversăm direcția sortării.
     if (sortField === field) {
       setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
       return;
@@ -46,6 +49,10 @@ export default function Facturare() {
   };
 
   const comenziFiltrate = useMemo(() => {
+    // Lista vizibilă este derivată din:
+    // - comenzi încă nefacturate
+    // - căutarea introdusă
+    // - starea curentă a sortării
     const termen = cautare.trim().toLowerCase();
 
     return [...comenziGata]
@@ -74,11 +81,14 @@ export default function Facturare() {
   );
 
   const liniiFactura: LinieFacturaMock[] = useMemo(() => {
+    // Liniile documentului depind direct de comanda selectată.
     if (!comandaSelectata) return [];
     return obtineLiniiFacturaDinComandaMock(comandaSelectata.idComanda);
   }, [comandaSelectata]);
 
   const { subtotal, valoareTVA, valoareDiscount, totalPlata, dataScadenta } = useMemo(() => {
+    // Toate sumele documentului sunt calculate într-un singur loc,
+    // ca să nu împrăștiem formulele financiare prin JSX.
     const sub = liniiFactura.reduce((acc, linie) => acc + (linie.cantitate * linie.pretUnitar), 0);
     const disc = sub * (discountProcent / 100);
     const subDupaDiscount = sub - disc;
@@ -97,6 +107,8 @@ export default function Facturare() {
   }, [liniiFactura, discountProcent, termenPlata]);
 
   const handleEmitereFactura = () => {
+    // În această aplicație demo "emiterea" actualizează doar starea locală
+    // și afișează feedback prin toast.
     if (!comandaSelectata) {
       toast.error('Selectează o comandă înainte de emiterea facturii.');
       return;
