@@ -34,6 +34,7 @@ interface PasFluxParams {
   dosarValid: boolean;
   esteLucrareAsigurare: boolean;
   idMecanicSelectat: number | null;
+  poateSalva: boolean;
   pozitiiDraft: PozitieComandaDraft[];
   vehiculSelectat: Vehicul | null;
 }
@@ -43,6 +44,7 @@ export function calculeazaFluxPreluare({
   dosarValid,
   esteLucrareAsigurare,
   idMecanicSelectat,
+  poateSalva,
   pozitiiDraft,
   vehiculSelectat,
 }: PasFluxParams) {
@@ -51,25 +53,35 @@ export function calculeazaFluxPreluare({
     : ['Selectare auto', 'Simptome', 'Deviz', 'Confirmare'];
 
   let pasCurent = 1;
+  const simptomeCompletate = detaliiPreluare.simptomeReclamate.trim().length > 0;
+  const devizCompletat = suntPozitiiValide(pozitiiDraft) && idMecanicSelectat !== null;
 
-  if (vehiculSelectat) {
+  if (!vehiculSelectat) {
+    return { pasiFlux, pasCurent };
+  }
+
+  if (!simptomeCompletate) {
+    return { pasiFlux, pasCurent };
+  }
+
+  if (esteLucrareAsigurare) {
     pasCurent = 2;
-    if (detaliiPreluare.simptomeReclamate) {
-      if (esteLucrareAsigurare) {
-        pasCurent = 3;
-        if (dosarValid) {
-          pasCurent = 4;
-          if (suntPozitiiValide(pozitiiDraft) && idMecanicSelectat !== null) {
-            pasCurent = 5;
-          }
-        }
-      } else {
-        pasCurent = 3;
-        if (suntPozitiiValide(pozitiiDraft) && idMecanicSelectat !== null) {
-          pasCurent = 4;
-        }
+
+    if (dosarValid) {
+      pasCurent = 3;
+
+      if (devizCompletat) {
+        pasCurent = poateSalva ? 5 : 4;
       }
     }
+
+    return { pasiFlux, pasCurent };
+  }
+
+  pasCurent = 2;
+
+  if (devizCompletat) {
+    pasCurent = poateSalva ? 4 : 3;
   }
 
   return { pasiFlux, pasCurent };

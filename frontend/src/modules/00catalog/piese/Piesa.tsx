@@ -19,7 +19,6 @@ export default function Piesa() {
   // Form State
   const [form, setForm] = useState<Partial<PiesaCatalogMock>>({ tip: 'NOUA', categorie: 'Altele', stoc: 0 });
 
-  const pieseNoi = piese.filter((p) => p.tip === 'NOUA').length;
   const valoareStoc = piese.reduce((acc, p) => acc + (p.pretBaza * p.stoc), 0);
   const stocEpuizat = piese.filter(p => p.stoc === 0).length;
 
