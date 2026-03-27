@@ -1,5 +1,5 @@
-import { createPortal } from 'react-dom';
-import { useEffect, useRef, useState } from 'react';
+import { createPortal } from "react-dom";
+import { useEffect, useRef, useState } from "react";
 
 interface PreluareAutoHeaderProps {
   esteLucrareAsigurare: boolean;
@@ -44,17 +44,24 @@ export default function PreluareAutoHeader({
       const wrapper = wrapperRef.current;
       if (!wrapper) return;
 
-      const main = wrapper.closest('main');
-      const section = wrapper.closest('section');
+      const main = wrapper.closest("main");
+      const section = wrapper.closest("section");
       const cardRect = wrapper.getBoundingClientRect();
 
-      const mainRect = main instanceof HTMLElement
-        ? main.getBoundingClientRect()
-        : { top: 0, left: 0, width: window.innerWidth };
+      const mainRect =
+        main instanceof HTMLElement
+          ? main.getBoundingClientRect()
+          : { top: 0, left: 0, width: window.innerWidth };
 
-      const sectionRect = section instanceof HTMLElement ? section.getBoundingClientRect() : cardRect;
+      const sectionRect =
+        section instanceof HTMLElement
+          ? section.getBoundingClientRect()
+          : cardRect;
       const overlayTop = Math.max(sectionRect.top, (mainRect as DOMRect).top);
-      const height = Math.max(cardRect.top - overlayTop + OVERLAY_EXTINDERE_SUB_CARD, 0);
+      const height = Math.max(
+        cardRect.top - overlayTop + OVERLAY_EXTINDERE_SUB_CARD,
+        0,
+      );
 
       setBlurRect({
         top: overlayTop,
@@ -66,15 +73,15 @@ export default function PreluareAutoHeader({
 
     actualizeaza();
 
-    const main = wrapperRef.current?.closest('main');
+    const main = wrapperRef.current?.closest("main");
     const target = main instanceof HTMLElement ? main : window;
 
-    target.addEventListener('scroll', actualizeaza, { passive: true });
-    window.addEventListener('resize', actualizeaza);
+    target.addEventListener("scroll", actualizeaza, { passive: true });
+    window.addEventListener("resize", actualizeaza);
 
     return () => {
-      target.removeEventListener('scroll', actualizeaza);
-      window.removeEventListener('resize', actualizeaza);
+      target.removeEventListener("scroll", actualizeaza);
+      window.removeEventListener("resize", actualizeaza);
     };
   }, [esteStickyActiv]);
 
@@ -87,16 +94,16 @@ export default function PreluareAutoHeader({
             <div
               aria-hidden="true"
               style={{
-                position: 'fixed',
+                position: "fixed",
                 top: blurRect.top,
                 left: blurRect.left,
                 width: blurRect.width,
                 height: blurRect.height,
                 zIndex: 39,
-                pointerEvents: 'none',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                background: 'rgba(255, 255, 255, 0.16)',
+                pointerEvents: "none",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                background: "rgba(255, 255, 255, 0.16)",
                 borderBottomLeftRadius: `${RAZA_CARD}px`,
                 borderBottomRightRadius: `${RAZA_CARD}px`,
               }}
@@ -108,14 +115,14 @@ export default function PreluareAutoHeader({
       <div
         ref={wrapperRef}
         className={`pointer-events-none relative transition-all duration-300 ${
-          esteStickyActiv ? 'sticky top-0 z-40 mb-6' : 'z-0'
+          esteStickyActiv ? "sticky top-0 z-40 mb-6" : "z-0"
         }`}
       >
         <div
           className={`pointer-events-auto relative z-10 isolate border transition-all duration-300 ${
             esteStickyActiv
-              ? 'rounded-2xl border-indigo-100/70 bg-transparent px-5 py-4 shadow-md shadow-slate-900/5'
-              : 'rounded-2xl border-slate-100 bg-white p-8 shadow-sm'
+              ? "rounded-2xl border-indigo-100/70 bg-transparent px-5 py-4 shadow-md shadow-slate-900/5"
+              : "rounded-2xl border-slate-100 bg-white p-8 shadow-sm"
           }`}
         >
           {esteStickyActiv ? (
@@ -128,9 +135,12 @@ export default function PreluareAutoHeader({
           {!vehiculSelectat ? (
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h3 className="text-2xl font-bold tracking-tight text-slate-800">Preluare auto</h3>
+                <h3 className="text-2xl font-bold tracking-tight text-slate-800">
+                  Preluare auto
+                </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Alege un vehicul pentru a începe fluxul de recepție și a genera devizul inițial.
+                  Alege un vehicul pentru a începe fluxul de recepție și a
+                  genera devizul inițial.
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -145,8 +155,10 @@ export default function PreluareAutoHeader({
                 </span>
                 <div className="flex items-center gap-3">
                   <span className="hidden text-xs font-semibold uppercase tracking-wider text-indigo-600 sm:block">
-                    Pas {pasCurent}:{' '}
-                    <span className="text-slate-600">{pasiFlux[pasCurent - 1]}</span>
+                    Pas {pasCurent}:{" "}
+                    <span className="text-slate-600">
+                      {pasiFlux[pasCurent - 1]}
+                    </span>
                   </span>
                   <div className="flex gap-1">
                     {pasiFlux.map((_, index) => (
@@ -154,10 +166,10 @@ export default function PreluareAutoHeader({
                         key={index}
                         className={`h-2 rounded-full transition-all duration-300 ${
                           index + 1 === pasCurent
-                            ? 'w-6 bg-indigo-500 shadow-sm shadow-indigo-200'
+                            ? "w-6 bg-indigo-500 shadow-sm shadow-indigo-200"
                             : index + 1 < pasCurent
-                              ? 'w-2 bg-emerald-400'
-                              : 'w-2 bg-slate-200'
+                              ? "w-2 bg-emerald-400"
+                              : "w-2 bg-slate-200"
                         }`}
                       />
                     ))}
@@ -172,13 +184,13 @@ export default function PreluareAutoHeader({
                 <span
                   className={`rounded-md border px-2.5 py-1 text-xs font-medium tracking-wide shadow-sm ${
                     esteLucrareAsigurare
-                      ? 'border-amber-200 bg-amber-50/80 text-amber-800'
-                      : 'border-emerald-200 bg-emerald-50/80 text-emerald-800'
+                      ? "border-amber-200 bg-amber-50/80 text-amber-800"
+                      : "border-emerald-200 bg-emerald-50/80 text-emerald-800"
                   }`}
                 >
-                  Plătitor:{' '}
+                  Plătitor:{" "}
                   <strong className="uppercase">
-                    {esteLucrareAsigurare ? 'Asigurator' : 'Client'}
+                    {esteLucrareAsigurare ? "Asigurator" : "Client"}
                   </strong>
                 </span>
                 {esteLucrareAsigurare && stareDosarTipPolita ? (
