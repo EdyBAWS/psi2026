@@ -20,7 +20,7 @@ interface BlurOverlayRect {
 }
 
 const RAZA_CARD = 16;
-const OVERLAY_EXTINDERE_SUB_CARD = RAZA_CARD + 2;
+const SUPRAPUNERE_PX = RAZA_CARD + 8;
 
 export default function PreluareAutoHeader({
   esteLucrareAsigurare,
@@ -58,10 +58,7 @@ export default function PreluareAutoHeader({
           ? section.getBoundingClientRect()
           : cardRect;
       const overlayTop = Math.max(sectionRect.top, (mainRect as DOMRect).top);
-      const height = Math.max(
-        cardRect.top - overlayTop + OVERLAY_EXTINDERE_SUB_CARD,
-        0,
-      );
+      const height = Math.max(cardRect.top - overlayTop + SUPRAPUNERE_PX, 0);
 
       setBlurRect({
         top: overlayTop,
@@ -104,8 +101,8 @@ export default function PreluareAutoHeader({
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
                 background: "rgba(255, 255, 255, 0.16)",
-                borderBottomLeftRadius: `${RAZA_CARD}px`,
-                borderBottomRightRadius: `${RAZA_CARD}px`,
+                maskImage: `linear-gradient(to bottom, black calc(100% - ${SUPRAPUNERE_PX}px), transparent 100%)`,
+                WebkitMaskImage: `linear-gradient(to bottom, black calc(100% - ${SUPRAPUNERE_PX}px), transparent 100%)`,
               }}
             />,
             document.body,
