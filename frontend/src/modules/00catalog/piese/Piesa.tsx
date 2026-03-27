@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { StatCard } from '../../../componente/ui/StatCard';
+import { pieseCatalogMock } from '../../../mock/catalog';
 
 // Catalogul de piese este încă un ecran local și simplu,
 // dar ilustrează un pattern de bază:
@@ -17,10 +19,7 @@ interface PiesaAuto {
 }
 
 export default function Piesa() {
-  const [piese, setPiese] = useState<PiesaAuto[]>([
-    { idPiesa: 1, codPiesa: 'FIL-UL-BOSCH', producator: 'Bosch', pretBaza: 45.50, tip: 'NOUA', luniGarantie: 12 },
-    { idPiesa: 2, codPiesa: 'ALT-VW-GOLF', producator: 'Valeo', pretBaza: 350.00, tip: 'SH', gradUzura: 'Ușor uzat' },
-  ]);
+  const [piese, setPiese] = useState<PiesaAuto[]>(pieseCatalogMock);
 
   const [arataFormular, setArataFormular] = useState(false);
   
@@ -31,6 +30,9 @@ export default function Piesa() {
   const [tipPiesa, setTipPiesa] = useState<TipPiesa>('NOUA');
   const [luniGarantie, setLuniGarantie] = useState('');
   const [gradUzura, setGradUzura] = useState('');
+
+  const pieseNoi = piese.filter((piesa) => piesa.tip === 'NOUA').length;
+  const pieseSh = piese.length - pieseNoi;
 
   const handleSalvare = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +73,12 @@ export default function Piesa() {
         >
           {arataFormular ? 'Anulează' : '+ Adaugă Piesă'}
         </button>
+      </div>
+
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <StatCard label="Total piese" value={piese.length} />
+        <StatCard label="Piese noi" value={pieseNoi} tone="success" />
+        <StatCard label="Piese SH" value={pieseSh} tone="warning" />
       </div>
 
       {/* Formularul de Adăugare */}
