@@ -29,7 +29,7 @@ export default function PreluareAutoHeader({
 
   return (
     <div
-      className={`relative transition-all duration-300 ${
+      className={`pointer-events-none relative transition-all duration-300 ${
         esteStickyActiv ? 'sticky top-0 z-40 mb-6' : 'z-0'
       }`}
     >
@@ -39,7 +39,7 @@ export default function PreluareAutoHeader({
               Masca face blur-ul să pară că pornește din colțurile inferioare
               ale headerului și urcă progresiv spre partea de sus. */}
           <div
-            className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 backdrop-blur-2xl"
+            className="pointer-events-none absolute inset-x-0 top-0 bottom-0 backdrop-blur-2xl"
             style={{
               WebkitMaskImage:
                 'radial-gradient(95% 85% at left bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.72) 24%, rgba(0,0,0,0.2) 52%, transparent 74%), radial-gradient(95% 85% at right bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.72) 24%, rgba(0,0,0,0.2) 52%, transparent 74%), linear-gradient(to top, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.38) 28%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,1) 100%)',
@@ -50,7 +50,7 @@ export default function PreluareAutoHeader({
           {/* Al doilea layer nu adaugă blur nou, ci o lumină albă/translucidă
               care face efectul mai "soft" și mai atmosferic. */}
           <div
-            className="pointer-events-none absolute inset-x-0 -top-16 bottom-0"
+            className="pointer-events-none absolute inset-x-0 top-0 bottom-0"
             style={{
               background:
                 'linear-gradient(to top, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.38) 34%, rgba(255,255,255,0.9) 100%)',
@@ -64,7 +64,7 @@ export default function PreluareAutoHeader({
       ) : null}
 
       <div
-        className={`relative border bg-white/92 transition-all duration-300 ${
+        className={`pointer-events-auto relative border bg-white/92 transition-all duration-300 ${
           esteStickyActiv
             ? 'rounded-2xl border-indigo-100 px-5 py-4 shadow-md backdrop-blur-md'
             : 'rounded-2xl border-slate-100 p-8 shadow-sm'
