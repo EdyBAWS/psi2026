@@ -215,7 +215,7 @@ export default function Client() {
                 onChange={(e) => { setArataInactivi(e.target.checked); setPaginaCurenta(1); }}
                 className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
               />
-              <label htmlFor="arataInactivi" className="text-sm text-slate-600 cursor-pointer font-medium">Afișează și inactivi</label>
+              <label htmlFor="arataInactivi" className="text-sm text-slate-600 cursor-pointer font-medium">Afișează inactivi</label>
             </div>
           </div>
 
