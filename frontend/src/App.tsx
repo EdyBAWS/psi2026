@@ -50,7 +50,7 @@ export default function App() {
       case 'incasari': return <Incasari />;
       case 'catalog-piese': return <Piesa />;
       case 'catalog-manopera': return <Manopera />;
-      case 'notificari': return <Notificare />;
+      case 'notificari': return <Notificare onNavigate={setPaginaCurenta} />;
       
       default:
         return (
