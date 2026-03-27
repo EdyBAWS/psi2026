@@ -1,3 +1,6 @@
+// Pagina de piese este un ecran CRUD/demo fără backend.
+// Datele pornesc din mock-uri comune, iar utilizatorul lucrează apoi
+// doar pe starea locală a componentei.
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { pieseCatalogMock, type PiesaCatalogMock, type TipPiesaCatalogMock, type CategoriePiesa } from '../../../mock/catalog';
@@ -9,14 +12,14 @@ export default function Piesa() {
   const [piese, setPiese] = useState<PiesaCatalogMock[]>(pieseCatalogMock);
   const [arataFormular, setArataFormular] = useState(false);
   
-  // Filtre și Sortare
+  // Filtrele și sortarea schimbă doar lista afișată, nu datele brute.
   const [cautare, setCautare] = useState('');
   const [filtruTip, setFiltruTip] = useState<TipPiesaCatalogMock | 'TOATE'>('TOATE');
   const [filtruCategorie, setFiltruCategorie] = useState<CategoriePiesa | 'TOATE'>('TOATE');
   const [sortField, setSortField] = useState<SortField>('denumire');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  // Form State
+  // Aici păstrăm valorile temporare din formularul de adăugare.
   const [form, setForm] = useState<Partial<PiesaCatalogMock>>({ tip: 'NOUA', categorie: 'Altele', stoc: 0 });
 
   const valoareStoc = piese.reduce((acc, p) => acc + (p.pretBaza * p.stoc), 0);
@@ -28,6 +31,7 @@ export default function Piesa() {
   };
 
   const pieseFiltrate = piese
+    // Mai întâi filtrăm lista după tip, categorie și căutare.
     .filter(p => 
       (filtruTip === 'TOATE' || p.tip === filtruTip) &&
       (filtruCategorie === 'TOATE' || p.categorie === filtruCategorie) &&
@@ -35,6 +39,7 @@ export default function Piesa() {
        p.denumire.toLowerCase().includes(cautare.toLowerCase()) ||
        p.producator.toLowerCase().includes(cautare.toLowerCase()))
     )
+    // După filtrare aplicăm sortarea aleasă de utilizator.
     .sort((a, b) => {
       let comparison = 0;
       if (sortField === 'codPiesa') comparison = a.codPiesa.localeCompare(b.codPiesa);
@@ -51,6 +56,7 @@ export default function Piesa() {
       return;
     }
 
+    // În demo folosim un ID temporar local, suficient pentru randare.
     const nouaPiesa = { ...form, idPiesa: Date.now() } as PiesaCatalogMock;
     setPiese([nouaPiesa, ...piese]);
     toast.success('Piesa a fost adăugată în nomenclator.');

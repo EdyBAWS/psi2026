@@ -1,3 +1,5 @@
+// Pagina de angajați urmează aceeași structură ca pagina de clienți,
+// dar are câmpuri condiționale în funcție de rolul ales.
 import { useState, useMemo } from 'react';
 import { BriefcaseBusiness, Users } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,6 +55,7 @@ export default function Angajat() {
     defaultValues: valoriInitiale,
   });
 
+  // Lista din tabel este derivată prin filtrare, sortare și paginare.
   const dateProcesate = useMemo(() => {
     const prelucrate = angajati.filter(a => {
       const statusCurent = a.status || 'Activ';
@@ -105,6 +108,7 @@ export default function Angajat() {
   };
 
   const incepeEditare = (angajat: AngajatType) => {
+    // La editare completăm și câmpurile care pot lipsi în modelul salvat.
     setModLucru('modificare');
     setEditingId(angajat.idAngajat);
     setTipAngajatSelectat(angajat.tipAngajat);

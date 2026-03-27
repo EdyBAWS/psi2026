@@ -9,6 +9,8 @@ export default function Notificare() {
       <h2 className="text-2xl font-bold mb-6 text-slate-800">Centru Notificări</h2>
 
       <div className="space-y-4">
+        {/* Fiecare notificare este randată pe baza tipului ei,
+            iar culorile diferă pentru a sugera gravitatea sau natura mesajului. */}
         {notificariMock.map((notificare) => (
           <div
             key={notificare.id}

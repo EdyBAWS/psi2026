@@ -1,3 +1,6 @@
+// Ecranul de încasări simulează repartizarea unei sume încasate
+// pe mai multe facturi restante. Nu modificăm backend-ul, ci doar
+// actualizăm starea locală și oferim feedback prin toast.
 import { useMemo, useState, type FormEvent } from 'react';
 import { ClipboardList, CreditCard, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,6 +21,8 @@ interface FacturaRestanta {
 }
 
 export default function Incasari() {
+  // Filtrul de client este păstrat în `sessionStorage`,
+  // ca utilizatorul să nu îl piardă imediat când schimbă pagina.
   const [clientSelectat, setClientSelectat] = usePageSessionState('incasari-client-filter', '');
   const [sumaIncasata, setSumaIncasata] = useState<number | ''>('');
   const [modalitate, setModalitate] = useState<string>('Transfer Bancar');
@@ -35,6 +40,8 @@ export default function Incasari() {
   );
 
   const clientiDisponibili = useMemo(
+    // Construim lista de clienți direct din facturile restante,
+    // ca să nu dublăm aceeași informație în altă parte.
     () =>
       Array.from(
         new Map(
@@ -48,6 +55,7 @@ export default function Incasari() {
   );
 
   const facturiFiltrate = useMemo(
+    // Lista vizibilă depinde de clientul selectat.
     () =>
       facturiRestante.filter(
         (factura) => clientSelectat === '' || String(factura.idClient) === clientSelectat,
@@ -58,6 +66,7 @@ export default function Incasari() {
   const totalRestant = facturiRestante.reduce((total, factura) => total + factura.restDePlata, 0);
 
   const handleAlocareSuma = (idFactura: number, valoare: string) => {
+    // Valorile din input vin ca text; le convertim la număr doar când există conținut.
     const valoareNumerica = valoare === '' ? '' : Number(valoare);
     setFacturiRestante((previous) =>
       previous.map((factura) =>
@@ -67,6 +76,8 @@ export default function Incasari() {
   };
 
   const handleSalvare = (e: FormEvent<HTMLFormElement>) => {
+    // Validările din această pagină sunt de business UX:
+    // există client, există sumă și totalul alocat nu depășește încasarea.
     e.preventDefault();
     if (!clientSelectat || sumaIncasata === '') {
       toast.error('Te rog completează clientul și suma încasată.');

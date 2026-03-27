@@ -1,3 +1,6 @@
+// Componenta afișează doar controalele de filtrare și sortare.
+// Toată starea reală stă în pagina părinte, iar acest formular trimite
+// schimbările înapoi prin callback-uri.
 import { Button } from '../../../../componente/ui/Button';
 import type { ComandaService, Mecanic, StatusComanda } from '../../types';
 import {
@@ -42,6 +45,8 @@ export default function GestiuneComenziFilters({
 }: GestiuneComenziFiltersProps) {
   return (
     <div className="space-y-3">
+      {/* Primul bloc conține filtrele efective.
+          Fiecare control schimbă o valoare din starea paginii principale. */}
       <div className="grid gap-4 xl:grid-cols-[1.4fr_repeat(4,0.7fr)] rounded-xl border border-slate-100 bg-slate-50 p-3">
         <input
           type="text"
@@ -104,6 +109,7 @@ export default function GestiuneComenziFilters({
         </label>
       </div>
 
+      {/* Al doilea bloc explică sortarea curentă și oferă reset rapid. */}
       <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-white px-4 py-3 md:flex-row md:items-center md:justify-between">
         <p className="text-sm text-slate-500">{descriereSortare(sortField, sortDir)}</p>
         <Button variant="outline" size="sm" onClick={onReset}>

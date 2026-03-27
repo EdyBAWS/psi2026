@@ -1,3 +1,7 @@
+// Headerul din `Preluare Auto` are 2 roluri:
+// 1. rezumă rapid contextul recepției
+// 2. arată progresul fluxului curent
+// În varianta sticky, componenta mai adaugă și un efect vizual de blur în fundal.
 interface PreluareAutoHeaderProps {
   esteLucrareAsigurare: boolean;
   mesajeBlocare: string[];
@@ -31,6 +35,9 @@ export default function PreluareAutoHeader({
     >
       {esteStickyActiv ? (
         <>
+          {/* Acest layer folosește `backdrop-blur` + mască.
+              Masca face blur-ul să pară că pornește din colțurile inferioare
+              ale headerului și urcă progresiv spre partea de sus. */}
           <div
             className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 backdrop-blur-2xl"
             style={{
@@ -40,6 +47,8 @@ export default function PreluareAutoHeader({
                 'radial-gradient(95% 85% at left bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.72) 24%, rgba(0,0,0,0.2) 52%, transparent 74%), radial-gradient(95% 85% at right bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.72) 24%, rgba(0,0,0,0.2) 52%, transparent 74%), linear-gradient(to top, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.38) 28%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,1) 100%)',
             }}
           />
+          {/* Al doilea layer nu adaugă blur nou, ci o lumină albă/translucidă
+              care face efectul mai "soft" și mai atmosferic. */}
           <div
             className="pointer-events-none absolute inset-x-0 -top-16 bottom-0"
             style={{
@@ -75,6 +84,8 @@ export default function PreluareAutoHeader({
           </div>
         ) : (
           <div className="flex flex-col gap-4">
+            {/* Primul rând din header arată numele pasului curent
+                și mini-indicatorii de progres. */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <span className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
                 PRELUARE
@@ -85,6 +96,11 @@ export default function PreluareAutoHeader({
                   Pas {pasCurent}: <span className="text-slate-600">{pasiFlux[pasCurent - 1]}</span>
                 </span>
                 <div className="flex gap-1">
+                  {/* Fiecare bulină este un pas.
+                      Culoarea spune dacă pasul este:
+                      - curent (indigo)
+                      - deja trecut (verde)
+                      - încă neparcurs (gri) */}
                   {pasiFlux.map((_, index) => (
                     <div
                       key={index}
@@ -101,6 +117,8 @@ export default function PreluareAutoHeader({
               </div>
             </div>
 
+            {/* Al doilea rând afișează badge-urile de context:
+                vehicul, tip plătitor, dosar și total estimat. */}
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 font-bold text-indigo-700 shadow-sm">
                 {vehiculSelectat.nrInmatriculare}
@@ -131,6 +149,8 @@ export default function PreluareAutoHeader({
             </div>
 
             {mesajeBlocare.length > 0 ? (
+              // Dacă fluxul nu poate continua, afișăm aici motivele,
+              // astfel încât utilizatorul să vadă imediat ce lipsește.
               <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100/60 pt-3">
                 <span className="mr-1 text-xs font-bold uppercase tracking-wide text-rose-600">
                   Câmpuri obligatorii lipsă:

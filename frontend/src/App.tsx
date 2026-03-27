@@ -1,3 +1,7 @@
+// `App.tsx` este "orchestratorul" principal al frontend-ului.
+// Aici nu folosim React Router, ci o navigație simplă bazată pe stare:
+// `paginaCurenta` păstrează ID-ul paginii active, iar `randeazaPagina`
+// decide ce componentă afișăm în zona principală din dreapta.
 import { useState } from 'react';
 import Sidebar from './componente/Sidebar';
 import Operational from './modules/02operational/Operational';
@@ -13,31 +17,35 @@ import Angajat from './modules/01entitati/angajati/Angajat';
 import Asigurator from './modules/01entitati/asiguratori/Asigurator';
 import Notificare from './modules/05notificari/Notificare';
 
-// IMPORTUL ACTUALIZAT CĂTRE NOUL TĂU ISTORIC IZOLAT
 import IstoricFacturare from './modules/03facturare/IstoricFacturare';
 
 export default function App() {
+  // `paginaCurenta` joacă rolul de "router local".
+  // Când Sidebar-ul apelează `setPaginaCurenta(...)`,
+  // componenta se rerandează și schimbă modulul afișat.
   const [paginaCurenta, setPaginaCurenta] = useState<string>('facturare-comenzi');
 
   const randeazaPagina = () => {
+    // `switch` este locul central în care mapăm ID-urile din Sidebar
+    // la componentele reale ale aplicației.
     switch (paginaCurenta) {
       case 'entitati-clienti': return <Client />;
       case 'entitati-angajati': return <Angajat />;
       case 'entitati-asiguratori': return <Asigurator />;
-      
-      // --- AICI AM ADĂUGAT CELE 2 RUTE NOI PENTRU OPERAȚIONAL ---
+
+      // În Operațional folosim același container de modul,
+      // dar îi spunem prin prop ce ecran intern vrem să afișeze.
       case 'operational-receptie': 
         return <Operational onNavigate={setPaginaCurenta} view="preluare-auto" />;
       case 'operational-comenzi': 
-        // Am presupus că view-ul din interiorul lui Operational se numește "gestiune-comenzi"
-        // Dacă în interiorul lui Operational.tsx foloseai alt cuvânt (ex: "comenzi"), îl poți schimba mai jos.
         return <Operational onNavigate={setPaginaCurenta} view="gestiune-comenzi" />;
-      
-      // AICI SUNT MODULELE TALE DIN PĂTRĂȚICA DE FACTURARE
+
+      // Modulele de facturare sunt ecrane separate,
+      // chiar dacă toate stau în aceeași categorie din meniu.
       case 'facturare-comenzi': return <Facturare />;
       case 'facturare-penalizari': return <Penalizare />;
       case 'facturare-campanii': return <Oferta />;
-      case 'facturare-istoric': return <IstoricFacturare />; // RUTA NOUĂ
+      case 'facturare-istoric': return <IstoricFacturare />;
       
       case 'incasari': return <Incasari />;
       case 'catalog-piese': return <Piesa />;
@@ -55,9 +63,12 @@ export default function App() {
   };
 
   return (
+    // Layout-ul general are 2 coloane:
+    // - stânga: Sidebar fix
+    // - dreapta: conținutul paginii active
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       <Sidebar setPagina={setPaginaCurenta} paginaCurenta={paginaCurenta} />
-      
+
       <main className="flex-1 p-10 overflow-y-scroll">
         <div className="max-w-6xl mx-auto">
           {randeazaPagina()}

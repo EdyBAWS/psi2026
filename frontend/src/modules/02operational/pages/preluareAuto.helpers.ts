@@ -1,3 +1,6 @@
+// Fișierul conține helperi puri pentru pagina `PreluareAuto`.
+// "Pur" înseamnă că funcțiile de aici nu modifică direct starea React
+// și nu afișează UI; ele doar calculează și întorc rezultate.
 import { calculeazaRezumatPozitii } from '../calculations';
 import { suntPozitiiValide } from '../validations';
 import type { Client, ComandaService, DosarDauna, PozitieComandaDraft, Vehicul } from '../types';
@@ -29,6 +32,8 @@ export const accesoriiCaLista = (valoare: string) =>
 export const tipPlataImplicit = (client: Client | null) =>
   client?.tipClient === 'Flota' ? 'Flota' : 'Client Direct';
 
+// Parametrii acestui helper descriu "starea curentă a fluxului":
+// ce vehicul avem, dacă e lucrare pe asigurare, dacă dosarul este valid etc.
 interface PasFluxParams {
   detaliiPreluare: DetaliiPreluareForm;
   dosarValid: boolean;
@@ -48,6 +53,7 @@ export function calculeazaFluxPreluare({
   pozitiiDraft,
   vehiculSelectat,
 }: PasFluxParams) {
+  // Lista pașilor diferă puțin în funcție de existența unui dosar de daună.
   const pasiFlux = esteLucrareAsigurare
     ? ['Selectare auto', 'Simptome', 'Dosar Daună', 'Deviz', 'Confirmare']
     : ['Selectare auto', 'Simptome', 'Deviz', 'Confirmare'];
@@ -56,6 +62,7 @@ export function calculeazaFluxPreluare({
   const simptomeCompletate = detaliiPreluare.simptomeReclamate.trim().length > 0;
   const devizCompletat = suntPozitiiValide(pozitiiDraft) && idMecanicSelectat !== null;
 
+  // Dacă nu avem încă vehiculul sau simptomele, fluxul rămâne în primul pas.
   if (!vehiculSelectat) {
     return { pasiFlux, pasCurent };
   }
@@ -65,6 +72,7 @@ export function calculeazaFluxPreluare({
   }
 
   if (esteLucrareAsigurare) {
+    // În fluxul cu asigurare trecem printr-un pas suplimentar: dosarul.
     pasCurent = 2;
 
     if (dosarValid) {
@@ -87,6 +95,10 @@ export function calculeazaFluxPreluare({
   return { pasiFlux, pasCurent };
 }
 
+// Acest helper grupează 3 lucruri folosite des în pagină:
+// - dacă lipsesc informații importante din formular
+// - dacă dosarul este incomplet
+// - rezumatul financiar al pozițiilor din deviz
 export function calculeazaIndicatoriPreluare(
   vehiculSelectat: Vehicul | null,
   esteLucrareAsigurare: boolean,
@@ -110,6 +122,8 @@ export function calculeazaPreviewDocumente(
   comenzi: ComandaService[],
   dosare: DosarDauna[],
 ) {
+  // Aici nu salvăm nimic, doar pregătim numerele "preview"
+  // pentru următoarea comandă și următorul dosar posibil.
   return {
     nrComandaPreview: genereazaNumarDocument(
       'CMD',
