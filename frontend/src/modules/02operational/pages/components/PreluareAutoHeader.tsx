@@ -32,15 +32,25 @@ export default function PreluareAutoHeader({
       {esteStickyActiv ? (
         <>
           <div
-            className="pointer-events-none absolute inset-x-4 -top-10 h-24 rounded-t-[28px] backdrop-blur-2xl"
+            className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 backdrop-blur-2xl"
             style={{
               WebkitMaskImage:
-                'linear-gradient(to top, transparent 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,1) 100%)',
+                'radial-gradient(95% 85% at left bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.72) 24%, rgba(0,0,0,0.2) 52%, transparent 74%), radial-gradient(95% 85% at right bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.72) 24%, rgba(0,0,0,0.2) 52%, transparent 74%), linear-gradient(to top, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.38) 28%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,1) 100%)',
               maskImage:
-                'linear-gradient(to top, transparent 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,1) 100%)',
+                'radial-gradient(95% 85% at left bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.72) 24%, rgba(0,0,0,0.2) 52%, transparent 74%), radial-gradient(95% 85% at right bottom, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.72) 24%, rgba(0,0,0,0.2) 52%, transparent 74%), linear-gradient(to top, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.38) 28%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,1) 100%)',
             }}
           />
-          <div className="pointer-events-none absolute inset-x-4 -top-10 h-24 rounded-t-[28px] bg-gradient-to-t from-white/0 via-white/60 to-white/95" />
+          <div
+            className="pointer-events-none absolute inset-x-0 -top-16 bottom-0"
+            style={{
+              background:
+                'linear-gradient(to top, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.38) 34%, rgba(255,255,255,0.9) 100%)',
+              WebkitMaskImage:
+                'radial-gradient(95% 85% at left bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 26%, rgba(0,0,0,0.18) 54%, transparent 76%), radial-gradient(95% 85% at right bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 26%, rgba(0,0,0,0.18) 54%, transparent 76%), linear-gradient(to top, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
+              maskImage:
+                'radial-gradient(95% 85% at left bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 26%, rgba(0,0,0,0.18) 54%, transparent 76%), radial-gradient(95% 85% at right bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 26%, rgba(0,0,0,0.18) 54%, transparent 76%), linear-gradient(to top, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
+            }}
+          />
         </>
       ) : null}
 
