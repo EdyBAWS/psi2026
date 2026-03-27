@@ -1,5 +1,10 @@
+// Selectorul de dosar rezolvă ramura "de asigurare" a fluxului:
+// fie atașează un dosar deja existent pentru vehicul, fie completează
+// datele principale pentru a crea unul nou la salvarea comenzii.
+// Componenta nu salvează nimic direct. Ea doar editează starea de formular
+// primită prin `value` și trimite modificările înapoi prin `onChange`.
 import type { StareDosarAsigurare } from '../formState';
-import type { Asigurator, DosarDauna, Vehicul } from '../types';
+import type { Asigurator, DosarDauna, StatusDosar, Vehicul } from '../types';
 
 interface SelectorDosarProps {
   asiguratori: Asigurator[];
@@ -9,6 +14,14 @@ interface SelectorDosarProps {
   vehicul: Vehicul | null;
   onChange: (value: StareDosarAsigurare) => void;
 }
+
+const statusuriDosar: StatusDosar[] = [
+  'Deschis',
+  'In analiza',
+  'Aprobat partial',
+  'Aprobat',
+  'Respins',
+];
 
 const formatSuma = (valoare: number) =>
   new Intl.NumberFormat('ro-RO', {
@@ -27,6 +40,8 @@ export default function SelectorDosar({
   vehicul,
   onChange,
 }: SelectorDosarProps) {
+  // Fără vehicul selectat nu putem ști ce dosare sunt relevante,
+  // deci afișăm doar un mesaj de ghidare.
   if (!vehicul) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-sm text-slate-500">
@@ -35,11 +50,17 @@ export default function SelectorDosar({
     );
   }
 
+  // Selectăm doar dosarele care aparțin vehiculului curent.
   const dosareVehicul = dosare.filter((dosar) => dosar.idVehicul === vehicul.idVehicul);
   const dosarSelectat =
     dosareVehicul.find((dosar) => dosar.idDosar === value.idDosarSelectat) ?? null;
+  const asiguratorSelectat =
+    asiguratori.find((asigurator) => asigurator.idAsigurator === dosarSelectat?.idAsigurator) ??
+    null;
   const existaDosare = dosareVehicul.length > 0;
 
+  // Când schimbăm modul, păstrăm aceeași structură de stare,
+  // dar resetăm câmpurile care nu mai au sens în contextul nou.
   const schimbaMod = (mod: 'existent' | 'nou') => {
     if (mod === 'existent') {
       onChange({
@@ -64,7 +85,7 @@ export default function SelectorDosar({
           <h3 className="text-xl font-bold text-slate-800">Dosar de daună</h3>
           <p className="mt-1 text-sm text-slate-500">
             Atașează un dosar existent pentru vehiculul selectat sau creează unul nou
-            local în aplicație.
+            cu datele minime de constatare și aprobare.
           </p>
         </div>
 
@@ -102,18 +123,25 @@ export default function SelectorDosar({
         </div>
       ) : null}
 
+      {/* Aici folosim randare condițională cu `? :`.
+          Dacă modul este `existent`, afișăm selectorul de dosare existente.
+          Altfel, afișăm formularul pentru dosar nou. */}
       {value.mod === 'existent' ? (
         <div className="space-y-4">
+          {/* În acest mod, utilizatorul doar alege un dosar deja cunoscut. */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
               Selectează dosarul existent
             </label>
             <select
+              // `?? ''` este un fallback: dacă nu avem un id selectat, dropdown-ul rămâne gol.
               value={value.idDosarSelectat ?? ''}
               onChange={(event) =>
                 onChange({
                   ...value,
                   idDosarSelectat:
+                    // `event.target.value` vine ca text din browser.
+                    // Îl transformăm în `null` sau `number`, după caz.
                     event.target.value === '' ? null : Number(event.target.value),
                 })
               }
@@ -122,7 +150,7 @@ export default function SelectorDosar({
               <option value="">Selectează dosar</option>
               {dosareVehicul.map((dosar) => (
                 <option key={dosar.idDosar} value={dosar.idDosar}>
-                  {dosar.nrDosar} · {formatSuma(dosar.sumaAprobata)}
+                  {dosar.nrDosar} · {dosar.statusAprobare}
                 </option>
               ))}
             </select>
@@ -130,14 +158,36 @@ export default function SelectorDosar({
 
           {dosarSelectat ? (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              {/* Afișăm un rezumat informativ, ca utilizatorul să confirme rapid
+                  că a ales dosarul corect înainte de salvarea comenzii. */}
               <dl className="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
                 <div>
                   <dt className="font-semibold text-slate-700">Număr dosar</dt>
                   <dd className="mt-1">{dosarSelectat.nrDosar}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-slate-700">Data deschiderii</dt>
-                  <dd className="mt-1">{formatData(dosarSelectat.dataDeschidere)}</dd>
+                  <dt className="font-semibold text-slate-700">Referință asigurator</dt>
+                  <dd className="mt-1">{dosarSelectat.numarReferintaAsigurator}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-slate-700">Asigurator</dt>
+                  <dd className="mt-1">{asiguratorSelectat?.denumire ?? '-'}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-slate-700">Tip poliță</dt>
+                  <dd className="mt-1">{dosarSelectat.tipPolita}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-slate-700">Status aprobare</dt>
+                  <dd className="mt-1">{dosarSelectat.statusAprobare}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-slate-700">Inspector</dt>
+                  <dd className="mt-1">{dosarSelectat.inspectorDauna}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-slate-700">Data constatării</dt>
+                  <dd className="mt-1">{formatData(dosarSelectat.dataConstatare)}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">Sumă aprobată</dt>
@@ -147,13 +197,19 @@ export default function SelectorDosar({
                   <dt className="font-semibold text-slate-700">Franciză</dt>
                   <dd className="mt-1">{formatSuma(dosarSelectat.franciza)}</dd>
                 </div>
+                <div className="md:col-span-2">
+                  <dt className="font-semibold text-slate-700">Observații</dt>
+                  <dd className="mt-1">{dosarSelectat.observatiiDauna}</dd>
+                </div>
               </dl>
             </div>
           ) : null}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-3 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {/* În modul "nou", componenta colectează doar datele necesare pentru
+              construirea obiectului final `DosarDauna` în pagina părinte. */}
+          <div className="md:col-span-2 xl:col-span-4 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
             Numărul noului dosar va fi generat automat la salvare: <strong>{nrDosarPreview}</strong>
           </div>
 
@@ -183,53 +239,152 @@ export default function SelectorDosar({
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Tip poliță
+            </label>
+            <select
+              value={value.tipPolita}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  tipPolita: event.target.value as StareDosarAsigurare['tipPolita'],
+                })
+              }
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="CASCO">CASCO</option>
+              <option value="RCA">RCA</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Status aprobare
+            </label>
+            <select
+              value={value.statusAprobare}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  statusAprobare: event.target.value as StatusDosar,
+                })
+              }
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {statusuriDosar.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Data constatării
+            </label>
+            <input
+              type="date"
+              value={value.dataConstatare}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  dataConstatare: event.target.value,
+                })
+              }
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Referință asigurator
+            </label>
+            <input
+              type="text"
+              value={value.numarReferintaAsigurator}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  numarReferintaAsigurator: event.target.value,
+                })
+              }
+              placeholder="Ex: ALT-CASCO-88214"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Inspector daună
+            </label>
+            <input
+              type="text"
+              value={value.inspectorDauna}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  inspectorDauna: event.target.value,
+                })
+              }
+              placeholder="Ex: Radu Enache"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
               Sumă aprobată
             </label>
-            <div className="relative">
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={value.sumaAprobata}
-                onChange={(event) =>
-                  onChange({
-                    ...value,
-                    sumaAprobata:
-                      event.target.value === '' ? '' : Number(event.target.value),
-                  })
-                }
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-14 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="0.00"
-              />
-              <span className="absolute right-4 top-3 text-sm font-medium text-slate-400">
-                RON
-              </span>
-            </div>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={value.sumaAprobata}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  sumaAprobata: event.target.value === '' ? '' : Number(event.target.value),
+                })
+              }
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
               Franciză
             </label>
-            <div className="relative">
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={value.franciza}
-                onChange={(event) =>
-                  onChange({
-                    ...value,
-                    franciza: event.target.value === '' ? '' : Number(event.target.value),
-                  })
-                }
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-14 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="0.00"
-              />
-              <span className="absolute right-4 top-3 text-sm font-medium text-slate-400">
-                RON
-              </span>
-            </div>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={value.franciza}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  franciza: event.target.value === '' ? '' : Number(event.target.value),
+                })
+              }
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div className="md:col-span-2 xl:col-span-4">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Observații dosar
+            </label>
+            <textarea
+              value={value.observatiiDauna}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  observatiiDauna: event.target.value,
+                })
+              }
+              rows={3}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Mențiuni despre constatare, limitări de aprobare sau pașii următori."
+            />
           </div>
         </div>
       )}

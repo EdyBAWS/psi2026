@@ -1,174 +1,332 @@
-import React, { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { facturiRestanteMock } from '../../../mock/incasari';
+import { mockClienti } from '../../../mock/operational';
 
-// Interfețe pentru Penalizări
-interface Client {
-  idClient: number;
-  nume: string;
-  soldDebitor: number;
-}
+export default function Penalizare() {
+  const [idClientSelectat, setIdClientSelectat] = useState<number | ''>('');
+  const [idFacturaSelectata, setIdFacturaSelectata] = useState<number | ''>('');
 
-interface FacturaRestanta {
-  idFactura: number;
-  idClient: number;
-  serie: string;
-  numar: string;
-  dataScadenta: string;
-  restDePlata: number;
-}
+  const [searchTermClient, setSearchTermClient] = useState('');
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  const clientDropdownRef = useRef<HTMLDivElement>(null);
 
-const Penalizare: React.FC = () => {
-  // State-uri
-  const [clientSelectat, setClientSelectat] = useState<number | ''>('');
-  const [facturaSelectata, setFacturaSelectata] = useState<FacturaRestanta | null>(null);
-  const [zileIntarziere, setZileIntarziere] = useState<number>(0);
-  const [procentPenalizare, setProcentPenalizare] = useState<number>(0.1); // Ex: 0.1% pe zi
+  const [dataCalcul, setDataCalcul] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [procentPenalizare, setProcentPenalizare] = useState<number>(1);
+  const [numarFacturaPenalizare, setNumarFacturaPenalizare] = useState<string>('');
 
-  // --- DATE DE TEST (Mock Data) ---
-  const clientiMock: Client[] = [
-    { idClient: 1, nume: 'Ion Popescu (PF)', soldDebitor: 1500 },
-    { idClient: 2, nume: 'SC Transport SRL (PJ)', soldDebitor: 4200 }
-  ];
+  const clientiMock = useMemo(
+    () =>
+      mockClienti
+        .filter((client) => facturiRestanteMock.some((factura) => factura.idClient === client.idClient))
+        .map((client) => ({
+          idClient: client.idClient,
+          nume: client.denumireCompanie ?? client.nume,
+          soldDebitor: facturiRestanteMock
+            .filter((factura) => factura.idClient === client.idClient)
+            .reduce((total, factura) => total + factura.restDePlata, 0),
+          CUI: client.email,
+        })),
+    [],
+  );
 
-  const facturiMock: FacturaRestanta[] = [
-    { idFactura: 10, idClient: 1, serie: 'FCT', numar: '2026-050', dataScadenta: '2026-02-15', restDePlata: 1500 },
-    { idFactura: 11, idClient: 2, serie: 'FCT', numar: '2026-042', dataScadenta: '2026-01-10', restDePlata: 4200 }
-  ];
-  // --------------------------------
+  const clientiFiltrati = useMemo(() => {
+    if (!searchTermClient) return clientiMock;
+    const term = searchTermClient.toLowerCase();
+    return clientiMock.filter(
+      (client) =>
+        client.nume.toLowerCase().includes(term) || client.CUI.toLowerCase().includes(term),
+    );
+  }, [clientiMock, searchTermClient]);
 
-  // Filtrăm facturile restante doar pentru clientul selectat
-  const facturiClient = facturiMock.filter(f => f.idClient === clientSelectat);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(event.target as Node)) {
+        setIsClientDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  // Calcul automat valoare penalizare
-  // Formula: Rest de plată * (Procent / 100) * Zile de întârziere
-  const valoarePenalizare = facturaSelectata 
-    ? (facturaSelectata.restDePlata * (procentPenalizare / 100) * zileIntarziere)
-    : 0;
+  const facturiClient = useMemo(
+    () => facturiRestanteMock.filter((factura) => factura.idClient === idClientSelectat),
+    [idClientSelectat],
+  );
+  const factura = useMemo(
+    () => facturiClient.find((item) => item.idFactura === idFacturaSelectata) || null,
+    [idFacturaSelectata, facturiClient],
+  );
 
-  const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setClientSelectat(parseInt(e.target.value) || '');
-    setFacturaSelectata(null); // Resetăm factura când schimbăm clientul
-    setZileIntarziere(0);
+  const handleSelectClient = (client: (typeof clientiMock)[number]) => {
+    setIdClientSelectat(client.idClient);
+    setSearchTermClient(`${client.nume} (${client.CUI})`);
+    setIsClientDropdownOpen(false);
+    setIdFacturaSelectata('');
   };
 
-  const handleFacturaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = parseInt(e.target.value);
-    const facturaGasita = facturiClient.find(f => f.idFactura === id) || null;
-    setFacturaSelectata(facturaGasita);
-  };
+  const calculePenalizare = useMemo(() => {
+    if (!factura) return { zileIntarziere: 0, valoarePenalizare: 0 };
 
-  const handleGenereazaPenalizare = () => {
-    if (!facturaSelectata || zileIntarziere <= 0) {
-      alert('Te rog selectează o factură și introdu zilele de întârziere!');
+    const scadenta = new Date(factura.dataScadenta);
+    const calcul = new Date(dataCalcul);
+
+    const diferentaTimp = calcul.getTime() - scadenta.getTime();
+    const zileIntarziere = Math.ceil(diferentaTimp / (1000 * 3600 * 24));
+
+    const zileValide = zileIntarziere > 0 ? zileIntarziere : 0;
+    const valoare = factura.restDePlata * (procentPenalizare / 100) * zileValide;
+
+    return { zileIntarziere: zileValide, valoarePenalizare: valoare };
+  }, [factura, dataCalcul, procentPenalizare]);
+
+  const handleGenereazaPenalizare = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!factura || calculePenalizare.zileIntarziere <= 0) {
+      toast.error('Nu există zile de întârziere pentru a putea emite o penalizare.');
       return;
     }
-    // Aici va veni INSERT în FACTURA și FACTURA_PENALIZARE
-    console.log('Factură Penalizare Generată:', {
-      idFacturaRest: facturaSelectata.idFactura,
-      zileIntarziere,
-      procentPenalizare,
-      valoareTotala: valoarePenalizare
-    });
-    alert(`Factura de penalizare în valoare de ${valoarePenalizare.toFixed(2)} RON a fost generată!`);
+    if (!numarFacturaPenalizare) {
+      toast.error('Introdu un număr pentru factura de penalizare.');
+      return;
+    }
+
+    toast.success(
+      `Factura de penalizare PEN-${numarFacturaPenalizare} a fost emisă pentru ${calculePenalizare.valoarePenalizare.toFixed(2)} RON.`,
+    );
+
+    setIdFacturaSelectata('');
+    setNumarFacturaPenalizare('');
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-red-600">Generare Factură Penalizare</h1>
-      <p className="mb-6 text-gray-600">
-        Acest modul aplică penalizări pentru facturile care au depășit data scadenței, conform contractului.
-      </p>
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 max-w-5xl mx-auto">
+      <div className="mb-8 border-b border-slate-100 pb-4">
+        <h2 className="text-2xl font-bold text-slate-800">Generare Factură Penalizare</h2>
+        <p className="text-slate-500 mt-1 text-sm">
+          Modulul calculează și aplică automat dobânzi penalizatoare pentru creanțele
+          neîncasate la termen, generând un nou document fiscal.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Partea Stângă: Selecție Date */}
-        <div className="space-y-6">
-          <div className="border p-4 rounded shadow-sm bg-white">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Selectare Restanță</h2>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Client:</label>
-              <select className="w-full border p-2 rounded mt-1" value={clientSelectat} onChange={handleClientChange}>
-                <option value="">-- Alege client --</option>
-                {clientiMock.map(c => (
-                  <option key={c.idClient} value={c.idClient}>{c.nume}</option>
-                ))}
-              </select>
-            </div>
+      <form onSubmit={handleGenereazaPenalizare} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+            <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">
+              1. Selectare Restanță
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative" ref={clientDropdownRef}>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Căutare Client
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Caută nume sau email..."
+                    className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 focus:ring-2 focus:ring-rose-500 outline-none shadow-sm transition-shadow"
+                    value={searchTermClient}
+                    onChange={(e) => {
+                      setSearchTermClient(e.target.value);
+                      setIsClientDropdownOpen(true);
+                      if (idClientSelectat) {
+                        setIdClientSelectat('');
+                        setIdFacturaSelectata('');
+                      }
+                    }}
+                    onFocus={() => setIsClientDropdownOpen(true)}
+                  />
+                  <svg
+                    className="w-5 h-5 absolute left-3 top-3 text-slate-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
 
-            <div className="mb-2">
-              <label className="block text-sm font-medium text-gray-700">Factură Restantă:</label>
-              <select className="w-full border p-2 rounded mt-1" disabled={!clientSelectat} onChange={handleFacturaChange}>
-                <option value="">-- Alege factură --</option>
-                {facturiClient.map(f => (
-                  <option key={f.idFactura} value={f.idFactura}>
-                    {f.serie} {f.numar} (Rest: {f.restDePlata} RON)
-                  </option>
-                ))}
-              </select>
+                {isClientDropdownOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto animate-fade-in">
+                    {clientiFiltrati.length > 0 ? (
+                      <ul className="divide-y divide-slate-100">
+                        {clientiFiltrati.map((client) => (
+                          <li
+                            key={client.idClient}
+                            onClick={() => handleSelectClient(client)}
+                            className="p-3 hover:bg-rose-50 cursor-pointer transition-colors group"
+                          >
+                            <p className="font-semibold text-slate-800 group-hover:text-rose-700">
+                              {client.nume}
+                            </p>
+                            <p className="text-xs text-slate-500">Contact: {client.CUI}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-3 text-center text-slate-500 text-sm">
+                        Nu a fost găsit niciun client.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Factură Scadentă Neachitată
+                </label>
+                <select
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-rose-500 outline-none shadow-sm disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  value={idFacturaSelectata}
+                  onChange={(e) => setIdFacturaSelectata(Number(e.target.value) || '')}
+                  disabled={!idClientSelectat}
+                >
+                  <option value="">-- Alege factura --</option>
+                  {facturiClient.map((facturaClient) => {
+                    const isOverdue = new Date(facturaClient.dataScadenta) < new Date(dataCalcul);
+                    return (
+                      <option key={facturaClient.idFactura} value={facturaClient.idFactura}>
+                        {facturaClient.numar} | Rest: {facturaClient.restDePlata} RON
+                        {isOverdue ? ' (ÎNTÂRZIATĂ)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="border p-4 rounded shadow-sm bg-white">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">2. Calcul Penalizare</h2>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Zile Întârziere:</label>
-              <input 
-                type="number" 
-                min="0"
-                className="w-full border p-2 rounded mt-1" 
-                value={zileIntarziere} 
-                onChange={(e) => setZileIntarziere(parseInt(e.target.value) || 0)} 
-              />
-            </div>
+          <div className="bg-white p-6 rounded-xl border border-rose-100 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+            <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide pl-2">
+              2. Motor Calcul Penalizări
+            </h3>
 
-            <div className="mb-2">
-              <label className="block text-sm font-medium text-gray-700">Procent Penalizare (% pe zi):</label>
-              <input 
-                type="number" 
-                step="0.01"
-                className="w-full border p-2 rounded mt-1" 
-                value={procentPenalizare} 
-                onChange={(e) => setProcentPenalizare(parseFloat(e.target.value) || 0)} 
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pl-2">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Dată Scadentă Factură
+                </label>
+                <input
+                  type="date"
+                  readOnly
+                  value={factura ? factura.dataScadenta : ''}
+                  className="w-full border border-slate-200 bg-slate-100 text-slate-500 p-2.5 rounded-lg cursor-not-allowed font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-rose-700 mb-1">
+                  Dată Curentă (Calcul la zi)
+                </label>
+                <input
+                  type="date"
+                  className="w-full border border-rose-300 bg-white p-2.5 rounded-lg focus:ring-2 focus:ring-rose-500 font-bold text-rose-900 shadow-inner"
+                  value={dataCalcul}
+                  onChange={(e) => setDataCalcul(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Procent Penalizare / Zi (%)
+                </label>
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  max="100"
+                  className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-rose-500 bg-white font-medium"
+                  value={procentPenalizare}
+                  onChange={(e) => {
+                    const valoareIntreaga = parseInt(e.target.value, 10) || 0;
+                    setProcentPenalizare(valoareIntreaga);
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Partea Dreaptă: Sumar și Acțiune */}
-        <div className="border p-6 rounded shadow-sm bg-gray-50 flex flex-col justify-center">
-          <h2 className="text-xl font-semibold mb-6 text-gray-800 text-center">Sumar Penalizare</h2>
-          
-          <div className="space-y-4 text-lg">
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-600">Bază de calcul (Rest):</span>
-              <span className="font-medium">{facturaSelectata ? facturaSelectata.restDePlata.toFixed(2) : '0.00'} RON</span>
+        <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500 rounded-bl-full opacity-10"></div>
+
+          <div className="relative z-10">
+            <h2 className="text-sm font-bold text-rose-400 mb-6 uppercase tracking-widest border-b border-slate-700 pb-2">
+              Sumar Execuție
+            </h2>
+
+            <div className="space-y-4">
+              <div className="flex justify-between text-slate-300 text-sm">
+                <span>Bază de calcul (Rest Plată):</span>
+                <span className="font-medium text-white">
+                  {factura ? factura.restDePlata.toFixed(2) : '0.00'} RON
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-300 text-sm">
+                <span>Total zile de întârziere:</span>
+                <span
+                  className={`font-bold ${
+                    calculePenalizare.zileIntarziere > 0 ? 'text-rose-400' : 'text-slate-500'
+                  }`}
+                >
+                  {calculePenalizare.zileIntarziere} zile
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-300 text-sm">
+                <span>Coeficient aplicat:</span>
+                <span className="font-medium">{procentPenalizare}% / zi</span>
+              </div>
             </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-600">Zile facturate:</span>
-              <span className="font-medium">{zileIntarziere} zile</span>
+
+            <div className="mt-8 bg-slate-800 p-4 rounded-xl border border-slate-700">
+              <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">
+                Valoare Extra de Facturat
+              </div>
+              <div className="text-3xl font-bold text-rose-500">
+                {calculePenalizare.valoarePenalizare.toFixed(2)}{' '}
+                <span className="text-lg text-slate-400">RON</span>
+              </div>
             </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-600">Procent aplicat:</span>
-              <span className="font-medium">{procentPenalizare}% / zi</span>
-            </div>
-            <div className="flex justify-between pt-4 text-2xl font-bold">
-              <span className="text-gray-800">Total de Facturat:</span>
-              <span className="text-red-600">{valoarePenalizare.toFixed(2)} RON</span>
+
+            <div className="mt-6">
+              <label className="block text-xs font-semibold text-slate-400 mb-2">
+                Alocă Număr Factură Penalizare
+              </label>
+              <div className="flex">
+                <span className="bg-slate-700 text-slate-300 px-3 py-2 rounded-l-lg border border-slate-600 border-r-0 font-medium text-sm flex items-center">
+                  PEN -
+                </span>
+                <input
+                  type="text"
+                  placeholder="ex: 0045"
+                  className="w-full bg-slate-800 border border-slate-600 text-white rounded-r-lg px-3 py-2 focus:ring-1 focus:ring-rose-500 outline-none"
+                  value={numarFacturaPenalizare}
+                  onChange={(e) => setNumarFacturaPenalizare(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
-          <button 
-            className="mt-10 w-full py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 font-bold transition-colors text-lg"
-            onClick={handleGenereazaPenalizare}
+          <button
+            type="submit"
+            disabled={!factura || calculePenalizare.zileIntarziere === 0}
+            className={`mt-8 w-full py-4 rounded-xl shadow font-bold tracking-wide transition-all z-10 ${
+              !factura || calculePenalizare.zileIntarziere === 0
+                ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'
+                : 'bg-rose-600 text-white hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-600/30 border border-rose-500'
+            }`}
           >
-            Emite Factura de Penalizare
+            Generează Penalizarea
           </button>
         </div>
-
-      </div>
+      </form>
     </div>
   );
-};
-
-export default Penalizare;
+}

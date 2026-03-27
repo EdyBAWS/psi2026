@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 type TipNotificare = 'Info' | 'Avertizare' | 'Succes';
 
@@ -68,7 +68,6 @@ export default function Notificare() {
   const [filtru, setFiltru] = useState<'Toate' | TipNotificare | 'Arhiva'>('Toate');
   
   const [notificari, setNotificari] = useState<NotificareItem[]>(() => {
-    // Am schimbat cheia în v2 ca să forțăm resetarea memoriei vechi!
     const salvate = localStorage.getItem('notificari_app_v2');
     if (salvate) return JSON.parse(salvate);
     return DATE_INITIALE;
@@ -184,7 +183,7 @@ export default function Notificare() {
       </div>
 
       {/* Listă Notificări */}
-      <div className="divide-y divide-slate-100 min-h-[400px] bg-slate-50/30">
+      <div className="divide-y divide-slate-100 min-h-100 bg-slate-50/30">
         {notificariFiltrate.length > 0 ? (
           notificariFiltrate.map(n => {
             const isAlert = n.tip === 'Avertizare';
@@ -203,7 +202,7 @@ export default function Notificare() {
                 )}
 
                 {/* Icon */}
-                <div className={`p-3 rounded-full flex-shrink-0 mt-1 hidden sm:block ${iconBg}`}>
+                <div className={`p-3 rounded-full shrink-0 mt-1 hidden sm:block ${iconBg}`}>
                   {n.arhivata ? (
                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
                   ) : isAlert ? (

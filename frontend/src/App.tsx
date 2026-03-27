@@ -8,33 +8,40 @@ import Oferta from './modules/03facturare/oferte/Oferta';
 import Piesa from './modules/00catalog/piese/Piesa';
 import Manopera from './modules/00catalog/manopera/Manopera';
 
-// Noile importuri
 import Client from './modules/01entitati/clienti/Client';
 import Angajat from './modules/01entitati/angajati/Angajat';
 import Asigurator from './modules/01entitati/asiguratori/Asigurator';
 import Notificare from './modules/05notificari/Notificare';
+
+// IMPORTUL ACTUALIZAT CĂTRE NOUL TĂU ISTORIC IZOLAT
+import IstoricFacturare from './modules/03facturare/IstoricFacturare';
 
 export default function App() {
   const [paginaCurenta, setPaginaCurenta] = useState<string>('facturare-comenzi');
 
   const randeazaPagina = () => {
     switch (paginaCurenta) {
-      // Entitati
       case 'entitati-clienti': return <Client />;
       case 'entitati-angajati': return <Angajat />;
       case 'entitati-asiguratori': return <Asigurator />;
-      // Operational
-      case 'operational': return <Operational />;
-      // Facturare
+      
+      // --- AICI AM ADĂUGAT CELE 2 RUTE NOI PENTRU OPERAȚIONAL ---
+      case 'operational-receptie': 
+        return <Operational onNavigate={setPaginaCurenta} view="preluare-auto" />;
+      case 'operational-comenzi': 
+        // Am presupus că view-ul din interiorul lui Operational se numește "gestiune-comenzi"
+        // Dacă în interiorul lui Operational.tsx foloseai alt cuvânt (ex: "comenzi"), îl poți schimba mai jos.
+        return <Operational onNavigate={setPaginaCurenta} view="gestiune-comenzi" />;
+      
+      // AICI SUNT MODULELE TALE DIN PĂTRĂȚICA DE FACTURARE
       case 'facturare-comenzi': return <Facturare />;
       case 'facturare-penalizari': return <Penalizare />;
       case 'facturare-campanii': return <Oferta />;
-      // Incasari
+      case 'facturare-istoric': return <IstoricFacturare />; // RUTA NOUĂ
+      
       case 'incasari': return <Incasari />;
-      // Catalog
       case 'catalog-piese': return <Piesa />;
       case 'catalog-manopera': return <Manopera />;
-      // Notificari
       case 'notificari': return <Notificare />;
       
       default:

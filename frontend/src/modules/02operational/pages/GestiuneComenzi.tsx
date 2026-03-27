@@ -1,13 +1,33 @@
-import StatusBadge from '../components/StatusBadge';
+import { AlertTriangle, ClipboardList, Wrench } from 'lucide-react';
+import { useEffect } from 'react';
+import { EmptyState } from '../../../componente/ui/EmptyState';
+import { StatCard } from '../../../componente/ui/StatCard';
+import { usePageSessionState } from '../../../lib/pageState';
+import GestiuneComenziDetail from './components/GestiuneComenziDetail';
+import GestiuneComenziFilters from './components/GestiuneComenziFilters';
+import GestiuneComenziTable from './components/GestiuneComenziTable';
+import {
+  calculeazaStatisticiComenzi,
+  construiesteLiniiLista,
+  filtreazaSiSorteazaComenzi,
+  rezolvaDetaliiComandaSelectata,
+  type GestiuneSortDir,
+  type GestiuneSortField,
+} from './gestiuneComenzi.helpers';
 import type {
+  Asigurator,
+  Client,
   ComandaService,
   DosarDauna,
   Mecanic,
   PozitieComanda,
+  StatusComanda,
   Vehicul,
 } from '../types';
 
 interface GestiuneComenziProps {
+  asiguratori: Asigurator[];
+  clienti: Client[];
   comenzi: ComandaService[];
   dosare: DosarDauna[];
   mecanici: Mecanic[];
@@ -15,132 +35,186 @@ interface GestiuneComenziProps {
   vehicule: Vehicul[];
 }
 
-const formatSuma = (valoare: number) =>
-  new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: 'RON',
-    maximumFractionDigits: 2,
-  }).format(valoare);
-
-const formatData = (valoare: Date | null) =>
-  valoare ? valoare.toLocaleDateString('ro-RO') : 'Nefinalizată';
-
 export default function GestiuneComenzi({
+  asiguratori,
+  clienti,
   comenzi,
   dosare,
   mecanici,
   pozitii,
   vehicule,
 }: GestiuneComenziProps) {
+  const [cautare, setCautare] = usePageSessionState('operational-comenzi-cautare', '');
+  const [filtruStatus, setFiltruStatus] = usePageSessionState<StatusComanda | 'Toate'>(
+    'operational-comenzi-status',
+    'Toate',
+  );
+  const [filtruMecanic, setFiltruMecanic] = usePageSessionState<number | 'toate'>(
+    'operational-comenzi-mecanic',
+    'toate',
+  );
+  const [filtruPlata, setFiltruPlata] = usePageSessionState<ComandaService['tipPlata'] | 'Toate'>(
+    'operational-comenzi-plata',
+    'Toate',
+  );
+  const [doarIntarziate, setDoarIntarziate] = usePageSessionState(
+    'operational-comenzi-intarziate',
+    false,
+  );
+  const [idComandaSelectata, setIdComandaSelectata] = usePageSessionState<number | null>(
+    'operational-comenzi-selectata',
+    null,
+  );
+  const [sortField, setSortField] = usePageSessionState<GestiuneSortField>(
+    'operational-comenzi-sort-field',
+    'data',
+  );
+  const [sortDir, setSortDir] = usePageSessionState<GestiuneSortDir>(
+    'operational-comenzi-sort-dir',
+    'desc',
+  );
+
+  const handleSort = (field: GestiuneSortField) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+
+    setSortField(field);
+    setSortDir(field === 'data' || field === 'valoare' ? 'desc' : 'asc');
+  };
+
+  const reseteazaFiltre = () => {
+    setCautare('');
+    setFiltruStatus('Toate');
+    setFiltruMecanic('toate');
+    setFiltruPlata('Toate');
+    setDoarIntarziate(false);
+    setSortField('data');
+    setSortDir('desc');
+  };
+
+  const comenziFiltrate = filtreazaSiSorteazaComenzi(
+    comenzi,
+    clienti,
+    vehicule,
+    { cautare, filtruStatus, filtruMecanic, filtruPlata, doarIntarziate },
+    sortField,
+    sortDir,
+  );
+  const liniiLista = construiesteLiniiLista(comenziFiltrate, clienti, vehicule);
+  const statistici = calculeazaStatisticiComenzi(comenzi);
+  const detaliiComanda = rezolvaDetaliiComandaSelectata(
+    idComandaSelectata,
+    comenziFiltrate,
+    clienti,
+    vehicule,
+    mecanici,
+    dosare,
+    asiguratori,
+    pozitii,
+  );
+
+  useEffect(() => {
+    if (idComandaSelectata === null) {
+      return;
+    }
+
+    const existaInLista = comenziFiltrate.some((comanda) => comanda.idComanda === idComandaSelectata);
+    if (!existaInLista) {
+      setIdComandaSelectata(null);
+    }
+  }, [comenziFiltrate, idComandaSelectata, setIdComandaSelectata]);
+
   return (
-    <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h3 className="text-2xl font-bold tracking-tight text-slate-800">
-            Gestiune comenzi service
-          </h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Vizualizare rapidă a comenzilor deschise și a estimărilor inițiale din
-            modulul operațional.
-          </p>
+    <section className="relative space-y-8 pb-10">
+      <style>{`
+        @keyframes slideFadeIn {
+          from { opacity: 0; transform: translateY(-16px) scale(0.99); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fisa-intrare {
+          animation: slideFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+
+      {detaliiComanda.comandaSelectata ? (
+        <GestiuneComenziDetail
+          {...detaliiComanda}
+          onInchide={() => setIdComandaSelectata(null)}
+        />
+      ) : null}
+
+      <div className="space-y-6 rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h3 className="text-2xl font-bold tracking-tight text-slate-800">
+              Registru comenzi service
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Urmărește și gestionează stadiul lucrărilor și detaliile fiecărui deviz.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <StatCard
+              label="Total comenzi"
+              value={statistici.totalComenzi}
+              icon={<ClipboardList className="h-4 w-4" />}
+            />
+            <StatCard
+              label="Active"
+              value={statistici.totalComenziActive}
+              tone="info"
+              icon={<Wrench className="h-4 w-4" />}
+            />
+            <StatCard
+              label="Întârziate"
+              value={statistici.totalIntarziate}
+              tone="danger"
+              icon={<AlertTriangle className="h-4 w-4" />}
+            />
+          </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Total comenzi înregistrate: <strong>{comenzi.length}</strong>
-        </div>
+
+        <GestiuneComenziFilters
+          cautare={cautare}
+          doarIntarziate={doarIntarziate}
+          filtruMecanic={filtruMecanic}
+          filtruPlata={filtruPlata}
+          filtruStatus={filtruStatus}
+          mecanici={mecanici}
+          onCautareChange={setCautare}
+          onDoarIntarziateChange={setDoarIntarziate}
+          onFiltruMecanicChange={setFiltruMecanic}
+          onFiltruPlataChange={setFiltruPlata}
+          onFiltruStatusChange={setFiltruStatus}
+          onReset={reseteazaFiltre}
+          sortDir={sortDir}
+          sortField={sortField}
+        />
       </div>
 
-      {comenzi.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-          Nu există comenzi înregistrate în modulul operațional.
-        </div>
+      {comenziFiltrate.length === 0 ? (
+        <EmptyState
+          title={comenzi.length === 0 ? 'Nu există comenzi în registru' : 'Nu există rezultate'}
+          description={
+            comenzi.length === 0
+              ? 'Comenzile noi deschise din recepție vor apărea aici împreună cu detaliile lor.'
+              : 'Filtrele actuale nu au găsit nicio comandă. Poți reseta rapid căutarea și filtrele.'
+          }
+          actionLabel={comenzi.length === 0 ? undefined : 'Resetează filtrele'}
+          onAction={comenzi.length === 0 ? undefined : reseteazaFiltre}
+        />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-4">Comandă</th>
-                <th className="px-5 py-4">Vehicul</th>
-                <th className="px-5 py-4">Mecanic</th>
-                <th className="px-5 py-4">Dosar</th>
-                <th className="px-5 py-4">Status</th>
-                <th className="px-5 py-4 text-right">Poziții</th>
-                <th className="px-5 py-4 text-right">Total estimat</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {comenzi
-                .slice()
-                .sort(
-                  (left, right) =>
-                    right.dataDeschidere.getTime() - left.dataDeschidere.getTime(),
-                )
-                .map((comanda) => {
-                  const vehicul =
-                    vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
-                  const dosar =
-                    dosare.find((item) => item.idDosar === comanda.idDosar) ?? null;
-                  const mecanic =
-                    mecanici.find((item) => item.idMecanic === comanda.idMecanic) ?? null;
-                  const numarPozitii = pozitii.filter(
-                    (pozitie) => pozitie.idComanda === comanda.idComanda,
-                  ).length;
-
-                  return (
-                    <tr key={comanda.idComanda} className="align-top hover:bg-slate-50/70">
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-800">{comanda.nrComanda}</p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          Deschisă în {formatData(comanda.dataDeschidere)}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          Finalizare: {formatData(comanda.dataFinalizare)}
-                        </p>
-                      </td>
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-800">
-                          {vehicul ? `${vehicul.marca} ${vehicul.model}` : 'Vehicul indisponibil'}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {vehicul?.nrInmatriculare ?? 'Fără număr'}
-                        </p>
-                      </td>
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-700">
-                          {mecanic?.nume ?? 'Nealocat'}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {mecanic?.specialitate ?? 'Fără specialitate'}
-                        </p>
-                      </td>
-                      <td className="px-5 py-4">
-                        {dosar ? (
-                          <>
-                            <p className="font-semibold text-slate-700">{dosar.nrDosar}</p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              {formatSuma(dosar.sumaAprobata)}
-                            </p>
-                          </>
-                        ) : (
-                          <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-                            Fără dosar
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <StatusBadge status={comanda.status} />
-                      </td>
-                      <td className="px-5 py-4 text-right font-semibold text-slate-700">
-                        {numarPozitii}
-                      </td>
-                      <td className="px-5 py-4 text-right font-semibold text-slate-800">
-                        {formatSuma(comanda.totalEstimat)}
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
+        <GestiuneComenziTable
+          comenzi={liniiLista}
+          idComandaSelectata={idComandaSelectata}
+          onSelecteazaComanda={setIdComandaSelectata}
+          onSort={handleSort}
+          sortDir={sortDir}
+          sortField={sortField}
+        />
       )}
     </section>
   );

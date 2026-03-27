@@ -1,8 +1,10 @@
-import React, { useState, useMemo, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useMemo, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
 
 // --- INTERFEȚE ---
 interface FacturaRestanta {
   idFactura: number;
+  idClient?: number | string;
+  client?: string;
   numar: string;
   dataEmitere: string;
   restDePlata: number;
@@ -24,14 +26,14 @@ const CLIENTI_MOCK: Client[] = [
 
 const FACTURI_MOCK: Record<string, FacturaRestanta[]> = {
   '1': [
-    { idFactura: 101, numar: 'F-2026-001', dataEmitere: '01 Mar 2026', restDePlata: 1500, sumaAlocata: '' },
-    { idFactura: 102, numar: 'F-2026-005', dataEmitere: '10 Mar 2026', restDePlata: 850, sumaAlocata: '' },
+    { idFactura: 101, numar: 'F-2026-001', dataEmitere: '01 Mar 2026', restDePlata: 1500, sumaAlocata: '', idClient: '1', client: 'SC Auto Fleet SRL' },
+    { idFactura: 102, numar: 'F-2026-005', dataEmitere: '10 Mar 2026', restDePlata: 850, sumaAlocata: '', idClient: '1', client: 'SC Auto Fleet SRL' },
   ],
   '2': [
-    { idFactura: 201, numar: 'F-2026-021', dataEmitere: '05 Mar 2026', restDePlata: 3200, sumaAlocata: '' },
+    { idFactura: 201, numar: 'F-2026-021', dataEmitere: '05 Mar 2026', restDePlata: 3200, sumaAlocata: '', idClient: '2', client: 'Ion Popescu' },
   ],
   '3': [
-    { idFactura: 301, numar: 'F-2026-041', dataEmitere: '02 Feb 2026', restDePlata: 9500, sumaAlocata: '' },
+    { idFactura: 301, numar: 'F-2026-041', dataEmitere: '02 Feb 2026', restDePlata: 9500, sumaAlocata: '', idClient: '3', client: 'Omega Construct SA' },
   ],
 };
 
@@ -42,12 +44,10 @@ const METODE = [
 ];
 
 export default function Incasari() {
-  // --- STĂRI PENTRU AUTOCOMPLETE CLIENȚI ---
   const [searchClient, setSearchClient] = useState<string>('');
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // --- STĂRI FORMULAR ---
   const [clientSelectat, setClientSelectat] = useState<string>('');
   const [sumaIncasata, setSumaIncasata] = useState<number | ''>('');
   const [modalitate, setModalitate] = useState<string>('Transfer Bancar');
@@ -55,7 +55,6 @@ export default function Incasari() {
   const [referinta, setReferinta] = useState<string>('');
   const [facturiRestante, setFacturiRestante] = useState<FacturaRestanta[]>([]);
 
-  // Închide dropdown-ul dacă dai click în afara lui
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -71,7 +70,6 @@ export default function Incasari() {
     c.cui.toLowerCase().includes(searchClient.toLowerCase())
   );
 
-  // --- CALCULE ---
   const totalDatorieClient = useMemo(
     () => facturiRestante.reduce((acc, f) => acc + f.restDePlata, 0),
     [facturiRestante]
@@ -89,7 +87,6 @@ export default function Incasari() {
   const isReferintaObligatorie = modalitate === 'Transfer Bancar' || modalitate === 'POS';
   const referintaLipsa = isReferintaObligatorie && referinta.trim() === '';
 
-  // --- HANDLERS ---
   const handleSelectClient = (id: string, nume: string) => {
     setClientSelectat(id);
     setSearchClient(nume);
@@ -353,12 +350,18 @@ export default function Incasari() {
                 <span className="text-slate-300">Total Repartizat:</span>
                 <span className="font-mono font-medium text-slate-200">{totalAlocat.toFixed(2)} RON</span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
-                <span className="text-slate-300 font-medium text-sm">Bani nealocați (Rest/Avans):</span>
-                <span className={`font-mono font-bold text-lg ${baniRamasi < 0 ? 'text-rose-400' : baniRamasi > 0 ? 'text-emerald-400' : 'text-slate-300'}`}>
-                  {baniRamasi.toFixed(2)} RON
-                </span>
-              </div>
+              
+              {/* Afișăm diferența DOAR dacă există (este diferită de 0) */}
+              {baniRamasi !== 0 && (
+                <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
+                  <span className="text-slate-300 font-medium text-sm">
+                    {baniRamasi > 0 ? 'Bani în plus (Avans/Rest):' : 'Bani lipsă:'}
+                  </span>
+                  <span className={`font-mono font-bold text-lg ${baniRamasi < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {Math.abs(baniRamasi).toFixed(2)} RON
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Buton Final */}

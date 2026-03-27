@@ -1,14 +1,37 @@
+// Aceasta este pagina principală a fluxului operațional.
 import { useState } from 'react';
+import { EmptyState } from '../../../componente/ui/EmptyState';
 import FormComanda from '../components/FormComanda';
 import SelectorDosar from '../components/SelectorDosar';
 import SelectorVehicul from '../components/SelectorVehicul';
 import {
   creeazaPozitieDraft,
+  detaliiPreluareInitiale,
   stareDosarInitiala,
+  type DetaliiPreluareForm,
   type StareDosarAsigurare,
 } from '../formState';
+import {
+  accesoriiCaLista,
+  calculeazaFluxPreluare,
+  calculeazaIndicatoriPreluare,
+  calculeazaPreviewDocumente,
+  esteNumarCompletat,
+  formatSuma,
+  tipPlataImplicit,
+  urmatorulId,
+  genereazaNumarDocument,
+} from './preluareAuto.helpers';
+import PreluareAutoContext from './components/PreluareAutoContext';
+import PreluareAutoHeader from './components/PreluareAutoHeader';
+import { comandaEsteActiva } from '../calculations';
+import { valideazaPreluare } from '../validations';
 import type {
   Asigurator,
+  CatalogKit,
+  CatalogManopera,
+  CatalogPiesa,
+  Client,
   ComandaService,
   DosarDauna,
   Mecanic,
@@ -25,6 +48,10 @@ export interface SalvarePreluarePayload {
 
 interface PreluareAutoProps {
   asiguratori: Asigurator[];
+  catalogKituri: CatalogKit[];
+  catalogManopere: CatalogManopera[];
+  catalogPiese: CatalogPiesa[];
+  clienti: Client[];
   comenzi: ComandaService[];
   dosare: DosarDauna[];
   mecanici: Mecanic[];
@@ -33,44 +60,12 @@ interface PreluareAutoProps {
   onSalveazaPreluare: (payload: SalvarePreluarePayload) => void;
 }
 
-const formatSuma = (valoare: number) =>
-  new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: 'RON',
-    maximumFractionDigits: 2,
-  }).format(valoare);
-
-const calculeazaTotalEstimat = (pozitiiDraft: PozitieComandaDraft[]) =>
-  Number(
-    pozitiiDraft
-      .reduce(
-        (total, pozitie) =>
-          total + pozitie.cantitate * pozitie.pretVanzare * (1 + pozitie.cotaTVA / 100),
-        0,
-      )
-      .toFixed(2),
-  );
-
-const urmatorulId = <T,>(items: T[], selector: (item: T) => number) =>
-  items.length === 0 ? 1 : Math.max(...items.map(selector)) + 1;
-
-const genereazaNumarDocument = (prefix: string, id: number) =>
-  `${prefix}-${new Date().getFullYear()}-${String(id).padStart(3, '0')}`;
-
-const esteNumarCompletat = (valoare: number | ''): valoare is number => valoare !== '';
-
-const suntPozitiiValide = (pozitiiDraft: PozitieComandaDraft[]) =>
-  pozitiiDraft.length > 0 &&
-  pozitiiDraft.every(
-    (pozitie) =>
-      pozitie.descriere.trim() !== '' &&
-      pozitie.cantitate > 0 &&
-      pozitie.pretVanzare > 0 &&
-      pozitie.cotaTVA >= 0,
-  );
-
 export default function PreluareAuto({
   asiguratori,
+  catalogKituri,
+  catalogManopere,
+  catalogPiese,
+  clienti,
   comenzi,
   dosare,
   mecanici,
@@ -80,53 +75,80 @@ export default function PreluareAuto({
 }: PreluareAutoProps) {
   const [idVehiculSelectat, setIdVehiculSelectat] = useState<number | null>(null);
   const [esteLucrareAsigurare, setEsteLucrareAsigurare] = useState(false);
-  const [stareDosar, setStareDosar] =
-    useState<StareDosarAsigurare>(stareDosarInitiala);
+  const [stareDosar, setStareDosar] = useState<StareDosarAsigurare>(stareDosarInitiala);
+  const [detaliiPreluare, setDetaliiPreluare] = useState<DetaliiPreluareForm>(detaliiPreluareInitiale);
   const [idMecanicSelectat, setIdMecanicSelectat] = useState<number | null>(null);
-  const [pozitiiDraft, setPozitiiDraft] = useState<PozitieComandaDraft[]>([
-    creeazaPozitieDraft(),
-  ]);
+  const [pozitiiDraft, setPozitiiDraft] = useState<PozitieComandaDraft[]>([creeazaPozitieDraft()]);
 
-  const vehiculSelectat =
-    vehicule.find((vehicul) => vehicul.idVehicul === idVehiculSelectat) ?? null;
-  const totalEstimat = calculeazaTotalEstimat(pozitiiDraft);
-  const nrComandaPreview = genereazaNumarDocument(
-    'CMD',
-    urmatorulId(comenzi, (comanda) => comanda.idComanda),
+  const vehiculSelectat = vehicule.find((vehicul) => vehicul.idVehicul === idVehiculSelectat) ?? null;
+  const clientSelectat = clienti.find((client) => client.idClient === vehiculSelectat?.idClient) ?? null;
+  const { nrComandaPreview, nrDosarPreview } = calculeazaPreviewDocumente(comenzi, dosare);
+  const rezumatPozitii = calculeazaIndicatoriPreluare(
+    vehiculSelectat,
+    esteLucrareAsigurare,
+    false,
+    detaliiPreluare,
+    idMecanicSelectat,
+    pozitiiDraft,
+  ).rezumatPozitii;
+  const comandaActivaExistenta =
+    vehiculSelectat === null
+      ? null
+      : comenzi.find(
+          (comanda) =>
+            comanda.idVehicul === vehiculSelectat.idVehicul && comandaEsteActiva(comanda.status),
+        ) ?? null;
+
+  const { dosarValid, mesajeAvertizare, mesajeBlocare, poateSalva } = valideazaPreluare({
+    comandaActivaExistenta,
+    detaliiPreluare,
+    esteLucrareAsigurare,
+    idMecanicSelectat,
+    pozitiiDraft,
+    stareDosar,
+    totalEstimat: rezumatPozitii.total,
+    vehiculSelectat,
+  });
+
+  const flux = calculeazaFluxPreluare({
+    detaliiPreluare,
+    dosarValid,
+    esteLucrareAsigurare,
+    idMecanicSelectat,
+    pozitiiDraft,
+    vehiculSelectat,
+  });
+
+  const indicatori = calculeazaIndicatoriPreluare(
+    vehiculSelectat,
+    esteLucrareAsigurare,
+    dosarValid,
+    detaliiPreluare,
+    idMecanicSelectat,
+    pozitiiDraft,
   );
-  const nrDosarPreview = genereazaNumarDocument(
-    'DAUNA',
-    urmatorulId(dosare, (dosar) => dosar.idDosar),
-  );
-
-  const dosarValid = !esteLucrareAsigurare
-    ? true
-    : stareDosar.mod === 'existent'
-      ? stareDosar.idDosarSelectat !== null
-      : stareDosar.idAsigurator !== null &&
-        esteNumarCompletat(stareDosar.sumaAprobata) &&
-        stareDosar.sumaAprobata > 0 &&
-        esteNumarCompletat(stareDosar.franciza) &&
-        stareDosar.franciza >= 0;
-
-  const poateSalva =
-    vehiculSelectat !== null &&
-    idMecanicSelectat !== null &&
-    suntPozitiiValide(pozitiiDraft) &&
-    dosarValid;
 
   const reseteazaFlux = () => {
+    const tipPlata = tipPlataImplicit(clientSelectat);
     setIdVehiculSelectat(null);
     setEsteLucrareAsigurare(false);
     setStareDosar(stareDosarInitiala);
+    setDetaliiPreluare({ ...detaliiPreluareInitiale, tipPlata });
     setIdMecanicSelectat(null);
     setPozitiiDraft([creeazaPozitieDraft()]);
   };
 
   const handleSelecteazaVehicul = (idVehicul: number | null) => {
+    const vehicul = vehicule.find((item) => item.idVehicul === idVehicul) ?? null;
+    const client = clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
+
     setIdVehiculSelectat(idVehicul);
     setEsteLucrareAsigurare(false);
     setStareDosar(stareDosarInitiala);
+    setDetaliiPreluare((previous) => ({
+      ...previous,
+      tipPlata: tipPlataImplicit(client),
+    }));
   };
 
   const handleSchimbaFluxAsigurare = (activ: boolean) => {
@@ -134,6 +156,10 @@ export default function PreluareAuto({
 
     if (!activ || idVehiculSelectat === null) {
       setStareDosar(stareDosarInitiala);
+      setDetaliiPreluare((previous) => ({
+        ...previous,
+        tipPlata: tipPlataImplicit(clientSelectat),
+      }));
       return;
     }
 
@@ -143,15 +169,21 @@ export default function PreluareAuto({
       mod: dosareVehicul.length > 0 ? 'existent' : 'nou',
       idDosarSelectat: dosareVehicul[0]?.idDosar ?? null,
     });
+    setDetaliiPreluare((previous) => ({ ...previous, tipPlata: 'Asigurare' }));
+  };
+
+  const handleDetaliiChange = (modificari: Partial<DetaliiPreluareForm>) => {
+    setDetaliiPreluare((previous) => ({ ...previous, ...modificari }));
   };
 
   const handleSalveaza = () => {
-    if (!vehiculSelectat || idMecanicSelectat === null || !poateSalva) {
-      return;
-    }
+    if (!vehiculSelectat || idMecanicSelectat === null || !poateSalva) return;
 
     const idComandaNoua = urmatorulId(comenzi, (comanda) => comanda.idComanda);
     const dataDeschidere = new Date();
+    const statusInitial = pozitiiDraft.some((pozitie) => !pozitie.disponibilitateStoc)
+      ? 'Asteapta piese'
+      : 'In asteptare diagnoza';
 
     let dosarNou: DosarDauna | null = null;
     let idDosarFinal: number | null = null;
@@ -171,9 +203,15 @@ export default function PreluareAuto({
           idVehicul: vehiculSelectat.idVehicul,
           idAsigurator: stareDosar.idAsigurator,
           nrDosar: genereazaNumarDocument('DAUNA', idDosarNou),
+          numarReferintaAsigurator: stareDosar.numarReferintaAsigurator,
+          tipPolita: stareDosar.tipPolita,
           dataDeschidere,
+          dataConstatare: new Date(`${stareDosar.dataConstatare}T10:00:00`),
           sumaAprobata: stareDosar.sumaAprobata,
           franciza: stareDosar.franciza,
+          statusAprobare: stareDosar.statusAprobare,
+          inspectorDauna: stareDosar.inspectorDauna,
+          observatiiDauna: stareDosar.observatiiDauna,
         };
         idDosarFinal = dosarNou.idDosar;
       }
@@ -187,57 +225,58 @@ export default function PreluareAuto({
       nrComanda: genereazaNumarDocument('CMD', idComandaNoua),
       dataDeschidere,
       dataFinalizare: null,
-      status: 'Deschis',
-      totalEstimat,
+      status: statusInitial,
+      totalEstimat: rezumatPozitii.total,
+      kilometrajPreluare: detaliiPreluare.kilometrajPreluare as number,
+      nivelCombustibil: detaliiPreluare.nivelCombustibil,
+      simptomeReclamate: detaliiPreluare.simptomeReclamate.trim(),
+      observatiiPreluare: detaliiPreluare.observatiiPreluare.trim(),
+      observatiiCaroserie: detaliiPreluare.observatiiCaroserie.trim(),
+      accesoriiPredate: accesoriiCaLista(detaliiPreluare.accesoriiPredate),
+      termenPromis: new Date(`${detaliiPreluare.termenPromis}T17:00:00`),
+      prioritate: detaliiPreluare.prioritate,
+      tipPlata: esteLucrareAsigurare ? 'Asigurare' : detaliiPreluare.tipPlata,
     };
 
     const urmatorulIdPozitie = urmatorulId(pozitii, (pozitie) => pozitie.idPozitieCmd);
-    const pozitiiNoi: PozitieComanda[] = pozitiiDraft.map((pozitie, index) => {
-      const idPozitieCmd = urmatorulIdPozitie + index;
+    const pozitiiNoi: PozitieComanda[] = pozitiiDraft.map((pozitie, index) => ({
+      idPozitieCmd: urmatorulIdPozitie + index,
+      idComanda: idComandaNoua,
+      idPiesa: pozitie.tipPozitie === 'Piesa' ? pozitie.catalogId : null,
+      idKit: pozitie.tipPozitie === 'Kit' ? pozitie.catalogId : null,
+      idManopera: pozitie.tipPozitie === 'Manopera' ? pozitie.catalogId : null,
+      tipPozitie: pozitie.tipPozitie,
+      codArticol: pozitie.codArticol,
+      descriere: pozitie.descriere,
+      unitateMasura: pozitie.unitateMasura,
+      cantitate: pozitie.cantitate,
+      pretVanzare: pozitie.pretVanzare,
+      discountProcent: pozitie.discountProcent,
+      cotaTVA: pozitie.cotaTVA,
+      disponibilitateStoc: pozitie.disponibilitateStoc,
+      observatiiPozitie: pozitie.observatiiPozitie.trim(),
+    }));
 
-      return {
-        idPozitieCmd,
-        idComanda: idComandaNoua,
-        idPiesa: pozitie.tipPozitie === 'Piesa' ? 1000 + idPozitieCmd : null,
-        idKit: pozitie.tipPozitie === 'Kit' ? 2000 + idPozitieCmd : null,
-        idManopera: pozitie.tipPozitie === 'Manopera' ? 3000 + idPozitieCmd : null,
-        tipPozitie: pozitie.tipPozitie,
-        cantitate: pozitie.cantitate,
-        pretVanzare: pozitie.pretVanzare,
-        cotaTVA: pozitie.cotaTVA,
-      };
-    });
-
-    onSalveazaPreluare({
-      comanda: comandaNoua,
-      dosarNou,
-      pozitiiNoi,
-    });
-
+    onSalveazaPreluare({ comanda: comandaNoua, dosarNou, pozitiiNoi });
     reseteazaFlux();
   };
 
   return (
     <section className="space-y-6">
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h3 className="text-2xl font-bold tracking-tight text-slate-800">
-              Preluare auto
-            </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Selectează vehiculul, configurează contextul comenzii și salvează
-              estimarea inițială de piese și manoperă.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Comanda nouă va primi numărul <strong>{nrComandaPreview}</strong>
-          </div>
-        </div>
-      </div>
+      <PreluareAutoHeader
+        esteLucrareAsigurare={esteLucrareAsigurare}
+        mesajeBlocare={mesajeBlocare}
+        nrComandaPreview={nrComandaPreview}
+        pasiFlux={flux.pasiFlux}
+        pasCurent={flux.pasCurent}
+        rezumatTotal={rezumatPozitii.total > 0 ? formatSuma(rezumatPozitii.total) : null}
+        stareDosarTipPolita={esteLucrareAsigurare ? stareDosar.tipPolita : null}
+        vehiculSelectat={vehiculSelectat ? { nrInmatriculare: vehiculSelectat.nrInmatriculare } : null}
+      />
 
       <SelectorVehicul
+        clienti={clienti}
+        comenzi={comenzi}
         idVehiculSelectat={idVehiculSelectat}
         onSelecteaza={handleSelecteazaVehicul}
         vehicule={vehicule}
@@ -245,102 +284,79 @@ export default function PreluareAuto({
 
       {vehiculSelectat ? (
         <>
-          <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Vehicul selectat
-              </p>
-              <h3 className="mt-2 text-2xl font-bold text-slate-800">
-                {vehiculSelectat.marca} {vehiculSelectat.model}
-              </h3>
-              <dl className="mt-5 grid gap-4 text-sm text-slate-600 md:grid-cols-2">
-                <div>
-                  <dt className="font-semibold text-slate-700">Număr înmatriculare</dt>
-                  <dd className="mt-1">{vehiculSelectat.nrInmatriculare}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-slate-700">Client</dt>
-                  <dd className="mt-1">#{vehiculSelectat.idClient}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-slate-700">An fabricație</dt>
-                  <dd className="mt-1">{vehiculSelectat.an}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-slate-700">Serie șasiu</dt>
-                  <dd className="mt-1 break-all">{vehiculSelectat.serieSasiu}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Tip intervenție
-                  </p>
-                  <h3 className="mt-2 text-xl font-bold text-slate-800">
-                    {esteLucrareAsigurare ? 'Lucrare cu asigurare' : 'Lucrare client direct'}
-                  </h3>
-                </div>
-                <label className="inline-flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <span className="text-sm font-semibold text-slate-700">Daună</span>
-                  <input
-                    type="checkbox"
-                    checked={esteLucrareAsigurare}
-                    onChange={(event) =>
-                      handleSchimbaFluxAsigurare(event.target.checked)
-                    }
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                </label>
-              </div>
-
-              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                <p className="text-sm text-slate-600">
-                  Total estimat curent: <strong>{formatSuma(totalEstimat)}</strong>
-                </p>
-                {esteLucrareAsigurare ? (
-                  <p className="mt-2 text-sm text-slate-500">
-                    La salvare se va folosi dosarul selectat sau se va genera unul nou:
-                    <strong> {nrDosarPreview}</strong>
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          {esteLucrareAsigurare ? (
-            <SelectorDosar
-              asiguratori={asiguratori}
-              dosare={dosare}
-              nrDosarPreview={nrDosarPreview}
-              value={stareDosar}
-              vehicul={vehiculSelectat}
-              onChange={setStareDosar}
-            />
-          ) : null}
-
-          <FormComanda
-            idMecanicSelectat={idMecanicSelectat}
-            mecanici={mecanici}
-            nrComandaPreview={nrComandaPreview}
-            pozitii={pozitiiDraft}
-            totalEstimat={totalEstimat}
-            vehicul={vehiculSelectat}
-            onMecanicChange={setIdMecanicSelectat}
-            onPozitiiChange={setPozitiiDraft}
+          <PreluareAutoContext
+            clientSelectat={clientSelectat}
+            comandaActivaExistenta={comandaActivaExistenta}
+            esteLucrareAsigurare={esteLucrareAsigurare}
+            onSchimbaFluxAsigurare={handleSchimbaFluxAsigurare}
+            vehiculSelectat={vehiculSelectat}
           />
 
-          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-1 text-sm text-slate-500">
+          {mesajeAvertizare.length > 0 ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-5">
+              <h4 className="text-sm font-bold uppercase tracking-wide text-amber-900">
+                Avertizări operaționale
+              </h4>
+              <ul className="mt-3 space-y-2 text-sm text-amber-800">
+                {mesajeAvertizare.map((mesaj) => (
+                  <li key={mesaj}>• {mesaj}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {esteLucrareAsigurare ? (
+            <div
+              className={`rounded-2xl transition-all duration-300 ${
+                indicatori.lipsesteDosar
+                  ? 'border-2 border-rose-400 bg-rose-50/20 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
+                  : ''
+              }`}
+            >
+              <SelectorDosar
+                asiguratori={asiguratori}
+                dosare={dosare}
+                nrDosarPreview={nrDosarPreview}
+                value={stareDosar}
+                vehicul={vehiculSelectat}
+                onChange={setStareDosar}
+              />
+            </div>
+          ) : null}
+
+          <div
+            className={`rounded-2xl transition-all duration-300 ${
+              indicatori.lipsescSimptomeSauMecanic
+                ? 'border-2 border-rose-400 bg-rose-50/20 p-0.5 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
+                : ''
+            }`}
+          >
+            <FormComanda
+              blocheazaTipPlataAsigurare={esteLucrareAsigurare}
+              catalogKituri={catalogKituri}
+              catalogManopere={catalogManopere}
+              catalogPiese={catalogPiese}
+              detaliiPreluare={detaliiPreluare}
+              idMecanicSelectat={idMecanicSelectat}
+              mecanici={mecanici}
+              nrComandaPreview={nrComandaPreview}
+              pozitii={pozitiiDraft}
+              subtotalEstimat={rezumatPozitii.subtotal}
+              totalEstimat={rezumatPozitii.total}
+              tvaEstimat={rezumatPozitii.tva}
+              vehicul={vehiculSelectat}
+              onDetaliiChange={handleDetaliiChange}
+              onMecanicChange={setIdMecanicSelectat}
+              onPozitiiChange={setPozitiiDraft}
+            />
+          </div>
+
+          <div className="mb-20 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl space-y-1 text-sm text-slate-500">
               <p>
-                Salvarea este permisă doar dacă ai selectat vehiculul, mecanicul și ai
-                completat toate pozițiile.
-              </p>
-              <p>
-                Dacă fluxul de daună este activ, trebuie ales un dosar existent sau
-                completat unul nou.
+                Comanda va porni cu status adaptat realității: dacă lipsește stocul, intră
+                automat în <strong>Așteaptă piese</strong>, altfel în{' '}
+                <strong>În așteptare diagnoză</strong>.
               </p>
             </div>
 
@@ -348,7 +364,7 @@ export default function PreluareAuto({
               <button
                 type="button"
                 onClick={reseteazaFlux}
-                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
               >
                 Resetează
               </button>
@@ -356,7 +372,7 @@ export default function PreluareAuto({
                 type="button"
                 onClick={handleSalveaza}
                 disabled={!poateSalva}
-                className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                className="rounded-xl bg-indigo-600 px-8 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/20 transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
               >
                 Deschide comanda
               </button>
@@ -364,9 +380,10 @@ export default function PreluareAuto({
           </div>
         </>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-          Selectează un vehicul pentru a continua cu preluarea și estimarea comenzii.
-        </div>
+        <EmptyState
+          title="Niciun vehicul selectat"
+          description="Caută și selectează un vehicul pentru a continua cu recepția și deschiderea unei comenzi."
+        />
       )}
     </section>
   );
