@@ -2,13 +2,17 @@
 // formular și listări să folosească aceeași formulă.
 // În felul acesta evităm situația în care aceeași poziție ar avea alt total
 // în tabel, alt total în comandă și alt total în mock data.
-import type { PozitieComanda, PozitieComandaDraft, StatusComanda } from './types';
+import type {
+  PozitieComanda,
+  PozitieComandaDraft,
+  StatusComanda,
+} from "./types";
 
 // Nu avem nevoie de toate câmpurile unei poziții pentru calcule.
 // De aceea extragem doar proprietățile strict necesare.
 type PozitieCalculabila = Pick<
   PozitieComandaDraft | PozitieComanda,
-  'cantitate' | 'pretVanzare' | 'discountProcent' | 'cotaTVA'
+  "cantitate" | "pretVanzare" | "discountProcent" | "cotaTVA"
 >;
 
 export interface RezumatFinanciar {
@@ -58,11 +62,11 @@ export const calculeazaRezumatPozitii = (
 // Considerăm "active" doar statusurile care înseamnă că lucrarea încă se află
 // în fluxul operațional și nu a fost închisă efectiv.
 const statusuriActive: StatusComanda[] = [
-  'In asteptare diagnoza',
-  'Asteapta aprobare client',
-  'Asteapta piese',
-  'In Lucru',
-  'Gata de livrare',
+  "In asteptare diagnoza",
+  "Asteapta aprobare client",
+  "Asteapta piese",
+  "In Lucru",
+  "Gata de livrare",
 ];
 
 export const comandaEsteActiva = (status: StatusComanda) =>

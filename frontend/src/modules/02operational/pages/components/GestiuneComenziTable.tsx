@@ -1,16 +1,20 @@
 // Tabelul este componenta vizuală a listei de comenzi.
 // El nu filtrează și nu sortează singur datele; primește deja o listă pregătită
 // de pagina părinte și doar o afișează.
-import StatusBadge from '../../components/StatusBadge';
-import type { ComandaFiltrataContext, GestiuneSortDir, GestiuneSortField } from '../gestiuneComenzi.helpers';
-import { formatData, formatSuma } from '../gestiuneComenzi.helpers';
+import StatusBadge from "../../components/StatusBadge";
+import type {
+  ComandaFiltrataContext,
+  GestiuneSortDir,
+  GestiuneSortField,
+} from "../gestiuneComenzi.helpers";
+import { formatData, formatSuma } from "../gestiuneComenzi.helpers";
 
 const sortLabels: Record<GestiuneSortField, string> = {
-  data: 'Dată',
-  nrComanda: 'Comandă',
-  status: 'Status',
-  valoare: 'Valoare Deviz',
-  vehicul: 'Client / Vehicul',
+  data: "Dată",
+  nrComanda: "Comandă",
+  status: "Status",
+  valoare: "Valoare Deviz",
+  vehicul: "Client / Vehicul",
 };
 
 function SortIcon({
@@ -28,16 +32,26 @@ function SortIcon({
   return (
     <svg
       className={`ml-1.5 inline-block h-3.5 w-3.5 transition-transform duration-300 ${
-        active ? 'text-indigo-500' : 'text-slate-300 group-hover:text-slate-400'
+        active ? "text-indigo-500" : "text-slate-300 group-hover:text-slate-400"
       }`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
     >
-      {active && sortDir === 'asc' ? (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
-      ) : active && sortDir === 'desc' ? (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+      {active && sortDir === "asc" ? (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={3}
+          d="M5 15l7-7 7 7"
+        />
+      ) : active && sortDir === "desc" ? (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={3}
+          d="M19 9l-7 7-7-7"
+        />
       ) : (
         <path
           strokeLinecap="round"
@@ -75,22 +89,32 @@ export default function GestiuneComenziTable({
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400">
             <tr>
-              {(['nrComanda', 'data', 'vehicul', 'status', 'valoare'] as GestiuneSortField[]).map(
-                (field) => (
-                  <th
-                    key={field}
-                    className={`group cursor-pointer select-none px-6 py-4 transition-colors hover:bg-slate-100 ${
-                      field === 'valoare' ? 'text-right' : ''
-                    }`}
-                    // Când utilizatorul apasă pe antetul unei coloane,
-                    // trimitem înapoi numele câmpului după care trebuie făcută sortarea.
-                    onClick={() => onSort(field)}
-                  >
-                    {sortLabels[field]}
-                    <SortIcon field={field} sortField={sortField} sortDir={sortDir} />
-                  </th>
-                ),
-              )}
+              {(
+                [
+                  "nrComanda",
+                  "data",
+                  "vehicul",
+                  "status",
+                  "valoare",
+                ] as GestiuneSortField[]
+              ).map((field) => (
+                <th
+                  key={field}
+                  className={`group cursor-pointer select-none px-6 py-4 transition-colors hover:bg-slate-100 ${
+                    field === "valoare" ? "text-right" : ""
+                  }`}
+                  // Când utilizatorul apasă pe antetul unei coloane,
+                  // trimitem înapoi numele câmpului după care trebuie făcută sortarea.
+                  onClick={() => onSort(field)}
+                >
+                  {sortLabels[field]}
+                  <SortIcon
+                    field={field}
+                    sortField={sortField}
+                    sortDir={sortDir}
+                  />
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -102,15 +126,21 @@ export default function GestiuneComenziTable({
                   key={comanda.idComanda}
                   className={`group/row relative cursor-pointer align-middle transition-all duration-200 ease-out ${
                     esteSelectata
-                      ? 'bg-indigo-50/60 shadow-[inset_4px_0_0_0_rgba(99,102,241,1)]'
-                      : 'hover:-translate-y-px hover:bg-slate-50/80 hover:shadow-sm'
+                      ? "bg-indigo-50/60 shadow-[inset_4px_0_0_0_rgba(99,102,241,1)]"
+                      : "hover:-translate-y-px hover:bg-slate-50/80 hover:shadow-sm"
                   }`}
                   // Aici nu modificăm rândul local.
                   // Spunem doar părintelui ce comandă a fost selectată.
-                  onClick={() => onSelecteazaComanda(esteSelectata ? null : comanda.idComanda)}
+                  onClick={() =>
+                    onSelecteazaComanda(
+                      esteSelectata ? null : comanda.idComanda,
+                    )
+                  }
                 >
                   <td className="px-6 py-4">
-                    <p className={`font-bold ${esteSelectata ? 'text-indigo-800' : 'text-slate-800'}`}>
+                    <p
+                      className={`font-bold ${esteSelectata ? "text-indigo-800" : "text-slate-800"}`}
+                    >
                       {comanda.nrComanda}
                     </p>
                   </td>
@@ -121,9 +151,11 @@ export default function GestiuneComenziTable({
                   </td>
                   <td className="px-6 py-4">
                     <p className="text-[13px] font-bold text-indigo-700">
-                      {vehicul ? vehicul.nrInmatriculare : '-'}
+                      {vehicul ? vehicul.nrInmatriculare : "-"}
                     </p>
-                    <p className="mt-1 text-xs font-medium text-slate-600">{client?.nume ?? '-'}</p>
+                    <p className="mt-1 text-xs font-medium text-slate-600">
+                      {client?.nume ?? "-"}
+                    </p>
                   </td>
                   <td className="px-6 py-4">
                     {/* Într-o singură coloană combinăm și badge-ul de status,

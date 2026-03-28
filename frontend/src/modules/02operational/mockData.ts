@@ -11,4 +11,4 @@ export {
   mockMecanici,
   mockPozitii,
   mockVehicule,
-} from '../../mock/operational';
+} from "../../mock/operational";

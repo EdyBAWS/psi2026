@@ -2,7 +2,11 @@
 // pentru pagina `GestiuneComenzi`.
 // Scopul este ca pagina principală să rămână mai ușor de citit:
 // UI-ul stă în componentă, iar calculele și legăturile dintre entități stau aici.
-import { calculeazaRezumatPozitii, comandaEsteActiva, comandaEsteIntarziata } from '../calculations';
+import {
+  calculeazaRezumatPozitii,
+  comandaEsteActiva,
+  comandaEsteIntarziata,
+} from "../calculations";
 import type {
   Asigurator,
   Client,
@@ -12,16 +16,21 @@ import type {
   PozitieComanda,
   StatusComanda,
   Vehicul,
-} from '../types';
+} from "../types";
 
-export type GestiuneSortField = 'nrComanda' | 'data' | 'vehicul' | 'status' | 'valoare';
-export type GestiuneSortDir = 'asc' | 'desc';
+export type GestiuneSortField =
+  | "nrComanda"
+  | "data"
+  | "vehicul"
+  | "status"
+  | "valoare";
+export type GestiuneSortDir = "asc" | "desc";
 
 export interface GestiuneFiltre {
   cautare: string;
-  filtruStatus: StatusComanda | 'Toate';
-  filtruMecanic: number | 'toate';
-  filtruPlata: ComandaService['tipPlata'] | 'Toate';
+  filtruStatus: StatusComanda | "Toate";
+  filtruMecanic: number | "toate";
+  filtruPlata: ComandaService["tipPlata"] | "Toate";
   doarIntarziate: boolean;
 }
 
@@ -43,41 +52,44 @@ export interface DetaliiComandaSelectata {
   vehiculSelectat: Vehicul | null;
 }
 
-export const statusuriFiltrare: Array<StatusComanda | 'Toate'> = [
-  'Toate',
-  'In asteptare diagnoza',
-  'Asteapta aprobare client',
-  'Asteapta piese',
-  'In Lucru',
-  'Gata de livrare',
-  'Livrat',
-  'Facturat',
-  'Anulat',
+export const statusuriFiltrare: Array<StatusComanda | "Toate"> = [
+  "Toate",
+  "In asteptare diagnoza",
+  "Asteapta aprobare client",
+  "Asteapta piese",
+  "In Lucru",
+  "Gata de livrare",
+  "Livrat",
+  "Facturat",
+  "Anulat",
 ];
 
 export const formatSuma = (valoare: number) =>
-  new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: 'RON',
+  new Intl.NumberFormat("ro-RO", {
+    style: "currency",
+    currency: "RON",
     maximumFractionDigits: 2,
   }).format(valoare);
 
 export const formatData = (valoare: Date | null) =>
-  valoare ? valoare.toLocaleDateString('ro-RO') : 'Nefinalizată';
+  valoare ? valoare.toLocaleDateString("ro-RO") : "Nefinalizată";
 
-export function descriereSortare(sortField: GestiuneSortField, sortDir: GestiuneSortDir) {
+export function descriereSortare(
+  sortField: GestiuneSortField,
+  sortDir: GestiuneSortDir,
+) {
   // Acest text este util pentru a explica utilizatorului
   // cum este ordonată lista în momentul curent.
   const etichete: Record<GestiuneSortField, string> = {
-    data: 'data deschiderii',
-    nrComanda: 'numărul comenzii',
-    status: 'status',
-    valoare: 'valoarea devizului',
-    vehicul: 'vehicul',
+    data: "data deschiderii",
+    nrComanda: "numărul comenzii",
+    status: "status",
+    valoare: "valoarea devizului",
+    vehicul: "vehicul",
   };
 
   return `Sortare după ${etichete[sortField]}, ordine ${
-    sortDir === 'asc' ? 'crescătoare' : 'descrescătoare'
+    sortDir === "asc" ? "crescătoare" : "descrescătoare"
   }.`;
 }
 
@@ -95,27 +107,33 @@ export function filtreazaSiSorteazaComenzi(
     .filter((comanda) => {
       // Pentru fiecare comandă rezolvăm și contextul ei minim,
       // adică vehiculul și clientul asociat.
-      const vehicul = vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
-      const client = clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
+      const vehicul =
+        vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
+      const client =
+        clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
       const potrivireCautare =
-        termen === '' ||
+        termen === "" ||
         [
           comanda.nrComanda,
-          vehicul?.nrInmatriculare ?? '',
-          vehicul?.marca ?? '',
-          vehicul?.model ?? '',
-          client?.nume ?? '',
-          client?.denumireCompanie ?? '',
+          vehicul?.nrInmatriculare ?? "",
+          vehicul?.marca ?? "",
+          vehicul?.model ?? "",
+          client?.nume ?? "",
+          client?.denumireCompanie ?? "",
         ].some((camp) => camp.toLowerCase().includes(termen));
 
       const potrivireStatus =
-        filtre.filtruStatus === 'Toate' || comanda.status === filtre.filtruStatus;
+        filtre.filtruStatus === "Toate" ||
+        comanda.status === filtre.filtruStatus;
       const potrivireMecanic =
-        filtre.filtruMecanic === 'toate' || comanda.idMecanic === filtre.filtruMecanic;
+        filtre.filtruMecanic === "toate" ||
+        comanda.idMecanic === filtre.filtruMecanic;
       const potrivirePlata =
-        filtre.filtruPlata === 'Toate' || comanda.tipPlata === filtre.filtruPlata;
+        filtre.filtruPlata === "Toate" ||
+        comanda.tipPlata === filtre.filtruPlata;
       const potrivireIntarziere =
-        !filtre.doarIntarziate || comandaEsteIntarziata(comanda.status, comanda.termenPromis);
+        !filtre.doarIntarziate ||
+        comandaEsteIntarziata(comanda.status, comanda.termenPromis);
 
       return (
         potrivireCautare &&
@@ -130,21 +148,25 @@ export function filtreazaSiSorteazaComenzi(
       // aceeași logică în tabel și în pagina principală.
       let comparison = 0;
 
-      if (sortField === 'data') {
+      if (sortField === "data") {
         comparison = a.dataDeschidere.getTime() - b.dataDeschidere.getTime();
-      } else if (sortField === 'nrComanda') {
+      } else if (sortField === "nrComanda") {
         comparison = a.nrComanda.localeCompare(b.nrComanda);
-      } else if (sortField === 'vehicul') {
-        const vehiculA = vehicule.find((item) => item.idVehicul === a.idVehicul)?.nrInmatriculare ?? '';
-        const vehiculB = vehicule.find((item) => item.idVehicul === b.idVehicul)?.nrInmatriculare ?? '';
+      } else if (sortField === "vehicul") {
+        const vehiculA =
+          vehicule.find((item) => item.idVehicul === a.idVehicul)
+            ?.nrInmatriculare ?? "";
+        const vehiculB =
+          vehicule.find((item) => item.idVehicul === b.idVehicul)
+            ?.nrInmatriculare ?? "";
         comparison = vehiculA.localeCompare(vehiculB);
-      } else if (sortField === 'status') {
+      } else if (sortField === "status") {
         comparison = a.status.localeCompare(b.status);
       } else {
         comparison = a.totalEstimat - b.totalEstimat;
       }
 
-      return sortDir === 'asc' ? comparison : -comparison;
+      return sortDir === "asc" ? comparison : -comparison;
     });
 }
 
@@ -156,8 +178,10 @@ export function construiesteLiniiLista(
   // În listă vrem deja o structură "pregătită de afișare",
   // nu doar comanda brută. De aceea construim aici contextul complet.
   return comenziFiltrate.map((comanda) => {
-    const vehicul = vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
-    const client = clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
+    const vehicul =
+      vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
+    const client =
+      clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
 
     return {
       client,
@@ -184,26 +208,35 @@ export function rezolvaDetaliiComandaSelectata(
   const comandaSelectata =
     idComandaSelectata === null
       ? null
-      : comenziFiltrate.find((comanda) => comanda.idComanda === idComandaSelectata) ?? null;
+      : (comenziFiltrate.find(
+          (comanda) => comanda.idComanda === idComandaSelectata,
+        ) ?? null);
 
   const pozitiiComandaSelectata = comandaSelectata
-    ? pozitii.filter((pozitie) => pozitie.idComanda === comandaSelectata.idComanda)
+    ? pozitii.filter(
+        (pozitie) => pozitie.idComanda === comandaSelectata.idComanda,
+      )
     : [];
   const rezumatSelectat = calculeazaRezumatPozitii(pozitiiComandaSelectata);
   const vehiculSelectat = comandaSelectata
-    ? vehicule.find((item) => item.idVehicul === comandaSelectata.idVehicul) ?? null
+    ? (vehicule.find((item) => item.idVehicul === comandaSelectata.idVehicul) ??
+      null)
     : null;
   const clientSelectat = vehiculSelectat
-    ? clienti.find((item) => item.idClient === vehiculSelectat.idClient) ?? null
+    ? (clienti.find((item) => item.idClient === vehiculSelectat.idClient) ??
+      null)
     : null;
   const mecanicSelectat = comandaSelectata
-    ? mecanici.find((item) => item.idMecanic === comandaSelectata.idMecanic) ?? null
+    ? (mecanici.find((item) => item.idMecanic === comandaSelectata.idMecanic) ??
+      null)
     : null;
   const dosarSelectat = comandaSelectata
-    ? dosare.find((item) => item.idDosar === comandaSelectata.idDosar) ?? null
+    ? (dosare.find((item) => item.idDosar === comandaSelectata.idDosar) ?? null)
     : null;
   const asiguratorSelectat = dosarSelectat
-    ? asiguratori.find((item) => item.idAsigurator === dosarSelectat.idAsigurator) ?? null
+    ? (asiguratori.find(
+        (item) => item.idAsigurator === dosarSelectat.idAsigurator,
+      ) ?? null)
     : null;
 
   return {
@@ -223,7 +256,9 @@ export function calculeazaStatisticiComenzi(comenzi: ComandaService[]) {
   // deci este mai sigur să le calculăm centralizat aici.
   return {
     totalComenzi: comenzi.length,
-    totalComenziActive: comenzi.filter((comanda) => comandaEsteActiva(comanda.status)).length,
+    totalComenziActive: comenzi.filter((comanda) =>
+      comandaEsteActiva(comanda.status),
+    ).length,
     totalIntarziate: comenzi.filter((comanda) =>
       comandaEsteIntarziata(comanda.status, comanda.termenPromis),
     ).length,

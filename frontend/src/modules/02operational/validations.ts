@@ -2,16 +2,9 @@
 // de business să fie mai ușor de citit și testat decât dacă ar rămâne în JSX.
 // Pagina `PreluareAuto` trimite starea curentă, iar acest fișier întoarce
 // rezultatul într-o formă ușor de afișat în interfață.
-import type {
-  ComandaService,
-  PozitieComandaDraft,
-  Vehicul,
-} from './types';
-import type {
-  DetaliiPreluareForm,
-  StareDosarAsigurare,
-} from './formState';
-import { dosarNouSchema } from './schemas';
+import type { ComandaService, PozitieComandaDraft, Vehicul } from "./types";
+import type { DetaliiPreluareForm, StareDosarAsigurare } from "./formState";
+import { dosarNouSchema } from "./schemas";
 
 export interface ValidarePreluareInput {
   comandaActivaExistenta: ComandaService | null;
@@ -33,7 +26,8 @@ export interface ValidarePreluareResult {
 
 // `number | ''` permite câmpul gol în input-urile controlate.
 // În validare avem nevoie să știm dacă utilizatorul a introdus deja o valoare numerică reală.
-const esteNumarCompletat = (valoare: number | ''): valoare is number => valoare !== '';
+const esteNumarCompletat = (valoare: number | ""): valoare is number =>
+  valoare !== "";
 
 // O poziție este considerată validă doar dacă are articol selectat și valori financiare minime.
 export const suntPozitiiValide = (pozitiiDraft: PozitieComandaDraft[]) =>
@@ -41,8 +35,8 @@ export const suntPozitiiValide = (pozitiiDraft: PozitieComandaDraft[]) =>
   pozitiiDraft.every(
     (pozitie) =>
       pozitie.catalogId !== null &&
-      pozitie.descriere.trim() !== '' &&
-      pozitie.codArticol.trim() !== '' &&
+      pozitie.descriere.trim() !== "" &&
+      pozitie.codArticol.trim() !== "" &&
       pozitie.cantitate > 0 &&
       pozitie.pretVanzare > 0 &&
       pozitie.discountProcent >= 0 &&
@@ -60,7 +54,7 @@ const dosarEsteValid = (
     return true;
   }
 
-  if (stareDosar.mod === 'existent') {
+  if (stareDosar.mod === "existent") {
     return stareDosar.idDosarSelectat !== null;
   }
 
@@ -87,7 +81,7 @@ export function valideazaPreluare({
   // De exemplu, schema știe dacă un text este prea scurt,
   // dar aici decidem dacă lipsa lui chiar blochează salvarea fluxului.
   if (!vehiculSelectat) {
-    mesajeBlocare.push('Selectează un vehicul înainte de a continua fluxul.');
+    mesajeBlocare.push("Selectează un vehicul înainte de a continua fluxul.");
   }
   if (comandaActivaExistenta) {
     mesajeBlocare.push(
@@ -95,37 +89,44 @@ export function valideazaPreluare({
     );
   }
   if (idMecanicSelectat === null) {
-    mesajeBlocare.push('Alege mecanicul responsabil pentru lucrare.');
+    mesajeBlocare.push("Alege mecanicul responsabil pentru lucrare.");
   }
   if (
     !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) ||
     detaliiPreluare.kilometrajPreluare <= 0
   ) {
-    mesajeBlocare.push('Completează kilometrajul de preluare.');
+    mesajeBlocare.push("Completează kilometrajul de preluare.");
   }
   if (detaliiPreluare.simptomeReclamate.trim().length < 10) {
-    mesajeBlocare.push('Descrie simptomele reclamate în minimum 10 caractere.');
+    mesajeBlocare.push("Descrie simptomele reclamate în minimum 10 caractere.");
   }
-  if (detaliiPreluare.termenPromis === '') {
-    mesajeBlocare.push('Setează un termen promis pentru livrare.');
+  if (detaliiPreluare.termenPromis === "") {
+    mesajeBlocare.push("Setează un termen promis pentru livrare.");
   }
   if (
-    detaliiPreluare.termenPromis !== '' &&
-    new Date(detaliiPreluare.termenPromis).getTime() < new Date().setHours(0, 0, 0, 0)
+    detaliiPreluare.termenPromis !== "" &&
+    new Date(detaliiPreluare.termenPromis).getTime() <
+      new Date().setHours(0, 0, 0, 0)
   ) {
-    mesajeBlocare.push('Termenul promis nu poate fi în trecut.');
+    mesajeBlocare.push("Termenul promis nu poate fi în trecut.");
   }
-  if (esteLucrareAsigurare && detaliiPreluare.tipPlata !== 'Asigurare') {
-    mesajeBlocare.push('Pentru lucrările pe asigurare, tipul de plată trebuie să fie Asigurare.');
+  if (esteLucrareAsigurare && detaliiPreluare.tipPlata !== "Asigurare") {
+    mesajeBlocare.push(
+      "Pentru lucrările pe asigurare, tipul de plată trebuie să fie Asigurare.",
+    );
   }
-  if (!esteLucrareAsigurare && detaliiPreluare.tipPlata === 'Asigurare') {
-    mesajeBlocare.push('Activează fluxul de daună dacă plata este prin asigurare.');
+  if (!esteLucrareAsigurare && detaliiPreluare.tipPlata === "Asigurare") {
+    mesajeBlocare.push(
+      "Activează fluxul de daună dacă plata este prin asigurare.",
+    );
   }
   if (!suntPozitiiValide(pozitiiDraft)) {
-    mesajeBlocare.push('Completează toate pozițiile și selectează articole din catalog.');
+    mesajeBlocare.push(
+      "Completează toate pozițiile și selectează articole din catalog.",
+    );
   }
   if (!dosarValid) {
-    mesajeBlocare.push('Completează corect datele dosarului de daună.');
+    mesajeBlocare.push("Completează corect datele dosarului de daună.");
   }
 
   const mesajeAvertizare: string[] = [];
@@ -133,18 +134,18 @@ export function valideazaPreluare({
     // Lipsa de stoc nu blochează deschiderea comenzii,
     // dar este important să semnalăm riscul din timp.
     mesajeAvertizare.push(
-      'Există poziții fără stoc local. Comanda poate fi salvată, dar va intra cel mai probabil în status Așteaptă piese.',
+      "Există poziții fără stoc local. Comanda poate fi salvată, dar va intra cel mai probabil în status Așteaptă piese.",
     );
   }
 
   if (
     esteLucrareAsigurare &&
-    stareDosar.mod === 'nou' &&
+    stareDosar.mod === "nou" &&
     esteNumarCompletat(stareDosar.sumaAprobata) &&
     stareDosar.sumaAprobata < totalEstimat
   ) {
     mesajeAvertizare.push(
-      'Suma aprobată în dosar este mai mică decât devizul estimat și va necesita suplimentare.',
+      "Suma aprobată în dosar este mai mică decât devizul estimat și va necesita suplimentare.",
     );
   }
 

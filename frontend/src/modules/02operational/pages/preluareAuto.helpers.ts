@@ -1,36 +1,44 @@
 // Fișierul conține helperi puri pentru pagina `PreluareAuto`.
 // "Pur" înseamnă că funcțiile de aici nu modifică direct starea React
 // și nu afișează UI; ele doar calculează și întorc rezultate.
-import { calculeazaRezumatPozitii } from '../calculations';
-import { suntPozitiiValide } from '../validations';
-import type { Client, ComandaService, DosarDauna, PozitieComandaDraft, Vehicul } from '../types';
-import type { DetaliiPreluareForm } from '../formState';
+import { calculeazaRezumatPozitii } from "../calculations";
+import { suntPozitiiValide } from "../validations";
+import type {
+  Client,
+  ComandaService,
+  DosarDauna,
+  PozitieComandaDraft,
+  Vehicul,
+} from "../types";
+import type { DetaliiPreluareForm } from "../formState";
 
 export const formatSuma = (valoare: number) =>
-  new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: 'RON',
+  new Intl.NumberFormat("ro-RO", {
+    style: "currency",
+    currency: "RON",
     maximumFractionDigits: 2,
   }).format(valoare);
 
-export const formatData = (valoare: Date) => valoare.toLocaleDateString('ro-RO');
+export const formatData = (valoare: Date) =>
+  valoare.toLocaleDateString("ro-RO");
 
-export const urmatorulId = <T,>(items: T[], selector: (item: T) => number) =>
+export const urmatorulId = <T>(items: T[], selector: (item: T) => number) =>
   items.length === 0 ? 1 : Math.max(...items.map(selector)) + 1;
 
 export const genereazaNumarDocument = (prefix: string, id: number) =>
-  `${prefix}-${new Date().getFullYear()}-${String(id).padStart(3, '0')}`;
+  `${prefix}-${new Date().getFullYear()}-${String(id).padStart(3, "0")}`;
 
-export const esteNumarCompletat = (valoare: number | ''): valoare is number => valoare !== '';
+export const esteNumarCompletat = (valoare: number | ""): valoare is number =>
+  valoare !== "";
 
 export const accesoriiCaLista = (valoare: string) =>
   valoare
-    .split(',')
+    .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
 
 export const tipPlataImplicit = (client: Client | null) =>
-  client?.tipClient === 'Flota' ? 'Flota' : 'Client Direct';
+  client?.tipClient === "Flota" ? "Flota" : "Client Direct";
 
 // Parametrii acestui helper descriu "starea curentă a fluxului":
 // ce vehicul avem, dacă e lucrare pe asigurare, dacă dosarul este valid etc.
@@ -55,12 +63,14 @@ export function calculeazaFluxPreluare({
 }: PasFluxParams) {
   // Lista pașilor diferă puțin în funcție de existența unui dosar de daună.
   const pasiFlux = esteLucrareAsigurare
-    ? ['Selectare auto', 'Simptome', 'Dosar Daună', 'Deviz', 'Confirmare']
-    : ['Selectare auto', 'Simptome', 'Deviz', 'Confirmare'];
+    ? ["Selectare auto", "Simptome", "Dosar Daună", "Deviz", "Confirmare"]
+    : ["Selectare auto", "Simptome", "Deviz", "Confirmare"];
 
   let pasCurent = 1;
-  const simptomeCompletate = detaliiPreluare.simptomeReclamate.trim().length > 0;
-  const devizCompletat = suntPozitiiValide(pozitiiDraft) && idMecanicSelectat !== null;
+  const simptomeCompletate =
+    detaliiPreluare.simptomeReclamate.trim().length > 0;
+  const devizCompletat =
+    suntPozitiiValide(pozitiiDraft) && idMecanicSelectat !== null;
 
   // Dacă nu avem încă vehiculul sau simptomele, fluxul rămâne în primul pas.
   if (!vehiculSelectat) {
@@ -113,7 +123,8 @@ export function calculeazaIndicatoriPreluare(
       (!detaliiPreluare.simptomeReclamate ||
         idMecanicSelectat === null ||
         !suntPozitiiValide(pozitiiDraft)),
-    lipsesteDosar: vehiculSelectat !== null && esteLucrareAsigurare && !dosarValid,
+    lipsesteDosar:
+      vehiculSelectat !== null && esteLucrareAsigurare && !dosarValid,
     rezumatPozitii: calculeazaRezumatPozitii(pozitiiDraft),
   };
 }
@@ -126,11 +137,11 @@ export function calculeazaPreviewDocumente(
   // pentru următoarea comandă și următorul dosar posibil.
   return {
     nrComandaPreview: genereazaNumarDocument(
-      'CMD',
+      "CMD",
       urmatorulId(comenzi, (comanda) => comanda.idComanda),
     ),
     nrDosarPreview: genereazaNumarDocument(
-      'DAUNA',
+      "DAUNA",
       urmatorulId(dosare, (dosar) => dosar.idDosar),
     ),
   };

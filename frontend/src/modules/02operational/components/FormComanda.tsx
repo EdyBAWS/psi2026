@@ -3,8 +3,8 @@
 // Acesta este un pattern important pentru începători:
 // - componenta copil afișează și colectează input-uri
 // - componenta părinte decide când datele sunt valide și când se salvează
-import TabelPozitii from './TabelPozitii';
-import type { DetaliiPreluareForm } from '../formState';
+import TabelPozitii from "./TabelPozitii";
+import type { DetaliiPreluareForm } from "../formState";
 import type {
   CatalogKit,
   CatalogManopera,
@@ -12,7 +12,7 @@ import type {
   Mecanic,
   PozitieComandaDraft,
   Vehicul,
-} from '../types';
+} from "../types";
 
 interface FormComandaProps {
   blocheazaTipPlataAsigurare: boolean;
@@ -42,9 +42,9 @@ interface FormComandaProps {
 }
 
 const formatSuma = (valoare: number) =>
-  new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: 'RON',
+  new Intl.NumberFormat("ro-RO", {
+    style: "currency",
+    currency: "RON",
     maximumFractionDigits: 2,
   }).format(valoare);
 
@@ -70,8 +70,8 @@ export default function FormComanda({
   const claseCamp = (areEroare: boolean) =>
     `w-full rounded-xl border px-4 py-3 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
       areEroare
-        ? 'border-rose-300 bg-rose-50/40 ring-2 ring-inset ring-rose-500/70 focus:border-rose-400 focus:ring-rose-500'
-        : 'border-slate-200 bg-slate-50 focus:border-indigo-300 focus:ring-indigo-500'
+        ? "border-rose-300 bg-rose-50/40 ring-2 ring-inset ring-rose-500/70 focus:border-rose-400 focus:ring-rose-500"
+        : "border-slate-200 bg-slate-50 focus:border-indigo-300 focus:ring-indigo-500"
     }`;
 
   return (
@@ -84,9 +84,12 @@ export default function FormComanda({
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               Comandă pregătită
             </p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-800">{nrComandaPreview}</h3>
+            <h3 className="mt-2 text-2xl font-bold text-slate-800">
+              {nrComandaPreview}
+            </h3>
             <p className="mt-2 text-sm text-slate-500">
-              Vehicul selectat: {vehicul.marca} {vehicul.model} · {vehicul.nrInmatriculare}
+              Vehicul selectat: {vehicul.marca} {vehicul.model} ·{" "}
+              {vehicul.nrInmatriculare}
             </p>
           </div>
 
@@ -97,19 +100,25 @@ export default function FormComanda({
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Status inițial
               </p>
-              <p className="mt-2 text-sm font-bold text-slate-800">In așteptare diagnoză</p>
+              <p className="mt-2 text-sm font-bold text-slate-800">
+                In așteptare diagnoză
+              </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Subtotal
               </p>
-              <p className="mt-2 text-sm font-bold text-slate-800">{formatSuma(subtotalEstimat)}</p>
+              <p className="mt-2 text-sm font-bold text-slate-800">
+                {formatSuma(subtotalEstimat)}
+              </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Total estimat
               </p>
-              <p className="mt-2 text-sm font-bold text-slate-800">{formatSuma(totalEstimat)}</p>
+              <p className="mt-2 text-sm font-bold text-slate-800">
+                {formatSuma(totalEstimat)}
+              </p>
             </div>
           </div>
         </div>
@@ -124,10 +133,12 @@ export default function FormComanda({
             <select
               // `?? ''` înseamnă:
               // dacă valoarea din stânga este `null` sau `undefined`, folosim stringul gol.
-              value={idMecanicSelectat ?? ''}
+              value={idMecanicSelectat ?? ""}
               onChange={(event) =>
                 // `event.target.value` este valoarea curentă aleasă de utilizator în select.
-                onMecanicChange(event.target.value === '' ? null : Number(event.target.value))
+                onMecanicChange(
+                  event.target.value === "" ? null : Number(event.target.value),
+                )
               }
               className={claseCamp(campuriCuEroare.mecanic)}
             >
@@ -149,7 +160,8 @@ export default function FormComanda({
               disabled={blocheazaTipPlataAsigurare}
               onChange={(event) =>
                 onDetaliiChange({
-                  tipPlata: event.target.value as DetaliiPreluareForm['tipPlata'],
+                  tipPlata: event.target
+                    .value as DetaliiPreluareForm["tipPlata"],
                 })
               }
               className={`${claseCamp(campuriCuEroare.tipPlata)} disabled:cursor-not-allowed disabled:bg-slate-100`}
@@ -168,7 +180,8 @@ export default function FormComanda({
               value={detaliiPreluare.prioritate}
               onChange={(event) =>
                 onDetaliiChange({
-                  prioritate: event.target.value as DetaliiPreluareForm['prioritate'],
+                  prioritate: event.target
+                    .value as DetaliiPreluareForm["prioritate"],
                 })
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -207,7 +220,7 @@ export default function FormComanda({
               onChange={(event) =>
                 onDetaliiChange({
                   kilometrajPreluare:
-                    event.target.value === '' ? '' : Number(event.target.value),
+                    event.target.value === "" ? "" : Number(event.target.value),
                 })
               }
               className={claseCamp(campuriCuEroare.kilometrajPreluare)}
@@ -223,8 +236,8 @@ export default function FormComanda({
               value={detaliiPreluare.nivelCombustibil}
               onChange={(event) =>
                 onDetaliiChange({
-                  nivelCombustibil:
-                    event.target.value as DetaliiPreluareForm['nivelCombustibil'],
+                  nivelCombustibil: event.target
+                    .value as DetaliiPreluareForm["nivelCombustibil"],
                 })
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -240,13 +253,21 @@ export default function FormComanda({
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 md:col-span-2">
             {/* Rezumatul folosește totalurile deja calculate în părinte.
                 Componenta nu recalculează aici formulele, doar le afișează. */}
-            <p className="text-sm font-semibold text-slate-700">Rezumat deviz</p>
+            <p className="text-sm font-semibold text-slate-700">
+              Rezumat deviz
+            </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <p className="text-sm text-slate-500">
-                TVA estimat: <strong className="text-slate-700">{formatSuma(tvaEstimat)}</strong>
+                TVA estimat:{" "}
+                <strong className="text-slate-700">
+                  {formatSuma(tvaEstimat)}
+                </strong>
               </p>
               <p className="text-sm text-slate-500">
-                Total final: <strong className="text-slate-700">{formatSuma(totalEstimat)}</strong>
+                Total final:{" "}
+                <strong className="text-slate-700">
+                  {formatSuma(totalEstimat)}
+                </strong>
               </p>
             </div>
           </div>
@@ -323,7 +344,13 @@ export default function FormComanda({
 
       {/* Tabelul de poziții este separat pentru a păstra componenta curată.
           El gestionează lista de rânduri, iar această componentă se ocupă de antetul comenzii. */}
-      <div className={campuriCuEroare.pozitii ? 'rounded-2xl ring-2 ring-inset ring-rose-500/70' : ''}>
+      <div
+        className={
+          campuriCuEroare.pozitii
+            ? "rounded-2xl ring-2 ring-inset ring-rose-500/70"
+            : ""
+        }
+      >
         <TabelPozitii
           catalogKituri={catalogKituri}
           catalogManopere={catalogManopere}

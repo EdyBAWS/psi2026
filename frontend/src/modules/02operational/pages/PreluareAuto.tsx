@@ -1,17 +1,17 @@
 // Aceasta este pagina principală a fluxului operațional.
-import { useState } from 'react';
-import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
-import { EmptyState } from '../../../componente/ui/EmptyState';
-import FormComanda from '../components/FormComanda';
-import SelectorDosar from '../components/SelectorDosar';
-import SelectorVehicul from '../components/SelectorVehicul';
+import { useState } from "react";
+import { ConfirmDialog } from "../../../componente/ui/ConfirmDialog";
+import { EmptyState } from "../../../componente/ui/EmptyState";
+import FormComanda from "../components/FormComanda";
+import SelectorDosar from "../components/SelectorDosar";
+import SelectorVehicul from "../components/SelectorVehicul";
 import {
   creeazaPozitieDraft,
   detaliiPreluareInitiale,
   stareDosarInitiala,
   type DetaliiPreluareForm,
   type StareDosarAsigurare,
-} from '../formState';
+} from "../formState";
 import {
   accesoriiCaLista,
   calculeazaFluxPreluare,
@@ -22,11 +22,11 @@ import {
   tipPlataImplicit,
   urmatorulId,
   genereazaNumarDocument,
-} from './preluareAuto.helpers';
-import PreluareAutoContext from './components/PreluareAutoContext';
-import PreluareAutoHeader from './components/PreluareAutoHeader';
-import { comandaEsteActiva } from '../calculations';
-import { suntPozitiiValide, valideazaPreluare } from '../validations';
+} from "./preluareAuto.helpers";
+import PreluareAutoContext from "./components/PreluareAutoContext";
+import PreluareAutoHeader from "./components/PreluareAutoHeader";
+import { comandaEsteActiva } from "../calculations";
+import { suntPozitiiValide, valideazaPreluare } from "../validations";
 import type {
   Asigurator,
   CatalogKit,
@@ -39,7 +39,7 @@ import type {
   PozitieComanda,
   PozitieComandaDraft,
   Vehicul,
-} from '../types';
+} from "../types";
 
 export interface SalvarePreluarePayload {
   comanda: ComandaService;
@@ -74,17 +74,32 @@ export default function PreluareAuto({
   vehicule,
   onSalveazaPreluare,
 }: PreluareAutoProps) {
-  const [idVehiculSelectat, setIdVehiculSelectat] = useState<number | null>(null);
+  const [idVehiculSelectat, setIdVehiculSelectat] = useState<number | null>(
+    null,
+  );
   const [esteLucrareAsigurare, setEsteLucrareAsigurare] = useState(false);
-  const [stareDosar, setStareDosar] = useState<StareDosarAsigurare>(stareDosarInitiala);
-  const [detaliiPreluare, setDetaliiPreluare] = useState<DetaliiPreluareForm>(detaliiPreluareInitiale);
-  const [idMecanicSelectat, setIdMecanicSelectat] = useState<number | null>(null);
-  const [pozitiiDraft, setPozitiiDraft] = useState<PozitieComandaDraft[]>([creeazaPozitieDraft()]);
+  const [stareDosar, setStareDosar] =
+    useState<StareDosarAsigurare>(stareDosarInitiala);
+  const [detaliiPreluare, setDetaliiPreluare] = useState<DetaliiPreluareForm>(
+    detaliiPreluareInitiale,
+  );
+  const [idMecanicSelectat, setIdMecanicSelectat] = useState<number | null>(
+    null,
+  );
+  const [pozitiiDraft, setPozitiiDraft] = useState<PozitieComandaDraft[]>([
+    creeazaPozitieDraft(),
+  ]);
   const [esteDialogResetDeschis, setEsteDialogResetDeschis] = useState(false);
 
-  const vehiculSelectat = vehicule.find((vehicul) => vehicul.idVehicul === idVehiculSelectat) ?? null;
-  const clientSelectat = clienti.find((client) => client.idClient === vehiculSelectat?.idClient) ?? null;
-  const { nrComandaPreview, nrDosarPreview } = calculeazaPreviewDocumente(comenzi, dosare);
+  const vehiculSelectat =
+    vehicule.find((vehicul) => vehicul.idVehicul === idVehiculSelectat) ?? null;
+  const clientSelectat =
+    clienti.find((client) => client.idClient === vehiculSelectat?.idClient) ??
+    null;
+  const { nrComandaPreview, nrDosarPreview } = calculeazaPreviewDocumente(
+    comenzi,
+    dosare,
+  );
   const rezumatPozitii = calculeazaIndicatoriPreluare(
     vehiculSelectat,
     esteLucrareAsigurare,
@@ -96,21 +111,23 @@ export default function PreluareAuto({
   const comandaActivaExistenta =
     vehiculSelectat === null
       ? null
-      : comenzi.find(
+      : (comenzi.find(
           (comanda) =>
-            comanda.idVehicul === vehiculSelectat.idVehicul && comandaEsteActiva(comanda.status),
-        ) ?? null;
+            comanda.idVehicul === vehiculSelectat.idVehicul &&
+            comandaEsteActiva(comanda.status),
+        ) ?? null);
 
-  const { dosarValid, mesajeAvertizare, mesajeBlocare, poateSalva } = valideazaPreluare({
-    comandaActivaExistenta,
-    detaliiPreluare,
-    esteLucrareAsigurare,
-    idMecanicSelectat,
-    pozitiiDraft,
-    stareDosar,
-    totalEstimat: rezumatPozitii.total,
-    vehiculSelectat,
-  });
+  const { dosarValid, mesajeAvertizare, mesajeBlocare, poateSalva } =
+    valideazaPreluare({
+      comandaActivaExistenta,
+      detaliiPreluare,
+      esteLucrareAsigurare,
+      idMecanicSelectat,
+      pozitiiDraft,
+      stareDosar,
+      totalEstimat: rezumatPozitii.total,
+      vehiculSelectat,
+    });
 
   const flux = calculeazaFluxPreluare({
     detaliiPreluare,
@@ -135,8 +152,9 @@ export default function PreluareAuto({
   // Headerul afișează mesajele, iar aceste booleene ne ajută să marcăm
   // exact câmpurile lipsă cu un contur roșu în interior.
   const termenEsteInTrecut =
-    detaliiPreluare.termenPromis !== '' &&
-    new Date(detaliiPreluare.termenPromis).getTime() < new Date().setHours(0, 0, 0, 0);
+    detaliiPreluare.termenPromis !== "" &&
+    new Date(detaliiPreluare.termenPromis).getTime() <
+      new Date().setHours(0, 0, 0, 0);
   const eroriCampuri = {
     vehicul: vehiculSelectat === null,
     dosar: esteLucrareAsigurare && !dosarValid,
@@ -146,10 +164,10 @@ export default function PreluareAuto({
     mecanic: idMecanicSelectat === null,
     pozitii: !suntPozitiiValide(pozitiiDraft),
     simptome: detaliiPreluare.simptomeReclamate.trim().length < 10,
-    termenPromis: detaliiPreluare.termenPromis === '' || termenEsteInTrecut,
+    termenPromis: detaliiPreluare.termenPromis === "" || termenEsteInTrecut,
     tipPlata:
-      (esteLucrareAsigurare && detaliiPreluare.tipPlata !== 'Asigurare') ||
-      (!esteLucrareAsigurare && detaliiPreluare.tipPlata === 'Asigurare'),
+      (esteLucrareAsigurare && detaliiPreluare.tipPlata !== "Asigurare") ||
+      (!esteLucrareAsigurare && detaliiPreluare.tipPlata === "Asigurare"),
   };
 
   const reseteazaFlux = () => {
@@ -168,8 +186,10 @@ export default function PreluareAuto({
   };
 
   const handleSelecteazaVehicul = (idVehicul: number | null) => {
-    const vehicul = vehicule.find((item) => item.idVehicul === idVehicul) ?? null;
-    const client = clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
+    const vehicul =
+      vehicule.find((item) => item.idVehicul === idVehicul) ?? null;
+    const client =
+      clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
 
     setIdVehiculSelectat(idVehicul);
     setEsteLucrareAsigurare(false);
@@ -192,13 +212,15 @@ export default function PreluareAuto({
       return;
     }
 
-    const dosareVehicul = dosare.filter((dosar) => dosar.idVehicul === idVehiculSelectat);
+    const dosareVehicul = dosare.filter(
+      (dosar) => dosar.idVehicul === idVehiculSelectat,
+    );
     setStareDosar({
       ...stareDosarInitiala,
-      mod: dosareVehicul.length > 0 ? 'existent' : 'nou',
+      mod: dosareVehicul.length > 0 ? "existent" : "nou",
       idDosarSelectat: dosareVehicul[0]?.idDosar ?? null,
     });
-    setDetaliiPreluare((previous) => ({ ...previous, tipPlata: 'Asigurare' }));
+    setDetaliiPreluare((previous) => ({ ...previous, tipPlata: "Asigurare" }));
   };
 
   const handleDetaliiChange = (modificari: Partial<DetaliiPreluareForm>) => {
@@ -210,15 +232,17 @@ export default function PreluareAuto({
 
     const idComandaNoua = urmatorulId(comenzi, (comanda) => comanda.idComanda);
     const dataDeschidere = new Date();
-    const statusInitial = pozitiiDraft.some((pozitie) => !pozitie.disponibilitateStoc)
-      ? 'Asteapta piese'
-      : 'In asteptare diagnoza';
+    const statusInitial = pozitiiDraft.some(
+      (pozitie) => !pozitie.disponibilitateStoc,
+    )
+      ? "Asteapta piese"
+      : "In asteptare diagnoza";
 
     let dosarNou: DosarDauna | null = null;
     let idDosarFinal: number | null = null;
 
     if (esteLucrareAsigurare) {
-      if (stareDosar.mod === 'existent') {
+      if (stareDosar.mod === "existent") {
         idDosarFinal = stareDosar.idDosarSelectat;
       } else if (
         stareDosar.idAsigurator !== null &&
@@ -231,7 +255,7 @@ export default function PreluareAuto({
           idClient: vehiculSelectat.idClient,
           idVehicul: vehiculSelectat.idVehicul,
           idAsigurator: stareDosar.idAsigurator,
-          nrDosar: genereazaNumarDocument('DAUNA', idDosarNou),
+          nrDosar: genereazaNumarDocument("DAUNA", idDosarNou),
           numarReferintaAsigurator: stareDosar.numarReferintaAsigurator,
           tipPolita: stareDosar.tipPolita,
           dataDeschidere,
@@ -251,7 +275,7 @@ export default function PreluareAuto({
       idVehicul: vehiculSelectat.idVehicul,
       idDosar: esteLucrareAsigurare ? idDosarFinal : null,
       idMecanic: idMecanicSelectat,
-      nrComanda: genereazaNumarDocument('CMD', idComandaNoua),
+      nrComanda: genereazaNumarDocument("CMD", idComandaNoua),
       dataDeschidere,
       dataFinalizare: null,
       status: statusInitial,
@@ -264,16 +288,19 @@ export default function PreluareAuto({
       accesoriiPredate: accesoriiCaLista(detaliiPreluare.accesoriiPredate),
       termenPromis: new Date(`${detaliiPreluare.termenPromis}T17:00:00`),
       prioritate: detaliiPreluare.prioritate,
-      tipPlata: esteLucrareAsigurare ? 'Asigurare' : detaliiPreluare.tipPlata,
+      tipPlata: esteLucrareAsigurare ? "Asigurare" : detaliiPreluare.tipPlata,
     };
 
-    const urmatorulIdPozitie = urmatorulId(pozitii, (pozitie) => pozitie.idPozitieCmd);
+    const urmatorulIdPozitie = urmatorulId(
+      pozitii,
+      (pozitie) => pozitie.idPozitieCmd,
+    );
     const pozitiiNoi: PozitieComanda[] = pozitiiDraft.map((pozitie, index) => ({
       idPozitieCmd: urmatorulIdPozitie + index,
       idComanda: idComandaNoua,
-      idPiesa: pozitie.tipPozitie === 'Piesa' ? pozitie.catalogId : null,
-      idKit: pozitie.tipPozitie === 'Kit' ? pozitie.catalogId : null,
-      idManopera: pozitie.tipPozitie === 'Manopera' ? pozitie.catalogId : null,
+      idPiesa: pozitie.tipPozitie === "Piesa" ? pozitie.catalogId : null,
+      idKit: pozitie.tipPozitie === "Kit" ? pozitie.catalogId : null,
+      idManopera: pozitie.tipPozitie === "Manopera" ? pozitie.catalogId : null,
       tipPozitie: pozitie.tipPozitie,
       codArticol: pozitie.codArticol,
       descriere: pozitie.descriere,
@@ -298,9 +325,15 @@ export default function PreluareAuto({
         nrComandaPreview={nrComandaPreview}
         pasiFlux={flux.pasiFlux}
         pasCurent={flux.pasCurent}
-        rezumatTotal={rezumatPozitii.total > 0 ? formatSuma(rezumatPozitii.total) : null}
+        rezumatTotal={
+          rezumatPozitii.total > 0 ? formatSuma(rezumatPozitii.total) : null
+        }
         stareDosarTipPolita={esteLucrareAsigurare ? stareDosar.tipPolita : null}
-        vehiculSelectat={vehiculSelectat ? { nrInmatriculare: vehiculSelectat.nrInmatriculare } : null}
+        vehiculSelectat={
+          vehiculSelectat
+            ? { nrInmatriculare: vehiculSelectat.nrInmatriculare }
+            : null
+        }
       />
 
       <SelectorVehicul
@@ -338,8 +371,8 @@ export default function PreluareAuto({
             <div
               className={`rounded-2xl transition-all duration-300 ${
                 eroriCampuri.dosar
-                  ? 'bg-rose-50/20 ring-2 ring-inset ring-rose-500/70 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
-                  : ''
+                  ? "bg-rose-50/20 ring-2 ring-inset ring-rose-500/70 shadow-[0_0_15px_rgba(251,113,133,0.15)]"
+                  : ""
               }`}
             >
               <SelectorDosar
@@ -356,8 +389,8 @@ export default function PreluareAuto({
           <div
             className={`rounded-2xl transition-all duration-300 ${
               indicatori.lipsescSimptomeSauMecanic
-                ? 'bg-rose-50/20 p-0.5 ring-2 ring-inset ring-rose-500/70 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
-                : ''
+                ? "bg-rose-50/20 p-0.5 ring-2 ring-inset ring-rose-500/70 shadow-[0_0_15px_rgba(251,113,133,0.15)]"
+                : ""
             }`}
           >
             <FormComanda
@@ -391,9 +424,9 @@ export default function PreluareAuto({
           <div className="mb-20 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl space-y-1 text-sm text-slate-500">
               <p>
-                Comanda va porni cu status adaptat realității: dacă lipsește stocul, intră
-                automat în <strong>Așteaptă piese</strong>, altfel în{' '}
-                <strong>În așteptare diagnoză</strong>.
+                Comanda va porni cu status adaptat realității: dacă lipsește
+                stocul, intră automat în <strong>Așteaptă piese</strong>, altfel
+                în <strong>În așteptare diagnoză</strong>.
               </p>
             </div>
 
