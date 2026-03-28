@@ -1,5 +1,6 @@
 // Aceasta este pagina principală a fluxului operațional.
 import { useState } from 'react';
+import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
 import { EmptyState } from '../../../componente/ui/EmptyState';
 import FormComanda from '../components/FormComanda';
 import SelectorDosar from '../components/SelectorDosar';
@@ -79,6 +80,7 @@ export default function PreluareAuto({
   const [detaliiPreluare, setDetaliiPreluare] = useState<DetaliiPreluareForm>(detaliiPreluareInitiale);
   const [idMecanicSelectat, setIdMecanicSelectat] = useState<number | null>(null);
   const [pozitiiDraft, setPozitiiDraft] = useState<PozitieComandaDraft[]>([creeazaPozitieDraft()]);
+  const [esteDialogResetDeschis, setEsteDialogResetDeschis] = useState(false);
 
   const vehiculSelectat = vehicule.find((vehicul) => vehicul.idVehicul === idVehiculSelectat) ?? null;
   const clientSelectat = clienti.find((client) => client.idClient === vehiculSelectat?.idClient) ?? null;
@@ -158,6 +160,11 @@ export default function PreluareAuto({
     setDetaliiPreluare({ ...detaliiPreluareInitiale, tipPlata });
     setIdMecanicSelectat(null);
     setPozitiiDraft([creeazaPozitieDraft()]);
+  };
+
+  const confirmaResetare = () => {
+    reseteazaFlux();
+    setEsteDialogResetDeschis(false);
   };
 
   const handleSelecteazaVehicul = (idVehicul: number | null) => {
@@ -393,7 +400,7 @@ export default function PreluareAuto({
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={reseteazaFlux}
+                onClick={() => setEsteDialogResetDeschis(true)}
                 className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
               >
                 Resetează
@@ -408,6 +415,16 @@ export default function PreluareAuto({
               </button>
             </div>
           </div>
+
+          <ConfirmDialog
+            cancelLabel="Înapoi"
+            confirmLabel="Da, resetează"
+            description="Toate datele completate în fluxul curent vor fi șterse, inclusiv vehiculul selectat, dosarul și pozițiile din deviz."
+            isOpen={esteDialogResetDeschis}
+            onCancel={() => setEsteDialogResetDeschis(false)}
+            onConfirm={confirmaResetare}
+            title="Confirmi resetarea fluxului?"
+          />
         </>
       ) : (
         <EmptyState
