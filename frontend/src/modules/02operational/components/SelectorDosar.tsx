@@ -3,8 +3,8 @@
 // datele principale pentru a crea unul nou la salvarea comenzii.
 // Componenta nu salvează nimic direct. Ea doar editează starea de formular
 // primită prin `value` și trimite modificările înapoi prin `onChange`.
-import type { StareDosarAsigurare } from '../formState';
-import type { Asigurator, DosarDauna, StatusDosar, Vehicul } from '../types';
+import type { StareDosarAsigurare } from "../formState";
+import type { Asigurator, DosarDauna, StatusDosar, Vehicul } from "../types";
 
 interface SelectorDosarProps {
   asiguratori: Asigurator[];
@@ -16,21 +16,21 @@ interface SelectorDosarProps {
 }
 
 const statusuriDosar: StatusDosar[] = [
-  'Deschis',
-  'In analiza',
-  'Aprobat partial',
-  'Aprobat',
-  'Respins',
+  "Deschis",
+  "In analiza",
+  "Aprobat partial",
+  "Aprobat",
+  "Respins",
 ];
 
 const formatSuma = (valoare: number) =>
-  new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: 'RON',
+  new Intl.NumberFormat("ro-RO", {
+    style: "currency",
+    currency: "RON",
     maximumFractionDigits: 2,
   }).format(valoare);
 
-const formatData = (valoare: Date) => valoare.toLocaleDateString('ro-RO');
+const formatData = (valoare: Date) => valoare.toLocaleDateString("ro-RO");
 
 export default function SelectorDosar({
   asiguratori,
@@ -45,24 +45,29 @@ export default function SelectorDosar({
   if (!vehicul) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-        Selectează mai întâi un vehicul pentru a putea lega sau crea un dosar de daună.
+        Selectează mai întâi un vehicul pentru a putea lega sau crea un dosar de
+        daună.
       </div>
     );
   }
 
   // Selectăm doar dosarele care aparțin vehiculului curent.
-  const dosareVehicul = dosare.filter((dosar) => dosar.idVehicul === vehicul.idVehicul);
+  const dosareVehicul = dosare.filter(
+    (dosar) => dosar.idVehicul === vehicul.idVehicul,
+  );
   const dosarSelectat =
-    dosareVehicul.find((dosar) => dosar.idDosar === value.idDosarSelectat) ?? null;
-  const asiguratorSelectat =
-    asiguratori.find((asigurator) => asigurator.idAsigurator === dosarSelectat?.idAsigurator) ??
+    dosareVehicul.find((dosar) => dosar.idDosar === value.idDosarSelectat) ??
     null;
+  const asiguratorSelectat =
+    asiguratori.find(
+      (asigurator) => asigurator.idAsigurator === dosarSelectat?.idAsigurator,
+    ) ?? null;
   const existaDosare = dosareVehicul.length > 0;
 
   // Când schimbăm modul, păstrăm aceeași structură de stare,
   // dar resetăm câmpurile care nu mai au sens în contextul nou.
-  const schimbaMod = (mod: 'existent' | 'nou') => {
-    if (mod === 'existent') {
+  const schimbaMod = (mod: "existent" | "nou") => {
+    if (mod === "existent") {
       onChange({
         ...value,
         mod,
@@ -84,31 +89,31 @@ export default function SelectorDosar({
         <div>
           <h3 className="text-xl font-bold text-slate-800">Dosar de daună</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Atașează un dosar existent pentru vehiculul selectat sau creează unul nou
-            cu datele minime de constatare și aprobare.
+            Atașează un dosar existent pentru vehiculul selectat sau creează
+            unul nou cu datele minime de constatare și aprobare.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => schimbaMod('existent')}
+            onClick={() => schimbaMod("existent")}
             disabled={!existaDosare}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-              value.mod === 'existent'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              value.mod === "existent"
+                ? "bg-indigo-600 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             } disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
           >
             Dosar existent
           </button>
           <button
             type="button"
-            onClick={() => schimbaMod('nou')}
+            onClick={() => schimbaMod("nou")}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-              value.mod === 'nou'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              value.mod === "nou"
+                ? "bg-indigo-600 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             Dosar nou
@@ -118,15 +123,15 @@ export default function SelectorDosar({
 
       {!existaDosare ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Pentru acest vehicul nu există încă un dosar deschis. Creează unul nou pentru
-          a continua fluxul de asigurare.
+          Pentru acest vehicul nu există încă un dosar deschis. Creează unul nou
+          pentru a continua fluxul de asigurare.
         </div>
       ) : null}
 
       {/* Aici folosim randare condițională cu `? :`.
           Dacă modul este `existent`, afișăm selectorul de dosare existente.
           Altfel, afișăm formularul pentru dosar nou. */}
-      {value.mod === 'existent' ? (
+      {value.mod === "existent" ? (
         <div className="space-y-4">
           {/* În acest mod, utilizatorul doar alege un dosar deja cunoscut. */}
           <div>
@@ -135,14 +140,16 @@ export default function SelectorDosar({
             </label>
             <select
               // `?? ''` este un fallback: dacă nu avem un id selectat, dropdown-ul rămâne gol.
-              value={value.idDosarSelectat ?? ''}
+              value={value.idDosarSelectat ?? ""}
               onChange={(event) =>
                 onChange({
                   ...value,
                   idDosarSelectat:
                     // `event.target.value` vine ca text din browser.
                     // Îl transformăm în `null` sau `number`, după caz.
-                    event.target.value === '' ? null : Number(event.target.value),
+                    event.target.value === ""
+                      ? null
+                      : Number(event.target.value),
                 })
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -166,19 +173,27 @@ export default function SelectorDosar({
                   <dd className="mt-1">{dosarSelectat.nrDosar}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-slate-700">Referință asigurator</dt>
-                  <dd className="mt-1">{dosarSelectat.numarReferintaAsigurator}</dd>
+                  <dt className="font-semibold text-slate-700">
+                    Referință asigurator
+                  </dt>
+                  <dd className="mt-1">
+                    {dosarSelectat.numarReferintaAsigurator}
+                  </dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">Asigurator</dt>
-                  <dd className="mt-1">{asiguratorSelectat?.denumire ?? '-'}</dd>
+                  <dd className="mt-1">
+                    {asiguratorSelectat?.denumire ?? "-"}
+                  </dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">Tip poliță</dt>
                   <dd className="mt-1">{dosarSelectat.tipPolita}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-slate-700">Status aprobare</dt>
+                  <dt className="font-semibold text-slate-700">
+                    Status aprobare
+                  </dt>
                   <dd className="mt-1">{dosarSelectat.statusAprobare}</dd>
                 </div>
                 <div>
@@ -186,12 +201,20 @@ export default function SelectorDosar({
                   <dd className="mt-1">{dosarSelectat.inspectorDauna}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-slate-700">Data constatării</dt>
-                  <dd className="mt-1">{formatData(dosarSelectat.dataConstatare)}</dd>
+                  <dt className="font-semibold text-slate-700">
+                    Data constatării
+                  </dt>
+                  <dd className="mt-1">
+                    {formatData(dosarSelectat.dataConstatare)}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-slate-700">Sumă aprobată</dt>
-                  <dd className="mt-1">{formatSuma(dosarSelectat.sumaAprobata)}</dd>
+                  <dt className="font-semibold text-slate-700">
+                    Sumă aprobată
+                  </dt>
+                  <dd className="mt-1">
+                    {formatSuma(dosarSelectat.sumaAprobata)}
+                  </dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">Franciză</dt>
@@ -210,7 +233,8 @@ export default function SelectorDosar({
           {/* În modul "nou", componenta colectează doar datele necesare pentru
               construirea obiectului final `DosarDauna` în pagina părinte. */}
           <div className="md:col-span-2 xl:col-span-4 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
-            Numărul noului dosar va fi generat automat la salvare: <strong>{nrDosarPreview}</strong>
+            Numărul noului dosar va fi generat automat la salvare:{" "}
+            <strong>{nrDosarPreview}</strong>
           </div>
 
           <div>
@@ -218,19 +242,24 @@ export default function SelectorDosar({
               Asigurator
             </label>
             <select
-              value={value.idAsigurator ?? ''}
+              value={value.idAsigurator ?? ""}
               onChange={(event) =>
                 onChange({
                   ...value,
                   idAsigurator:
-                    event.target.value === '' ? null : Number(event.target.value),
+                    event.target.value === ""
+                      ? null
+                      : Number(event.target.value),
                 })
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Selectează asigurator</option>
               {asiguratori.map((asigurator) => (
-                <option key={asigurator.idAsigurator} value={asigurator.idAsigurator}>
+                <option
+                  key={asigurator.idAsigurator}
+                  value={asigurator.idAsigurator}
+                >
                   {asigurator.denumire}
                 </option>
               ))}
@@ -246,7 +275,8 @@ export default function SelectorDosar({
               onChange={(event) =>
                 onChange({
                   ...value,
-                  tipPolita: event.target.value as StareDosarAsigurare['tipPolita'],
+                  tipPolita: event.target
+                    .value as StareDosarAsigurare["tipPolita"],
                 })
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -343,7 +373,8 @@ export default function SelectorDosar({
               onChange={(event) =>
                 onChange({
                   ...value,
-                  sumaAprobata: event.target.value === '' ? '' : Number(event.target.value),
+                  sumaAprobata:
+                    event.target.value === "" ? "" : Number(event.target.value),
                 })
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -362,7 +393,8 @@ export default function SelectorDosar({
               onChange={(event) =>
                 onChange({
                   ...value,
-                  franciza: event.target.value === '' ? '' : Number(event.target.value),
+                  franciza:
+                    event.target.value === "" ? "" : Number(event.target.value),
                 })
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"

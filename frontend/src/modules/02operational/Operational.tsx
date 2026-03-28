@@ -1,6 +1,6 @@
 // Fișierul principal al modulului operațional.
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   mockAsiguratori,
   mockCatalogKituri,
@@ -12,12 +12,14 @@ import {
   mockMecanici,
   mockPozitii,
   mockVehicule,
-} from '../../mock/operational';
-import { comandaEsteActiva } from './calculations';
-import GestiuneComenzi from './pages/GestiuneComenzi';
-import PreluareAuto, { type SalvarePreluarePayload } from './pages/PreluareAuto';
+} from "../../mock/operational";
+import { comandaEsteActiva } from "./calculations";
+import GestiuneComenzi from "./pages/GestiuneComenzi";
+import PreluareAuto, {
+  type SalvarePreluarePayload,
+} from "./pages/PreluareAuto";
 
-export type OperationalView = 'preluare-auto' | 'gestiune-comenzi';
+export type OperationalView = "preluare-auto" | "gestiune-comenzi";
 
 interface OperationalProps {
   onNavigate: (pagina: string) => void;
@@ -39,18 +41,20 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
       setDosare((previous) => [...previous, dosarNou]);
     }
     setPozitii((previous) => [...previous, ...pozitiiNoi]);
-    
+
     toast.success(`Comanda ${comanda.nrComanda} a fost deschisă cu succes.`);
-    onNavigate('operational-comenzi');
+    onNavigate("operational-comenzi");
   };
 
   // Re-aducem calculul statisticilor generale pentru antet
-  const comenziActive = comenzi.filter((comanda) => comandaEsteActiva(comanda.status)).length;
+  const comenziActive = comenzi.filter((comanda) =>
+    comandaEsteActiva(comanda.status),
+  ).length;
 
   return (
     <section className="space-y-6 w-full">
       {/* Antetul apare DOAR pe pagina de preluare auto (recepție) */}
-      {view === 'preluare-auto' && (
+      {view === "preluare-auto" && (
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-2">
@@ -62,7 +66,8 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
               </h2>
               <p className="max-w-3xl text-sm text-slate-500">
                 Modulul operațional acoperă recepția vehiculului și gestionarea
-                comenzilor service, cu aceeași stare comună între cele două ecrane.
+                comenzilor service, cu aceeași stare comună între cele două
+                ecrane.
               </p>
             </div>
 
@@ -71,19 +76,25 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Vehicule disponibile
                 </p>
-                <p className="mt-2 text-2xl font-bold text-slate-800">{mockVehicule.length}</p>
+                <p className="mt-2 text-2xl font-bold text-slate-800">
+                  {mockVehicule.length}
+                </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Comenzi active
                 </p>
-                <p className="mt-2 text-2xl font-bold text-slate-800">{comenziActive}</p>
+                <p className="mt-2 text-2xl font-bold text-slate-800">
+                  {comenziActive}
+                </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Dosare de daună
                 </p>
-                <p className="mt-2 text-2xl font-bold text-slate-800">{dosare.length}</p>
+                <p className="mt-2 text-2xl font-bold text-slate-800">
+                  {dosare.length}
+                </p>
               </div>
             </div>
           </div>
@@ -91,7 +102,7 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
       )}
 
       {/* Rutele propriu-zise */}
-      {view === 'preluare-auto' ? (
+      {view === "preluare-auto" ? (
         <PreluareAuto
           clienti={mockClienti}
           vehicule={mockVehicule}

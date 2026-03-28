@@ -3,6 +3,7 @@
 `Service Auto G` este, în starea actuală a repo-ului, în principal frontend-ul administrativ al unei aplicații pentru service auto. Proiectul modelează fluxuri precum catalogul de piese și manoperă, gestiunea entităților de bază, recepția auto, comenzile de service, facturarea, încasările și notificările.
 
 În forma actuală, proiectul este un MVP tehnic `frontend-only`:
+
 - nu are backend real
 - nu are API integrat
 - nu persistă datele de business după refresh
@@ -22,6 +23,7 @@
 - `sonner` pentru toast-uri
 
 Observații importante:
+
 - `react-router-dom` este instalat, dar nu este folosit în implementarea actuală
 - navigația este state-based în `frontend/src/App.tsx`
 - nu există store global de stare
@@ -29,6 +31,7 @@ Observații importante:
 ## Pornire rapidă
 
 Cerințe:
+
 - Node.js 20+
 - npm
 
@@ -51,15 +54,18 @@ npm run build
 ## Arhitectură generală
 
 Frontend-ul pornește din:
+
 - `frontend/src/main.tsx`
 
 Shell-ul principal este format din:
+
 - `frontend/src/App.tsx`
 - `frontend/src/componente/Sidebar.tsx`
 
 Aplicația nu folosește router activ. `App.tsx` păstrează `paginaCurenta` într-un `useState` și decide pagina afișată printr-un `switch`. `Sidebar.tsx` schimbă această stare.
 
 În practică:
+
 - repo-ul conține în principal frontend-ul
 - frontend-ul este modularizat pe domenii funcționale
 - documentația detaliată pentru implementarea frontend-ului este în `frontend/README.md`
@@ -67,12 +73,14 @@ Aplicația nu folosește router activ. `App.tsx` păstrează `paginaCurenta` în
 ## Module principale
 
 ### `00catalog`
+
 - piese auto
 - manoperă
 
 Ecrane demo/CRUD care pornesc din mock-uri comune și folosesc feedback prin toast-uri.
 
 ### `01entitati`
+
 - clienți
 - angajați
 - asigurători
@@ -80,9 +88,11 @@ Ecrane demo/CRUD care pornesc din mock-uri comune și folosesc feedback prin toa
 Folosește `react-hook-form`, `zod`, componente UI comune și confirmări UI.
 
 ### `02operational`
+
 Modulul cel mai matur și cea mai bună referință pentru logică de business mai complexă.
 
 Acoperă:
+
 - preluare auto
 - selecție vehicul și context client
 - flux de daună / asigurare
@@ -92,16 +102,19 @@ Acoperă:
 - gestiune comenzi
 
 ### `03facturare`
+
 - facturare comenzi
 - istoric facturare
 - oferte / campanii
 - penalizări
 
 ### `04incasari`
+
 - înregistrarea încasărilor
 - alocarea sumelor pe facturi
 
 ### `05notificari`
+
 - centru de notificări
 
 ## Date demo și stare actuală
@@ -113,11 +126,13 @@ frontend/src/mock/
 ```
 
 Asta înseamnă:
+
 - modulele importante consumă seed-uri coerente între ele
 - există coerență demo pentru documente, clienți, comenzi și facturi
 - nu există încă o sursă globală live de adevăr
 
 Pe scurt:
+
 - există mock-uri comune
 - există coerență demo între module
 - dar nu există sincronizare live completă între toate ecranele
@@ -137,6 +152,7 @@ frontend/src/lib/cn.ts
 ```
 
 Acestea ajută la:
+
 - consistență vizuală
 - reducerea duplicării
 - extinderea mai ușoară a modulelor
@@ -146,6 +162,7 @@ Pentru convențiile detaliate de UI, validare, toast-uri, `ConfirmDialog`, `sess
 ## Starea actuală și limitări
 
 Ce este deja bine definit:
+
 - navigația pe module este clară și funcțională
 - `02operational` are structură coerentă și separare bună între UI, calcule și validări
 - `01entitati` folosește formulare moderne cu `react-hook-form` + `zod`
@@ -153,6 +170,7 @@ Ce este deja bine definit:
 - există coerență demo între `02operational`, `03facturare`, `04incasari` și `05notificari`
 
 Ce rămâne limitare reală:
+
 - nu există backend
 - nu există persistență reală de business
 - nu există React Router activ
@@ -185,6 +203,7 @@ Pentru detalii tehnice complete despre frontend, vezi:
 - [frontend/README.md](frontend/README.md)
 
 Acolo sunt documentate în detaliu:
+
 - mock layer-ul comun
 - arhitectura reală a frontend-ului
 - convențiile UI și helperii comuni

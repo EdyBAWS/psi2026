@@ -1,27 +1,27 @@
 // Componenta afișează doar controalele de filtrare și sortare.
 // Toată starea reală stă în pagina părinte, iar acest formular trimite
 // schimbările înapoi prin callback-uri.
-import { Button } from '../../../../componente/ui/Button';
-import type { ComandaService, Mecanic, StatusComanda } from '../../types';
+import { Button } from "../../../../componente/ui/Button";
+import type { ComandaService, Mecanic, StatusComanda } from "../../types";
 import {
   descriereSortare,
   statusuriFiltrare,
   type GestiuneSortDir,
   type GestiuneSortField,
-} from '../gestiuneComenzi.helpers';
+} from "../gestiuneComenzi.helpers";
 
 interface GestiuneComenziFiltersProps {
   cautare: string;
   doarIntarziate: boolean;
-  filtruMecanic: number | 'toate';
-  filtruPlata: ComandaService['tipPlata'] | 'Toate';
-  filtruStatus: StatusComanda | 'Toate';
+  filtruMecanic: number | "toate";
+  filtruPlata: ComandaService["tipPlata"] | "Toate";
+  filtruStatus: StatusComanda | "Toate";
   mecanici: Mecanic[];
   onCautareChange: (value: string) => void;
   onDoarIntarziateChange: (value: boolean) => void;
-  onFiltruMecanicChange: (value: number | 'toate') => void;
-  onFiltruPlataChange: (value: ComandaService['tipPlata'] | 'Toate') => void;
-  onFiltruStatusChange: (value: StatusComanda | 'Toate') => void;
+  onFiltruMecanicChange: (value: number | "toate") => void;
+  onFiltruPlataChange: (value: ComandaService["tipPlata"] | "Toate") => void;
+  onFiltruStatusChange: (value: StatusComanda | "Toate") => void;
   onReset: () => void;
   sortDir: GestiuneSortDir;
   sortField: GestiuneSortField;
@@ -58,7 +58,9 @@ export default function GestiuneComenziFilters({
 
         <select
           value={filtruStatus}
-          onChange={(event) => onFiltruStatusChange(event.target.value as StatusComanda | 'Toate')}
+          onChange={(event) =>
+            onFiltruStatusChange(event.target.value as StatusComanda | "Toate")
+          }
           className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition-shadow focus:border-indigo-400 focus:outline-none"
         >
           {statusuriFiltrare.map((status) => (
@@ -72,7 +74,9 @@ export default function GestiuneComenziFilters({
           value={filtruMecanic}
           onChange={(event) =>
             onFiltruMecanicChange(
-              event.target.value === 'toate' ? 'toate' : Number(event.target.value),
+              event.target.value === "toate"
+                ? "toate"
+                : Number(event.target.value),
             )
           }
           className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition-shadow focus:border-indigo-400 focus:outline-none"
@@ -88,7 +92,9 @@ export default function GestiuneComenziFilters({
         <select
           value={filtruPlata}
           onChange={(event) =>
-            onFiltruPlataChange(event.target.value as ComandaService['tipPlata'] | 'Toate')
+            onFiltruPlataChange(
+              event.target.value as ComandaService["tipPlata"] | "Toate",
+            )
           }
           className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition-shadow focus:border-indigo-400 focus:outline-none"
         >
@@ -111,7 +117,9 @@ export default function GestiuneComenziFilters({
 
       {/* Al doilea bloc explică sortarea curentă și oferă reset rapid. */}
       <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-white px-4 py-3 md:flex-row md:items-center md:justify-between">
-        <p className="text-sm text-slate-500">{descriereSortare(sortField, sortDir)}</p>
+        <p className="text-sm text-slate-500">
+          {descriereSortare(sortField, sortDir)}
+        </p>
         <Button variant="outline" size="sm" onClick={onReset}>
           Resetează filtrele
         </Button>

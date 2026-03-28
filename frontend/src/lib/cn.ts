@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 // `cn` este un helper mic, dar folosit foarte des în proiect.
 // `clsx` ne ajută să compunem clase condițional (`dacă e activ, adaugă clasa X`),

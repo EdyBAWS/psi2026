@@ -1,14 +1,18 @@
-import { calculeazaRezumatPozitii } from '../../calculations';
-import StatusBadge from '../../components/StatusBadge';
-import type { DetaliiComandaSelectata } from '../gestiuneComenzi.helpers';
-import { formatData, formatSuma } from '../gestiuneComenzi.helpers';
+import { calculeazaRezumatPozitii } from "../../calculations";
+import StatusBadge from "../../components/StatusBadge";
+import type { DetaliiComandaSelectata } from "../gestiuneComenzi.helpers";
+import { formatData, formatSuma } from "../gestiuneComenzi.helpers";
 
-const badgePrioritate = (prioritate: NonNullable<DetaliiComandaSelectata['comandaSelectata']>['prioritate']) => {
+const badgePrioritate = (
+  prioritate: NonNullable<
+    DetaliiComandaSelectata["comandaSelectata"]
+  >["prioritate"],
+) => {
   const stiluri = {
-    Scazuta: 'border-slate-200 bg-slate-100 text-slate-700',
-    Normala: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-    Ridicata: 'border-amber-200 bg-amber-50 text-amber-700',
-    Urgenta: 'border-rose-200 bg-rose-50 text-rose-700',
+    Scazuta: "border-slate-200 bg-slate-100 text-slate-700",
+    Normala: "border-indigo-200 bg-indigo-50 text-indigo-700",
+    Ridicata: "border-amber-200 bg-amber-50 text-amber-700",
+    Urgenta: "border-rose-200 bg-rose-50 text-rose-700",
   };
 
   return (
@@ -47,8 +51,18 @@ export default function GestiuneComenziDetail({
           className="absolute right-4 top-4 rounded-lg p-2 text-slate-400 transition-all duration-200 hover:rotate-90 hover:scale-110 hover:bg-slate-800 hover:text-white"
           title="Închide fișa"
         >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 
@@ -57,15 +71,19 @@ export default function GestiuneComenziDetail({
             <span className="text-xs font-bold uppercase tracking-widest text-indigo-300">
               Fișă Comandă Service
             </span>
-            <h2 className="mt-1 text-3xl font-black tracking-tight">{comandaSelectata.nrComanda}</h2>
+            <h2 className="mt-1 text-3xl font-black tracking-tight">
+              {comandaSelectata.nrComanda}
+            </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-sm text-slate-400">
                 Deschisă la {formatData(comandaSelectata.dataDeschidere)}
               </span>
               <span className="text-slate-600">•</span>
               <span className="text-sm text-slate-400">
-                Termen:{' '}
-                <strong className="text-slate-300">{formatData(comandaSelectata.termenPromis)}</strong>
+                Termen:{" "}
+                <strong className="text-slate-300">
+                  {formatData(comandaSelectata.termenPromis)}
+                </strong>
               </span>
             </div>
           </div>
@@ -82,14 +100,22 @@ export default function GestiuneComenziDetail({
             <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-2">
                 <div className="h-6 w-1 rounded-full bg-indigo-500" />
-                <h4 className="text-sm font-bold uppercase tracking-wide text-slate-800">Vehicul</h4>
+                <h4 className="text-sm font-bold uppercase tracking-wide text-slate-800">
+                  Vehicul
+                </h4>
               </div>
-              <p className="text-xl font-black text-indigo-700">{vehiculSelectat.nrInmatriculare}</p>
-              <p className="mt-1 text-sm font-medium text-slate-600">
-                {vehiculSelectat.marca} {vehiculSelectat.model}{' '}
-                <span className="ml-1 text-slate-400">({vehiculSelectat.an})</span>
+              <p className="text-xl font-black text-indigo-700">
+                {vehiculSelectat.nrInmatriculare}
               </p>
-              <p className="mt-1 break-all text-xs text-slate-400">VIN: {vehiculSelectat.serieSasiu}</p>
+              <p className="mt-1 text-sm font-medium text-slate-600">
+                {vehiculSelectat.marca} {vehiculSelectat.model}{" "}
+                <span className="ml-1 text-slate-400">
+                  ({vehiculSelectat.an})
+                </span>
+              </p>
+              <p className="mt-1 break-all text-xs text-slate-400">
+                VIN: {vehiculSelectat.serieSasiu}
+              </p>
               <div className="mt-4 flex justify-between border-t border-slate-100 pt-4 text-xs font-medium text-slate-500">
                 <span>Km: {comandaSelectata.kilometrajPreluare}</span>
                 <span>Rezervor: {comandaSelectata.nivelCombustibil}</span>
@@ -103,8 +129,12 @@ export default function GestiuneComenziDetail({
                   Plătitor: {comandaSelectata.tipPlata}
                 </h4>
               </div>
-              <p className="text-lg font-bold text-slate-800">{clientSelectat.nume}</p>
-              <p className="mt-1 text-sm text-slate-600">{clientSelectat.telefon}</p>
+              <p className="text-lg font-bold text-slate-800">
+                {clientSelectat.nume}
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                {clientSelectat.telefon}
+              </p>
               {clientSelectat.denumireCompanie ? (
                 <p className="mt-2 inline-block rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500">
                   {clientSelectat.denumireCompanie}
@@ -120,7 +150,8 @@ export default function GestiuneComenziDetail({
                   Dosar Daună {dosarSelectat.tipPolita}
                 </h4>
                 <p className="text-sm font-medium text-blue-800">
-                  {dosarSelectat.nrDosar} <span className="mx-1 text-blue-400">•</span>{' '}
+                  {dosarSelectat.nrDosar}{" "}
+                  <span className="mx-1 text-blue-400">•</span>{" "}
                   {asiguratorSelectat.denumire}
                 </p>
                 <span className="mt-3 inline-flex rounded-md border border-blue-200 bg-white px-2 py-0.5 text-[10px] font-bold uppercase text-blue-700">
@@ -145,14 +176,14 @@ export default function GestiuneComenziDetail({
                 Mecanic Alocat
               </span>
               <p className="mt-1 text-sm font-bold text-slate-800">
-                {mecanicSelectat?.nume ?? 'Nealocat încă'}
+                {mecanicSelectat?.nume ?? "Nealocat încă"}
               </p>
               <div className="mt-3 border-t border-slate-50 pt-3">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Observații recepție
                 </span>
                 <p className="mt-1 text-xs italic text-slate-600">
-                  {comandaSelectata.observatiiPreluare || 'Nicio observație'}
+                  {comandaSelectata.observatiiPreluare || "Nicio observație"}
                 </p>
               </div>
             </div>
@@ -189,19 +220,31 @@ export default function GestiuneComenziDetail({
                     >
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-sm font-bold text-slate-700">{pozitie.descriere}</p>
+                          <p className="text-sm font-bold text-slate-700">
+                            {pozitie.descriere}
+                          </p>
                           <div className="mt-1 flex items-center gap-2">
-                            <span className="font-mono text-xs text-slate-400">{pozitie.codArticol}</span>
+                            <span className="font-mono text-xs text-slate-400">
+                              {pozitie.codArticol}
+                            </span>
                             <span
                               className={`inline-flex h-2 w-2 items-center justify-center rounded-full ${
-                                pozitie.disponibilitateStoc ? 'bg-emerald-400' : 'bg-amber-400'
+                                pozitie.disponibilitateStoc
+                                  ? "bg-emerald-400"
+                                  : "bg-amber-400"
                               }`}
-                              title={pozitie.disponibilitateStoc ? 'În stoc' : 'Necesar comandă'}
+                              title={
+                                pozitie.disponibilitateStoc
+                                  ? "În stoc"
+                                  : "Necesar comandă"
+                              }
                             />
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-bold text-slate-800">{formatSuma(totalLinie)}</p>
+                          <p className="text-sm font-bold text-slate-800">
+                            {formatSuma(totalLinie)}
+                          </p>
                           <p className="mt-1 text-xs text-slate-500">
                             {pozitie.cantitate} {pozitie.unitateMasura}
                           </p>
@@ -212,21 +255,29 @@ export default function GestiuneComenziDetail({
                 })}
               </ul>
             ) : (
-              <div className="p-8 text-center text-sm text-slate-400">Nicio poziție adăugată pe deviz.</div>
+              <div className="p-8 text-center text-sm text-slate-400">
+                Nicio poziție adăugată pe deviz.
+              </div>
             )}
           </div>
 
           <div className="mt-auto shrink-0 bg-slate-800 p-5 text-white">
             <div className="mb-2 flex justify-between text-xs text-slate-400">
               <span>Subtotal</span>
-              <span className="font-medium text-white">{formatSuma(rezumatSelectat.subtotal)}</span>
+              <span className="font-medium text-white">
+                {formatSuma(rezumatSelectat.subtotal)}
+              </span>
             </div>
             <div className="mb-3 flex justify-between border-b border-slate-700 pb-3 text-xs text-slate-400">
               <span>TVA (19%)</span>
-              <span className="font-medium text-white">{formatSuma(rezumatSelectat.tva)}</span>
+              <span className="font-medium text-white">
+                {formatSuma(rezumatSelectat.tva)}
+              </span>
             </div>
             <div className="flex items-end justify-between">
-              <span className="text-sm font-bold uppercase tracking-wider text-slate-300">Total</span>
+              <span className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                Total
+              </span>
               <span className="text-2xl font-black tracking-tight text-emerald-400">
                 {formatSuma(rezumatSelectat.total)}
               </span>

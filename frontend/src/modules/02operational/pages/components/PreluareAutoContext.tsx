@@ -1,8 +1,8 @@
 // Această componentă afișează contextul minim al recepției:
 // cine este clientul, ce vehicul a fost ales și dacă lucrarea merge pe asigurare.
 // Starea rămâne în componenta părinte; aici doar afișăm datele și trimitem evenimentele înapoi.
-import type { Client, ComandaService, Vehicul } from '../../types';
-import { formatData } from '../preluareAuto.helpers';
+import type { Client, ComandaService, Vehicul } from "../../types";
+import { formatData } from "../preluareAuto.helpers";
 
 interface PreluareAutoContextProps {
   clientSelectat: Client | null;
@@ -32,15 +32,17 @@ export default function PreluareAutoContext({
         <dl className="mt-5 grid gap-4 text-sm text-slate-600 md:grid-cols-2">
           <div>
             <dt className="font-semibold text-slate-700">Client</dt>
-            <dd className="mt-1">{clientSelectat?.nume ?? `#${vehiculSelectat.idClient}`}</dd>
+            <dd className="mt-1">
+              {clientSelectat?.nume ?? `#${vehiculSelectat.idClient}`}
+            </dd>
           </div>
           <div>
             <dt className="font-semibold text-slate-700">Telefon</dt>
-            <dd className="mt-1">{clientSelectat?.telefon ?? '-'}</dd>
+            <dd className="mt-1">{clientSelectat?.telefon ?? "-"}</dd>
           </div>
           <div>
             <dt className="font-semibold text-slate-700">Tip client</dt>
-            <dd className="mt-1">{clientSelectat?.tipClient ?? '-'}</dd>
+            <dd className="mt-1">{clientSelectat?.tipClient ?? "-"}</dd>
           </div>
           <div>
             <dt className="font-semibold text-slate-700">Serie șasiu</dt>
@@ -64,7 +66,9 @@ export default function PreluareAutoContext({
               Tip intervenție
             </p>
             <h3 className="mt-2 text-xl font-bold text-slate-800">
-              {esteLucrareAsigurare ? 'Lucrare cu asigurare' : 'Lucrare client / flotă'}
+              {esteLucrareAsigurare
+                ? "Lucrare cu asigurare"
+                : "Lucrare client / flotă"}
             </h3>
           </div>
           <label className="inline-flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100">
@@ -81,8 +85,10 @@ export default function PreluareAutoContext({
         {comandaActivaExistenta ? (
           // Mesajul apare doar dacă există deja o comandă activă pentru același vehicul.
           <div className="mb-4 flex-1 rounded-xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-800">
-            Există deja comanda activă <strong>{comandaActivaExistenta.nrComanda}</strong> pentru acest
-            vehicul, cu status <strong>{comandaActivaExistenta.status}</strong> și termen promis{' '}
+            Există deja comanda activă{" "}
+            <strong>{comandaActivaExistenta.nrComanda}</strong> pentru acest
+            vehicul, cu status <strong>{comandaActivaExistenta.status}</strong>{" "}
+            și termen promis{" "}
             <strong>{formatData(comandaActivaExistenta.termenPromis)}</strong>.
           </div>
         ) : null}

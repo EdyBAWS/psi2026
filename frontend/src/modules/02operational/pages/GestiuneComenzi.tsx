@@ -1,11 +1,11 @@
-import { AlertTriangle, ClipboardList, Wrench } from 'lucide-react';
-import { useEffect } from 'react';
-import { EmptyState } from '../../../componente/ui/EmptyState';
-import { StatCard } from '../../../componente/ui/StatCard';
-import { usePageSessionState } from '../../../lib/pageState';
-import GestiuneComenziDetail from './components/GestiuneComenziDetail';
-import GestiuneComenziFilters from './components/GestiuneComenziFilters';
-import GestiuneComenziTable from './components/GestiuneComenziTable';
+import { AlertTriangle, ClipboardList, Wrench } from "lucide-react";
+import { useEffect } from "react";
+import { EmptyState } from "../../../componente/ui/EmptyState";
+import { StatCard } from "../../../componente/ui/StatCard";
+import { usePageSessionState } from "../../../lib/pageState";
+import GestiuneComenziDetail from "./components/GestiuneComenziDetail";
+import GestiuneComenziFilters from "./components/GestiuneComenziFilters";
+import GestiuneComenziTable from "./components/GestiuneComenziTable";
 import {
   calculeazaStatisticiComenzi,
   construiesteLiniiLista,
@@ -13,7 +13,7 @@ import {
   rezolvaDetaliiComandaSelectata,
   type GestiuneSortDir,
   type GestiuneSortField,
-} from './gestiuneComenzi.helpers';
+} from "./gestiuneComenzi.helpers";
 import type {
   Asigurator,
   Client,
@@ -23,7 +23,7 @@ import type {
   PozitieComanda,
   StatusComanda,
   Vehicul,
-} from '../types';
+} from "../types";
 
 interface GestiuneComenziProps {
   asiguratori: Asigurator[];
@@ -44,54 +44,53 @@ export default function GestiuneComenzi({
   pozitii,
   vehicule,
 }: GestiuneComenziProps) {
-  const [cautare, setCautare] = usePageSessionState('operational-comenzi-cautare', '');
-  const [filtruStatus, setFiltruStatus] = usePageSessionState<StatusComanda | 'Toate'>(
-    'operational-comenzi-status',
-    'Toate',
+  const [cautare, setCautare] = usePageSessionState(
+    "operational-comenzi-cautare",
+    "",
   );
-  const [filtruMecanic, setFiltruMecanic] = usePageSessionState<number | 'toate'>(
-    'operational-comenzi-mecanic',
-    'toate',
-  );
-  const [filtruPlata, setFiltruPlata] = usePageSessionState<ComandaService['tipPlata'] | 'Toate'>(
-    'operational-comenzi-plata',
-    'Toate',
-  );
+  const [filtruStatus, setFiltruStatus] = usePageSessionState<
+    StatusComanda | "Toate"
+  >("operational-comenzi-status", "Toate");
+  const [filtruMecanic, setFiltruMecanic] = usePageSessionState<
+    number | "toate"
+  >("operational-comenzi-mecanic", "toate");
+  const [filtruPlata, setFiltruPlata] = usePageSessionState<
+    ComandaService["tipPlata"] | "Toate"
+  >("operational-comenzi-plata", "Toate");
   const [doarIntarziate, setDoarIntarziate] = usePageSessionState(
-    'operational-comenzi-intarziate',
+    "operational-comenzi-intarziate",
     false,
   );
-  const [idComandaSelectata, setIdComandaSelectata] = usePageSessionState<number | null>(
-    'operational-comenzi-selectata',
-    null,
-  );
+  const [idComandaSelectata, setIdComandaSelectata] = usePageSessionState<
+    number | null
+  >("operational-comenzi-selectata", null);
   const [sortField, setSortField] = usePageSessionState<GestiuneSortField>(
-    'operational-comenzi-sort-field',
-    'data',
+    "operational-comenzi-sort-field",
+    "data",
   );
   const [sortDir, setSortDir] = usePageSessionState<GestiuneSortDir>(
-    'operational-comenzi-sort-dir',
-    'desc',
+    "operational-comenzi-sort-dir",
+    "desc",
   );
 
   const handleSort = (field: GestiuneSortField) => {
     if (sortField === field) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
       return;
     }
 
     setSortField(field);
-    setSortDir(field === 'data' || field === 'valoare' ? 'desc' : 'asc');
+    setSortDir(field === "data" || field === "valoare" ? "desc" : "asc");
   };
 
   const reseteazaFiltre = () => {
-    setCautare('');
-    setFiltruStatus('Toate');
-    setFiltruMecanic('toate');
-    setFiltruPlata('Toate');
+    setCautare("");
+    setFiltruStatus("Toate");
+    setFiltruMecanic("toate");
+    setFiltruPlata("Toate");
     setDoarIntarziate(false);
-    setSortField('data');
-    setSortDir('desc');
+    setSortField("data");
+    setSortDir("desc");
   };
 
   const comenziFiltrate = filtreazaSiSorteazaComenzi(
@@ -120,7 +119,9 @@ export default function GestiuneComenzi({
       return;
     }
 
-    const existaInLista = comenziFiltrate.some((comanda) => comanda.idComanda === idComandaSelectata);
+    const existaInLista = comenziFiltrate.some(
+      (comanda) => comanda.idComanda === idComandaSelectata,
+    );
     if (!existaInLista) {
       setIdComandaSelectata(null);
     }
@@ -152,7 +153,8 @@ export default function GestiuneComenzi({
               Registru comenzi service
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              Urmărește și gestionează stadiul lucrărilor și detaliile fiecărui deviz.
+              Urmărește și gestionează stadiul lucrărilor și detaliile fiecărui
+              deviz.
             </p>
           </div>
 
@@ -197,13 +199,17 @@ export default function GestiuneComenzi({
 
       {comenziFiltrate.length === 0 ? (
         <EmptyState
-          title={comenzi.length === 0 ? 'Nu există comenzi în registru' : 'Nu există rezultate'}
+          title={
+            comenzi.length === 0
+              ? "Nu există comenzi în registru"
+              : "Nu există rezultate"
+          }
           description={
             comenzi.length === 0
-              ? 'Comenzile noi deschise din recepție vor apărea aici împreună cu detaliile lor.'
-              : 'Filtrele actuale nu au găsit nicio comandă. Poți reseta rapid căutarea și filtrele.'
+              ? "Comenzile noi deschise din recepție vor apărea aici împreună cu detaliile lor."
+              : "Filtrele actuale nu au găsit nicio comandă. Poți reseta rapid căutarea și filtrele."
           }
-          actionLabel={comenzi.length === 0 ? undefined : 'Resetează filtrele'}
+          actionLabel={comenzi.length === 0 ? undefined : "Resetează filtrele"}
           onAction={comenzi.length === 0 ? undefined : reseteazaFiltre}
         />
       ) : (

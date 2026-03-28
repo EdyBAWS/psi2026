@@ -10,20 +10,20 @@ import type {
   StatusDosar,
   TipPlata,
   TipPolita,
-} from './types';
+} from "./types";
 
 // Această structură descrie doar starea vizibilă în formularul de daună.
 // De exemplu, datele sunt păstrate ca string pentru input-uri HTML de tip `date`,
 // iar sumele pot fi temporar goale până când utilizatorul le completează.
 export interface StareDosarAsigurare {
-  mod: 'existent' | 'nou';
+  mod: "existent" | "nou";
   idDosarSelectat: number | null;
   idAsigurator: number | null;
   numarReferintaAsigurator: string;
   tipPolita: TipPolita;
   dataConstatare: string;
-  sumaAprobata: number | '';
-  franciza: number | '';
+  sumaAprobata: number | "";
+  franciza: number | "";
   statusAprobare: StatusDosar;
   inspectorDauna: string;
   observatiiDauna: string;
@@ -33,7 +33,7 @@ export interface StareDosarAsigurare {
 // Din nou, unele câmpuri sunt mai permisive decât în datele finale,
 // pentru că formularul trebuie să poată porni "gol".
 export interface DetaliiPreluareForm {
-  kilometrajPreluare: number | '';
+  kilometrajPreluare: number | "";
   nivelCombustibil: NivelCombustibil;
   simptomeReclamate: string;
   observatiiPreluare: string;
@@ -55,29 +55,29 @@ const dataPesteDouaZile = () => {
 // Valorile inițiale sunt centralizate aici ca să putem reseta ușor formularul
 // și să folosim aceeași bază de pornire oriunde este nevoie.
 export const stareDosarInitiala: StareDosarAsigurare = {
-  mod: 'existent',
+  mod: "existent",
   idDosarSelectat: null,
   idAsigurator: null,
-  numarReferintaAsigurator: '',
-  tipPolita: 'CASCO',
+  numarReferintaAsigurator: "",
+  tipPolita: "CASCO",
   dataConstatare: new Date().toISOString().slice(0, 10),
-  sumaAprobata: '',
-  franciza: '',
-  statusAprobare: 'In analiza',
-  inspectorDauna: '',
-  observatiiDauna: '',
+  sumaAprobata: "",
+  franciza: "",
+  statusAprobare: "In analiza",
+  inspectorDauna: "",
+  observatiiDauna: "",
 };
 
 export const detaliiPreluareInitiale: DetaliiPreluareForm = {
-  kilometrajPreluare: '',
-  nivelCombustibil: '1/2',
-  simptomeReclamate: '',
-  observatiiPreluare: '',
-  observatiiCaroserie: '',
-  accesoriiPredate: '',
+  kilometrajPreluare: "",
+  nivelCombustibil: "1/2",
+  simptomeReclamate: "",
+  observatiiPreluare: "",
+  observatiiCaroserie: "",
+  accesoriiPredate: "",
   termenPromis: dataPesteDouaZile(),
-  prioritate: 'Normala',
-  tipPlata: 'Client Direct',
+  prioritate: "Normala",
+  tipPlata: "Client Direct",
 };
 
 // Generăm un id local pentru rândurile din UI. Nu este un id de bază de date,
@@ -90,15 +90,15 @@ const genereazaDraftId = () =>
 // tipul este manoperă, cantitatea este 1 și TVA-ul pornește de la 19%.
 export const creeazaPozitieDraft = (): PozitieComandaDraft => ({
   _draftId: genereazaDraftId(),
-  tipPozitie: 'Manopera',
+  tipPozitie: "Manopera",
   catalogId: null,
-  codArticol: '',
-  descriere: '',
-  unitateMasura: 'ore',
+  codArticol: "",
+  descriere: "",
+  unitateMasura: "ore",
   cantitate: 1,
   pretVanzare: 0,
   discountProcent: 0,
   cotaTVA: 19,
   disponibilitateStoc: true,
-  observatiiPozitie: '',
+  observatiiPozitie: "",
 });

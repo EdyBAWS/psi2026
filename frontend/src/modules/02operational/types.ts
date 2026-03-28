@@ -3,7 +3,7 @@ import type {
   AsiguratorCore,
   ClientCoreBase,
   TipClientOperational,
-} from '../../types/domain';
+} from "../../types/domain";
 
 // Tipurile din acest fișier descriu modelul domeniului operațional.
 // Am păstrat nucleul schemei inițiale și am adăugat câmpuri uzuale pentru
@@ -13,23 +13,28 @@ import type {
 // Avantajul pentru TypeScript este că prindem mai repede greșeli de scriere
 // și știm exact ce opțiuni poate avea un câmp din formular sau din datele salvate.
 export type TipClient = TipClientOperational;
-export type TipPlata = 'Client Direct' | 'Asigurare' | 'Flota';
-export type PrioritateComanda = 'Scazuta' | 'Normala' | 'Ridicata' | 'Urgenta';
-export type NivelCombustibil = 'Rezerva' | '1/4' | '1/2' | '3/4' | 'Plin';
-export type TipPolita = 'RCA' | 'CASCO';
-export type StatusDosar = 'Deschis' | 'In analiza' | 'Aprobat partial' | 'Aprobat' | 'Respins';
-export type TipPozitie = 'Piesa' | 'Kit' | 'Manopera';
-export type UnitateMasura = 'buc' | 'set' | 'ore' | 'kit';
+export type TipPlata = "Client Direct" | "Asigurare" | "Flota";
+export type PrioritateComanda = "Scazuta" | "Normala" | "Ridicata" | "Urgenta";
+export type NivelCombustibil = "Rezerva" | "1/4" | "1/2" | "3/4" | "Plin";
+export type TipPolita = "RCA" | "CASCO";
+export type StatusDosar =
+  | "Deschis"
+  | "In analiza"
+  | "Aprobat partial"
+  | "Aprobat"
+  | "Respins";
+export type TipPozitie = "Piesa" | "Kit" | "Manopera";
+export type UnitateMasura = "buc" | "set" | "ore" | "kit";
 
 export type StatusComanda =
-  | 'In asteptare diagnoza'
-  | 'Asteapta aprobare client'
-  | 'Asteapta piese'
-  | 'In Lucru'
-  | 'Gata de livrare'
-  | 'Livrat'
-  | 'Facturat'
-  | 'Anulat';
+  | "In asteptare diagnoza"
+  | "Asteapta aprobare client"
+  | "Asteapta piese"
+  | "In Lucru"
+  | "Gata de livrare"
+  | "Livrat"
+  | "Facturat"
+  | "Anulat";
 
 // `Client` este entitatea care deține vehiculul.
 // În UI o folosim pentru a afișa rapid cine aduce mașina în service
@@ -117,9 +122,9 @@ export interface PozitieComanda {
   observatiiPozitie: string;
 }
 
-export type Asigurator = Pick<AsiguratorCore, 'idAsigurator' | 'denumire'>;
+export type Asigurator = Pick<AsiguratorCore, "idAsigurator" | "denumire">;
 
-export interface Mecanic extends Pick<AngajatCore, 'nume'> {
+export interface Mecanic extends Pick<AngajatCore, "nume"> {
   idMecanic: number;
   specialitate: string;
 }
@@ -151,7 +156,7 @@ export interface CatalogManopera {
   idManopera: number;
   cod: string;
   denumire: string;
-  unitateMasura: 'ore';
+  unitateMasura: "ore";
   tarif: number;
   cotaTVA: number;
 }

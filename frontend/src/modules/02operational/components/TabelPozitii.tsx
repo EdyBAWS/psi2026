@@ -5,15 +5,18 @@
 // - primește lista curentă de poziții
 // - modifică o poziție sau adaugă/șterge una
 // - trimite lista actualizată înapoi prin `onChange`
-import { calculeazaRezumatPozitii, calculeazaValoriPozitie } from '../calculations';
-import { creeazaPozitieDraft } from '../formState';
+import {
+  calculeazaRezumatPozitii,
+  calculeazaValoriPozitie,
+} from "../calculations";
+import { creeazaPozitieDraft } from "../formState";
 import type {
   CatalogKit,
   CatalogManopera,
   CatalogPiesa,
   PozitieComandaDraft,
   TipPozitie,
-} from '../types';
+} from "../types";
 
 interface TabelPozitiiProps {
   catalogKituri: CatalogKit[];
@@ -27,18 +30,18 @@ type CatalogOption = {
   id: number;
   cod: string;
   denumire: string;
-  unitateMasura: PozitieComandaDraft['unitateMasura'];
+  unitateMasura: PozitieComandaDraft["unitateMasura"];
   pretVanzare: number;
   cotaTVA: number;
   disponibilitateStoc: boolean;
 };
 
-const tipuriPozitie: TipPozitie[] = ['Manopera', 'Piesa', 'Kit'];
+const tipuriPozitie: TipPozitie[] = ["Manopera", "Piesa", "Kit"];
 
 const formatSuma = (valoare: number) =>
-  new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: 'RON',
+  new Intl.NumberFormat("ro-RO", {
+    style: "currency",
+    currency: "RON",
     maximumFractionDigits: 2,
   }).format(valoare);
 
@@ -57,7 +60,7 @@ export default function TabelPozitii({
   // Returnăm toate formele într-o structură comună (`CatalogOption`)
   // pentru a putea afișa aceeași interfață în tabel.
   const obtineCatalog = (tipPozitie: TipPozitie): CatalogOption[] => {
-    if (tipPozitie === 'Piesa') {
+    if (tipPozitie === "Piesa") {
       return catalogPiese.map((item) => ({
         id: item.idPiesa,
         cod: item.cod,
@@ -69,7 +72,7 @@ export default function TabelPozitii({
       }));
     }
 
-    if (tipPozitie === 'Kit') {
+    if (tipPozitie === "Kit") {
       return catalogKituri.map((item) => ({
         id: item.idKit,
         cod: item.cod,
@@ -107,19 +110,20 @@ export default function TabelPozitii({
   const schimbaTipPozitie = (draftId: string, tipPozitie: TipPozitie) => {
     // Când se schimbă tipul poziției, resetăm și articolul ales din catalog.
     // Facem asta pentru a evita combinații invalide, de tip "piesă veche rămasă pe manoperă".
-    const unitateMasura = tipPozitie === 'Manopera' ? 'ore' : tipPozitie === 'Kit' ? 'kit' : 'buc';
+    const unitateMasura =
+      tipPozitie === "Manopera" ? "ore" : tipPozitie === "Kit" ? "kit" : "buc";
 
     actualizeazaPozitie(draftId, {
       tipPozitie,
       catalogId: null,
-      codArticol: '',
-      descriere: '',
+      codArticol: "",
+      descriere: "",
       unitateMasura,
       pretVanzare: 0,
       cotaTVA: 19,
       discountProcent: 0,
-      disponibilitateStoc: tipPozitie === 'Manopera',
-      observatiiPozitie: '',
+      disponibilitateStoc: tipPozitie === "Manopera",
+      observatiiPozitie: "",
     });
   };
 
@@ -130,16 +134,19 @@ export default function TabelPozitii({
   ) => {
     // Alegerea unui articol completează automat câmpurile derivate:
     // cod, denumire, unitate, preț, TVA și stoc.
-    const articol = obtineCatalog(tipPozitie).find((item) => item.id === catalogId) ?? null;
+    const articol =
+      obtineCatalog(tipPozitie).find((item) => item.id === catalogId) ?? null;
 
     actualizeazaPozitie(draftId, {
       catalogId,
-      codArticol: articol?.cod ?? '',
-      descriere: articol?.denumire ?? '',
-      unitateMasura: articol?.unitateMasura ?? (tipPozitie === 'Manopera' ? 'ore' : 'buc'),
+      codArticol: articol?.cod ?? "",
+      descriere: articol?.denumire ?? "",
+      unitateMasura:
+        articol?.unitateMasura ?? (tipPozitie === "Manopera" ? "ore" : "buc"),
       pretVanzare: articol?.pretVanzare ?? 0,
       cotaTVA: articol?.cotaTVA ?? 19,
-      disponibilitateStoc: articol?.disponibilitateStoc ?? (tipPozitie === 'Manopera'),
+      disponibilitateStoc:
+        articol?.disponibilitateStoc ?? tipPozitie === "Manopera",
     });
   };
 
@@ -234,14 +241,16 @@ export default function TabelPozitii({
                       <select
                         // `?? ''` înseamnă:
                         // dacă `catalogId` este null/undefined, folosim stringul gol.
-                        value={pozitie.catalogId ?? ''}
+                        value={pozitie.catalogId ?? ""}
                         // Lista de articole se schimbă dinamic în funcție de tipul ales pe rând.
                         onChange={(event) =>
                           selecteazaArticol(
                             pozitie._draftId,
                             pozitie.tipPozitie,
                             // Valoarea citită din input vine ca text și o convertim la număr.
-                            event.target.value === '' ? null : Number(event.target.value),
+                            event.target.value === ""
+                              ? null
+                              : Number(event.target.value),
                           )
                         }
                         className="min-w-56 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -255,11 +264,18 @@ export default function TabelPozitii({
                         ))}
                       </select>
                       {/* `||` oferă o valoare de rezervă dacă descrierea este goală. */}
-                      <p className="mt-2 max-w-xs text-xs text-slate-500">{pozitie.descriere || 'Selectează un articol din catalog.'}</p>
+                      <p className="mt-2 max-w-xs text-xs text-slate-500">
+                        {pozitie.descriere ||
+                          "Selectează un articol din catalog."}
+                      </p>
                     </td>
                     <td className="px-4 py-4">
-                      <p className="font-semibold text-slate-700">{pozitie.codArticol || '-'}</p>
-                      <p className="mt-1 text-xs text-slate-500 uppercase">{pozitie.unitateMasura}</p>
+                      <p className="font-semibold text-slate-700">
+                        {pozitie.codArticol || "-"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500 uppercase">
+                        {pozitie.unitateMasura}
+                      </p>
                     </td>
                     <td className="px-4 py-4">
                       {/* `input` este câmpul în care utilizatorul scrie o valoare.
@@ -267,11 +283,14 @@ export default function TabelPozitii({
                       <input
                         type="number"
                         min="0"
-                        step={pozitie.tipPozitie === 'Manopera' ? '0.1' : '1'}
+                        step={pozitie.tipPozitie === "Manopera" ? "0.1" : "1"}
                         value={pozitie.cantitate}
                         onChange={(event) =>
                           actualizeazaPozitie(pozitie._draftId, {
-                            cantitate: event.target.value === '' ? 0 : Number(event.target.value),
+                            cantitate:
+                              event.target.value === ""
+                                ? 0
+                                : Number(event.target.value),
                           })
                         }
                         className="w-24 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -286,7 +305,9 @@ export default function TabelPozitii({
                         onChange={(event) =>
                           actualizeazaPozitie(pozitie._draftId, {
                             pretVanzare:
-                              event.target.value === '' ? 0 : Number(event.target.value),
+                              event.target.value === ""
+                                ? 0
+                                : Number(event.target.value),
                           })
                         }
                         className="w-28 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -302,7 +323,9 @@ export default function TabelPozitii({
                         onChange={(event) =>
                           actualizeazaPozitie(pozitie._draftId, {
                             discountProcent:
-                              event.target.value === '' ? 0 : Number(event.target.value),
+                              event.target.value === ""
+                                ? 0
+                                : Number(event.target.value),
                           })
                         }
                         className="w-24 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -316,7 +339,10 @@ export default function TabelPozitii({
                         value={pozitie.cotaTVA}
                         onChange={(event) =>
                           actualizeazaPozitie(pozitie._draftId, {
-                            cotaTVA: event.target.value === '' ? 0 : Number(event.target.value),
+                            cotaTVA:
+                              event.target.value === ""
+                                ? 0
+                                : Number(event.target.value),
                           })
                         }
                         className="w-24 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -327,11 +353,11 @@ export default function TabelPozitii({
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                           pozitie.disponibilitateStoc
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-amber-50 text-amber-800'
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-amber-50 text-amber-800"
                         }`}
                       >
-                        {pozitie.disponibilitateStoc ? 'În stoc' : 'La comandă'}
+                        {pozitie.disponibilitateStoc ? "În stoc" : "La comandă"}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right font-semibold text-slate-700">
@@ -373,16 +399,28 @@ export default function TabelPozitii({
             modificărilor din fiecare rând asupra totalului comenzii. */}
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Subtotal</p>
-            <p className="mt-2 text-lg font-bold text-slate-800">{formatSuma(rezumat.subtotal)}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Subtotal
+            </p>
+            <p className="mt-2 text-lg font-bold text-slate-800">
+              {formatSuma(rezumat.subtotal)}
+            </p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">TVA</p>
-            <p className="mt-2 text-lg font-bold text-slate-800">{formatSuma(rezumat.tva)}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              TVA
+            </p>
+            <p className="mt-2 text-lg font-bold text-slate-800">
+              {formatSuma(rezumat.tva)}
+            </p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total deviz</p>
-            <p className="mt-2 text-lg font-bold text-slate-800">{formatSuma(rezumat.total)}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Total deviz
+            </p>
+            <p className="mt-2 text-lg font-bold text-slate-800">
+              {formatSuma(rezumat.total)}
+            </p>
           </div>
         </div>
       </div>
