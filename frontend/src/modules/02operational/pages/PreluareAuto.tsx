@@ -25,7 +25,7 @@ import {
 import PreluareAutoContext from './components/PreluareAutoContext';
 import PreluareAutoHeader from './components/PreluareAutoHeader';
 import { comandaEsteActiva } from '../calculations';
-import { valideazaPreluare } from '../validations';
+import { suntPozitiiValide, valideazaPreluare } from '../validations';
 import type {
   Asigurator,
   CatalogKit,
@@ -128,6 +128,27 @@ export default function PreluareAuto({
     idMecanicSelectat,
     pozitiiDraft,
   );
+
+  // Construim separat stările de eroare pentru UI.
+  // Headerul afișează mesajele, iar aceste booleene ne ajută să marcăm
+  // exact câmpurile lipsă cu un contur roșu în interior.
+  const termenEsteInTrecut =
+    detaliiPreluare.termenPromis !== '' &&
+    new Date(detaliiPreluare.termenPromis).getTime() < new Date().setHours(0, 0, 0, 0);
+  const eroriCampuri = {
+    vehicul: vehiculSelectat === null,
+    dosar: esteLucrareAsigurare && !dosarValid,
+    kilometraj:
+      !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) ||
+      detaliiPreluare.kilometrajPreluare <= 0,
+    mecanic: idMecanicSelectat === null,
+    pozitii: !suntPozitiiValide(pozitiiDraft),
+    simptome: detaliiPreluare.simptomeReclamate.trim().length < 10,
+    termenPromis: detaliiPreluare.termenPromis === '' || termenEsteInTrecut,
+    tipPlata:
+      (esteLucrareAsigurare && detaliiPreluare.tipPlata !== 'Asigurare') ||
+      (!esteLucrareAsigurare && detaliiPreluare.tipPlata === 'Asigurare'),
+  };
 
   const reseteazaFlux = () => {
     const tipPlata = tipPlataImplicit(clientSelectat);
@@ -309,8 +330,8 @@ export default function PreluareAuto({
           {esteLucrareAsigurare ? (
             <div
               className={`rounded-2xl transition-all duration-300 ${
-                indicatori.lipsesteDosar
-                  ? 'border-2 border-rose-400 bg-rose-50/20 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
+                eroriCampuri.dosar
+                  ? 'bg-rose-50/20 ring-2 ring-inset ring-rose-500/70 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
                   : ''
               }`}
             >
@@ -328,7 +349,7 @@ export default function PreluareAuto({
           <div
             className={`rounded-2xl transition-all duration-300 ${
               indicatori.lipsescSimptomeSauMecanic
-                ? 'border-2 border-rose-400 bg-rose-50/20 p-0.5 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
+                ? 'bg-rose-50/20 p-0.5 ring-2 ring-inset ring-rose-500/70 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
                 : ''
             }`}
           >
@@ -342,6 +363,14 @@ export default function PreluareAuto({
               mecanici={mecanici}
               nrComandaPreview={nrComandaPreview}
               pozitii={pozitiiDraft}
+              campuriCuEroare={{
+                kilometrajPreluare: eroriCampuri.kilometraj,
+                mecanic: eroriCampuri.mecanic,
+                pozitii: eroriCampuri.pozitii,
+                simptomeReclamate: eroriCampuri.simptome,
+                termenPromis: eroriCampuri.termenPromis,
+                tipPlata: eroriCampuri.tipPlata,
+              }}
               subtotalEstimat={rezumatPozitii.subtotal}
               totalEstimat={rezumatPozitii.total}
               tvaEstimat={rezumatPozitii.tva}
