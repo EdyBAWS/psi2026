@@ -11,7 +11,7 @@ import type {
   DetaliiPreluareForm,
   StareDosarAsigurare,
 } from './formState';
-import { detaliiPreluareSchema, dosarNouSchema } from './schemas';
+import { dosarNouSchema } from './schemas';
 
 export interface ValidarePreluareInput {
   comandaActivaExistenta: ComandaService | null;
@@ -81,7 +81,6 @@ export function valideazaPreluare({
   // - blocări: utilizatorul nu poate salva
   // - avertizări: utilizatorul poate salva, dar merită atenționat
   const dosarValid = dosarEsteValid(esteLucrareAsigurare, stareDosar);
-  const detaliiValide = detaliiPreluareSchema.safeParse(detaliiPreluare).success;
   const mesajeBlocare: string[] = [];
 
   // Validările de mai jos combină reguli de structură cu reguli de business.
@@ -98,13 +97,16 @@ export function valideazaPreluare({
   if (idMecanicSelectat === null) {
     mesajeBlocare.push('Alege mecanicul responsabil pentru lucrare.');
   }
-  if (!detaliiValide && (!esteNumarCompletat(detaliiPreluare.kilometrajPreluare) || detaliiPreluare.kilometrajPreluare <= 0)) {
+  if (
+    !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) ||
+    detaliiPreluare.kilometrajPreluare <= 0
+  ) {
     mesajeBlocare.push('Completează kilometrajul de preluare.');
   }
-  if (!detaliiValide && detaliiPreluare.simptomeReclamate.trim().length < 10) {
+  if (detaliiPreluare.simptomeReclamate.trim().length < 10) {
     mesajeBlocare.push('Descrie simptomele reclamate în minimum 10 caractere.');
   }
-  if (!detaliiValide && detaliiPreluare.termenPromis === '') {
+  if (detaliiPreluare.termenPromis === '') {
     mesajeBlocare.push('Setează un termen promis pentru livrare.');
   }
   if (
