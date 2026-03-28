@@ -16,6 +16,14 @@ import type {
 
 interface FormComandaProps {
   blocheazaTipPlataAsigurare: boolean;
+  campuriCuEroare: {
+    kilometrajPreluare: boolean;
+    mecanic: boolean;
+    pozitii: boolean;
+    simptomeReclamate: boolean;
+    termenPromis: boolean;
+    tipPlata: boolean;
+  };
   catalogKituri: CatalogKit[];
   catalogManopere: CatalogManopera[];
   catalogPiese: CatalogPiesa[];
@@ -42,6 +50,7 @@ const formatSuma = (valoare: number) =>
 
 export default function FormComanda({
   blocheazaTipPlataAsigurare,
+  campuriCuEroare,
   catalogKituri,
   catalogManopere,
   catalogPiese,
@@ -58,6 +67,13 @@ export default function FormComanda({
   onMecanicChange,
   onPozitiiChange,
 }: FormComandaProps) {
+  const claseCamp = (areEroare: boolean) =>
+    `w-full rounded-xl border px-4 py-3 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
+      areEroare
+        ? 'border-rose-300 bg-rose-50/40 ring-2 ring-inset ring-rose-500/70 focus:border-rose-400 focus:ring-rose-500'
+        : 'border-slate-200 bg-slate-50 focus:border-indigo-300 focus:ring-indigo-500'
+    }`;
+
   return (
     // JSX-ul de mai jos descrie interfața componentei.
     // Tag-uri precum `div`, `p`, `select` și `input` sunt elemente de UI.
@@ -113,7 +129,7 @@ export default function FormComanda({
                 // `event.target.value` este valoarea curentă aleasă de utilizator în select.
                 onMecanicChange(event.target.value === '' ? null : Number(event.target.value))
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={claseCamp(campuriCuEroare.mecanic)}
             >
               <option value="">Selectează mecanic</option>
               {mecanici.map((mecanic) => (
@@ -136,7 +152,7 @@ export default function FormComanda({
                   tipPlata: event.target.value as DetaliiPreluareForm['tipPlata'],
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 disabled:cursor-not-allowed disabled:bg-slate-100 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`${claseCamp(campuriCuEroare.tipPlata)} disabled:cursor-not-allowed disabled:bg-slate-100`}
             >
               <option value="Client Direct">Client Direct</option>
               <option value="Flota">Flotă</option>
@@ -176,7 +192,7 @@ export default function FormComanda({
                   termenPromis: event.target.value,
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={claseCamp(campuriCuEroare.termenPromis)}
             />
           </div>
 
@@ -194,7 +210,7 @@ export default function FormComanda({
                     event.target.value === '' ? '' : Number(event.target.value),
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={claseCamp(campuriCuEroare.kilometrajPreluare)}
               placeholder="Ex: 146220"
             />
           </div>
@@ -247,7 +263,7 @@ export default function FormComanda({
                   simptomeReclamate: event.target.value,
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={claseCamp(campuriCuEroare.simptomeReclamate)}
               placeholder="Descrierea problemei observate de client."
             />
           </div>
@@ -307,13 +323,15 @@ export default function FormComanda({
 
       {/* Tabelul de poziții este separat pentru a păstra componenta curată.
           El gestionează lista de rânduri, iar această componentă se ocupă de antetul comenzii. */}
-      <TabelPozitii
-        catalogKituri={catalogKituri}
-        catalogManopere={catalogManopere}
-        catalogPiese={catalogPiese}
-        pozitii={pozitii}
-        onChange={onPozitiiChange}
-      />
+      <div className={campuriCuEroare.pozitii ? 'rounded-2xl ring-2 ring-inset ring-rose-500/70' : ''}>
+        <TabelPozitii
+          catalogKituri={catalogKituri}
+          catalogManopere={catalogManopere}
+          catalogPiese={catalogPiese}
+          pozitii={pozitii}
+          onChange={onPozitiiChange}
+        />
+      </div>
     </div>
   );
 }

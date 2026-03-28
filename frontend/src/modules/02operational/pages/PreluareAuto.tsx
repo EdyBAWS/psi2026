@@ -1,5 +1,6 @@
 // Aceasta este pagina principală a fluxului operațional.
 import { useState } from 'react';
+import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
 import { EmptyState } from '../../../componente/ui/EmptyState';
 import FormComanda from '../components/FormComanda';
 import SelectorDosar from '../components/SelectorDosar';
@@ -25,7 +26,7 @@ import {
 import PreluareAutoContext from './components/PreluareAutoContext';
 import PreluareAutoHeader from './components/PreluareAutoHeader';
 import { comandaEsteActiva } from '../calculations';
-import { valideazaPreluare } from '../validations';
+import { suntPozitiiValide, valideazaPreluare } from '../validations';
 import type {
   Asigurator,
   CatalogKit,
@@ -79,6 +80,7 @@ export default function PreluareAuto({
   const [detaliiPreluare, setDetaliiPreluare] = useState<DetaliiPreluareForm>(detaliiPreluareInitiale);
   const [idMecanicSelectat, setIdMecanicSelectat] = useState<number | null>(null);
   const [pozitiiDraft, setPozitiiDraft] = useState<PozitieComandaDraft[]>([creeazaPozitieDraft()]);
+  const [esteDialogResetDeschis, setEsteDialogResetDeschis] = useState(false);
 
   const vehiculSelectat = vehicule.find((vehicul) => vehicul.idVehicul === idVehiculSelectat) ?? null;
   const clientSelectat = clienti.find((client) => client.idClient === vehiculSelectat?.idClient) ?? null;
@@ -129,6 +131,27 @@ export default function PreluareAuto({
     pozitiiDraft,
   );
 
+  // Construim separat stările de eroare pentru UI.
+  // Headerul afișează mesajele, iar aceste booleene ne ajută să marcăm
+  // exact câmpurile lipsă cu un contur roșu în interior.
+  const termenEsteInTrecut =
+    detaliiPreluare.termenPromis !== '' &&
+    new Date(detaliiPreluare.termenPromis).getTime() < new Date().setHours(0, 0, 0, 0);
+  const eroriCampuri = {
+    vehicul: vehiculSelectat === null,
+    dosar: esteLucrareAsigurare && !dosarValid,
+    kilometraj:
+      !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) ||
+      detaliiPreluare.kilometrajPreluare <= 0,
+    mecanic: idMecanicSelectat === null,
+    pozitii: !suntPozitiiValide(pozitiiDraft),
+    simptome: detaliiPreluare.simptomeReclamate.trim().length < 10,
+    termenPromis: detaliiPreluare.termenPromis === '' || termenEsteInTrecut,
+    tipPlata:
+      (esteLucrareAsigurare && detaliiPreluare.tipPlata !== 'Asigurare') ||
+      (!esteLucrareAsigurare && detaliiPreluare.tipPlata === 'Asigurare'),
+  };
+
   const reseteazaFlux = () => {
     const tipPlata = tipPlataImplicit(clientSelectat);
     setIdVehiculSelectat(null);
@@ -137,6 +160,11 @@ export default function PreluareAuto({
     setDetaliiPreluare({ ...detaliiPreluareInitiale, tipPlata });
     setIdMecanicSelectat(null);
     setPozitiiDraft([creeazaPozitieDraft()]);
+  };
+
+  const confirmaResetare = () => {
+    reseteazaFlux();
+    setEsteDialogResetDeschis(false);
   };
 
   const handleSelecteazaVehicul = (idVehicul: number | null) => {
@@ -309,8 +337,8 @@ export default function PreluareAuto({
           {esteLucrareAsigurare ? (
             <div
               className={`rounded-2xl transition-all duration-300 ${
-                indicatori.lipsesteDosar
-                  ? 'border-2 border-rose-400 bg-rose-50/20 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
+                eroriCampuri.dosar
+                  ? 'bg-rose-50/20 ring-2 ring-inset ring-rose-500/70 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
                   : ''
               }`}
             >
@@ -328,7 +356,7 @@ export default function PreluareAuto({
           <div
             className={`rounded-2xl transition-all duration-300 ${
               indicatori.lipsescSimptomeSauMecanic
-                ? 'border-2 border-rose-400 bg-rose-50/20 p-0.5 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
+                ? 'bg-rose-50/20 p-0.5 ring-2 ring-inset ring-rose-500/70 shadow-[0_0_15px_rgba(251,113,133,0.15)]'
                 : ''
             }`}
           >
@@ -342,6 +370,14 @@ export default function PreluareAuto({
               mecanici={mecanici}
               nrComandaPreview={nrComandaPreview}
               pozitii={pozitiiDraft}
+              campuriCuEroare={{
+                kilometrajPreluare: eroriCampuri.kilometraj,
+                mecanic: eroriCampuri.mecanic,
+                pozitii: eroriCampuri.pozitii,
+                simptomeReclamate: eroriCampuri.simptome,
+                termenPromis: eroriCampuri.termenPromis,
+                tipPlata: eroriCampuri.tipPlata,
+              }}
               subtotalEstimat={rezumatPozitii.subtotal}
               totalEstimat={rezumatPozitii.total}
               tvaEstimat={rezumatPozitii.tva}
@@ -364,7 +400,7 @@ export default function PreluareAuto({
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={reseteazaFlux}
+                onClick={() => setEsteDialogResetDeschis(true)}
                 className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
               >
                 Resetează
@@ -379,6 +415,16 @@ export default function PreluareAuto({
               </button>
             </div>
           </div>
+
+          <ConfirmDialog
+            cancelLabel="Înapoi"
+            confirmLabel="Da, resetează"
+            description="Toate datele completate în fluxul curent vor fi șterse, inclusiv vehiculul selectat, dosarul și pozițiile din deviz."
+            isOpen={esteDialogResetDeschis}
+            onCancel={() => setEsteDialogResetDeschis(false)}
+            onConfirm={confirmaResetare}
+            title="Confirmi resetarea fluxului?"
+          />
         </>
       ) : (
         <EmptyState
