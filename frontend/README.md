@@ -2,6 +2,8 @@
 
 Acest folder conține frontend-ul aplicației `Service Auto G`, construit cu `React + TypeScript + Vite + Tailwind CSS`.
 
+Frontend-ul este în stadiul actual o aplicație `frontend-only`, orientată spre demo și onboarding tehnic. Nu există backend real, nu există API integrat și nu există sincronizare live completă între toate modulele. Totuși, structura actuală este suficient de matură încât să servească drept bază clară pentru dezvoltare incrementală.
+
 Aplicația este organizată pe module funcționale și rulează ca un SPA administrativ cu navigație bazată pe stare locală, nu pe router.
 
 ## Stack și biblioteci folosite
@@ -16,11 +18,15 @@ Aplicația este organizată pe module funcționale și rulează ca un SPA admini
 - `react-hook-form` pentru gestionarea formularelor
 - `zod` și `@hookform/resolvers` pentru validare
 - `sonner` pentru toast-uri
+- `sessionStorage` pentru persistența unor filtre/stări de pagină în sesiunea curentă
+- `ConfirmDialog` pentru confirmări UI în loc de `window.confirm`
 
-Observație:
+Observații importante:
 - `react-router-dom` este instalat, dar nu este folosit în implementarea actuală
+- aplicația nu are store global de stare (`Redux`, `Zustand`, `Context` de business etc.)
+- navigația și majoritatea datelor sunt încă gestionate local, la nivel de modul sau componentă
 
-## Scripturi disponibile
+## Cum rulezi și verifici proiectul
 
 Din directorul `frontend/`:
 
@@ -32,6 +38,23 @@ npm run lint
 npm run preview
 ```
 
+Pe scurt:
+- `npm install`: instalează dependențele
+- `npm run dev`: pornește serverul local de dezvoltare
+- `npm run build`: verifică TypeScript și generează build-ul de producție
+- `npm run lint`: verifică regulile ESLint
+- `npm run preview`: rulează local build-ul generat
+
+Verificările minime recomandate înainte de commit:
+
+```bash
+npm run lint
+npm run build
+```
+
+Observație:
+- `vite build` poate afișa un warning despre chunk-uri mari; în starea actuală a proiectului acesta este cunoscut și nu blochează build-ul
+
 ## Structură importantă
 
 ```text
@@ -39,6 +62,7 @@ frontend/
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.json
+├── README.md
 ├── src/
 │   ├── main.tsx
 │   ├── App.tsx
@@ -47,7 +71,16 @@ frontend/
 │   │   ├── Sidebar.tsx
 │   │   └── ui/
 │   ├── lib/
-│   │   └── cn.ts
+│   │   ├── cn.ts
+│   │   └── pageState.ts
+│   ├── mock/
+│   │   ├── catalog.ts
+│   │   ├── entitati.ts
+│   │   ├── operational.ts
+│   │   ├── facturare.ts
+│   │   ├── incasari.ts
+│   │   ├── notificari.ts
+│   │   └── types.ts
 │   ├── modules/
 │   │   ├── 00catalog/
 │   │   ├── 01entitati/
@@ -59,54 +92,144 @@ frontend/
 └── dist/
 ```
 
-## Cum funcționează navigația
+## Arhitectura reală a frontend-ului
 
-Navigația este controlată de:
+### Shell-ul aplicației
+
+Fișierele principale sunt:
+- `src/main.tsx`
 - `src/App.tsx`
 - `src/componente/Sidebar.tsx`
 
-`App.tsx` păstrează `paginaCurenta` într-un `useState<string>` și alege ecranul activ printr-un `switch`.
+Rolurile lor:
+- `main.tsx` montează aplicația și montează global și `Toaster` din `sonner`
+- `App.tsx` păstrează `paginaCurenta` în `useState<string>` și decide manual ce pagină se afișează
+- `Sidebar.tsx` este meniul lateral care schimbă `paginaCurenta`
 
-`Sidebar.tsx` este meniul lateral care schimbă această stare. În prezent, categoria `Operațional` are două intrări separate:
-- `Preluare Auto`
-- `Gestiune Comenzi`
+Concluzie importantă:
+- aplicația nu folosește router activ
+- nu există URL-uri reale pentru pagini
+- schimbarea paginii se face exclusiv prin stare locală în `App.tsx`
 
-Nu se folosește React Router.
+### Componente container vs componente de prezentare
+
+În proiect apar două stiluri de componente:
+
+- componente container
+  - țin starea
+  - fac derivări și validări
+  - conectează helperi, mock-uri și subcomponente
+- componente de prezentare
+  - afișează datele primite
+  - emit evenimente înapoi prin props
+  - nu decid singure logica de business
+
+Exemple:
+- `PreluareAuto.tsx` este componentă container
+- `PreluareAutoHeader.tsx`, `PreluareAutoContext.tsx`, `SelectorVehicul.tsx` sunt în principal componente de UI/control local
+
+### Helperi și logică extrasă
+
+În loc să lăsăm toată logica direct în JSX, proiectul încearcă să separe:
+- helperi de calcul
+- validări
+- tipuri
+- stare de formular
+
+Exemple utile:
+- `lib/cn.ts` pentru compunerea claselor Tailwind
+- `lib/pageState.ts` pentru citire/scriere în `sessionStorage`
+- `02operational/calculations.ts` pentru totaluri și indicatori
+- `02operational/validations.ts` pentru reguli de business
+- `02operational/schemas.ts` pentru validări de formă
+
+## Mock layer și date demo
+
+### Unde este sursa comună a mock-urilor
+
+Datele demo comune trăiesc în:
+
+```text
+src/mock/
+```
+
+Acolo sunt centralizate seed-urile pentru:
+- catalog
+- entități
+- operațional
+- facturare
+- încasări
+- notificări
+
+Scopul lor este să mențină coerența demo între ecrane, chiar dacă aplicația nu are încă o sursă live de adevăr.
+
+### Ce înseamnă „mock comun” vs „state local”
+
+Diferența importantă este:
+- `src/mock/*` furnizează datele inițiale
+- modulele pot copia aceste date în `useState` local și apoi lucrează pe acea copie
+
+Deci:
+- datele pornesc dintr-o sursă comună
+- dar nu există sincronizare globală reală între toate modificările făcute în runtime
+
+### Compat layer în `02operational`
+
+Fișierul:
+- `src/modules/02operational/mockData.ts`
+
+există în principal pentru compatibilitate și re-export. Sursa reală a datelor demo pentru modulul operațional este:
+- `src/mock/operational.ts`
 
 ## Module
 
 ### `src/modules/00catalog`
-Conține ecrane simple pentru:
+
+Conține ecrane pentru:
 - piese auto
 - manoperă
 
-Sunt module locale, fără backend, bune pentru CRUD demo și populare rapidă a interfeței.
+Starea actuală:
+- ecrane de catalog/CRUD demo
+- datele pornesc din `src/mock/catalog.ts`
+- feedback-ul folosește toast-uri
+- fără backend
+- fără integrare live cu alte module
+
+Bun pentru:
+- extindere rapidă de UI
+- testare de filtre, formulare și listări
 
 ### `src/modules/01entitati`
+
 Conține ecrane pentru:
 - clienți
 - angajați
 - asigurători
 
-Acestea folosesc:
-- `react-hook-form`
-- `zod`
-- componente UI comune
-- toast-uri pentru confirmări
+Starea actuală:
+- folosește `react-hook-form`
+- folosește `zod`
+- folosește componente UI comune
+- folosește `ConfirmDialog` pentru acțiuni de confirmare
+- folosește seed-uri comune din `src/mock/entitati.ts`
+- păstrează datele editabile local în componentă
 
-Datele sunt gestionate local în componentă.
+Observație importantă:
+- modificările din `01entitati` nu rescriu automat datele deja folosite de `02operational`
 
 ### `src/modules/02operational`
-Acesta este cel mai avansat modul din aplicație.
 
-Rolul lui:
-- recepție auto
-- selecție vehicul
+Acesta este modulul cel mai matur și cea mai bună referință pentru un feature mai complex.
+
+Acoperă:
+- selecția vehiculului
 - context client
-- flux de daună / asigurare
-- creare comandă service
-- gestionare poziții de deviz
-- calcul subtotal / TVA / total
+- fluxul de daună / asigurare
+- preluarea vehiculului
+- deschiderea comenzii service
+- poziții de deviz
+- subtotal / TVA / total
 - listare și detalii comenzi
 
 Fișiere importante:
@@ -118,33 +241,80 @@ Fișiere importante:
 - `calculations.ts`
 - `validations.ts`
 - `schemas.ts`
-- `mockData.ts`
 
-Acest modul este referința cea mai bună pentru organizarea unui feature mai complex în aplicație.
+Caracteristici importante:
+- container local cu stare comună pentru comenzi, dosare și poziții
+- helperi puri pentru filtrare, sortare și calcule
+- subcomponente separate pentru header, context, detalii și tabel
+- comentarii beginner-friendly extinse
 
 ### `src/modules/03facturare`
+
 Conține:
 - facturare comenzi
+- istoric facturare
 - oferte / campanii
 - penalizări
 
-Folosește componente UI comune și toast-uri, dar funcționează tot pe date locale/mock.
+Starea actuală:
+- consumă mock-uri comune din `src/mock/facturare.ts`
+- este coerent cu operaționalul la nivel de numere și entități demo
+- folosește componente UI comune și toast-uri
+- rămâne încă demo/local-state, nu flux live complet
 
 ### `src/modules/04incasari`
+
 Conține înregistrarea încasărilor și alocarea lor pe facturi.
 
+Starea actuală:
+- consumă mock-uri comune din `src/mock/incasari.ts`
+- este coerent cu facturarea la nivel de facturi demo
+- folosește toast-uri
+- nu are backend și nu sincronizează live cu restul aplicației
+
 ### `src/modules/05notificari`
-Conține un ecran simplu de notificări.
 
-## Componente UI comune
+Conține centrul de notificări.
 
-Pentru a evita repetarea aceleiași structuri vizuale, proiectul are o bază comună de componente în:
+Starea actuală:
+- consumă `src/mock/notificari.ts`
+- folosește `ConfirmDialog` pentru acțiuni destructive
+- folosește toast-uri
+- poate direcționa utilizatorul către zone ale aplicației prin navigația state-based
+
+## Fluxurile demo dintre module
+
+În forma actuală, aplicația are un flux demo coerent între:
+
+```text
+02operational -> 03facturare -> 04incasari -> 05notificari
+```
+
+Dar este important să înțelegi exact ce înseamnă asta:
+
+- modulele folosesc mock-uri comune și tipuri coerente
+- numerele de comandă, dosar și factură sunt aliniate între ecrane
+- datele par legate logic între module
+
+Ce NU înseamnă:
+- nu există o sursă globală live unică
+- nu există store global
+- nu există backend care să persiste datele
+- nu toate acțiunile dintr-un modul se propagă automat în celelalte în runtime
+
+Pe scurt:
+- există coerență demo
+- nu există încă sincronizare reală end-to-end
+
+## Componente UI comune și convenții
+
+Componentele comune trăiesc în:
 
 ```text
 src/componente/ui/
 ```
 
-Aceste componente sunt folosite treptat în module:
+Exemple:
 - `Button`
 - `Card`
 - `Field`
@@ -153,21 +323,67 @@ Aceste componente sunt folosite treptat în module:
 - `PageHeader`
 - `EmptyState`
 - `StatCard`
+- `ConfirmDialog`
 
-Compunerea claselor se face prin:
+Rolul lor:
+- reduc duplicarea de markup și stiluri
+- mențin consistența UI între module
+- fac codul mai ușor de extins
+
+Compunerea claselor Tailwind se face prin:
 - `src/lib/cn.ts`
 
-## Formulare și validare
+Convenții utile:
+- folosim toast-uri în loc de `alert`
+- folosim confirm dialog UI în loc de `window.confirm`
+- folosim `EmptyState` pentru stări de tip „nu există date” sau „nu există rezultate”
+- folosim `StatCard` pentru mici rezumate numerice pe pagină
+
+## Formulare, validare și persistență
+
+### Formulare
 
 Strategia actuală este:
 - formularele simple și medii folosesc `react-hook-form` + `zod`
-- regulile de business mai complexe rămân separate de UI
+- regulile de business mai complexe sunt separate de UI
 
-Exemplu:
-- în `02operational`, validările de business sunt în `validations.ts`
-- validările de structură și input pot folosi `schemas.ts`
+Exemple:
+- `01entitati` folosește `react-hook-form` + `zod`
+- `02operational` separă validările de formă în `schemas.ts` și validările de business în `validations.ts`
 
-Această separare permite cod mai clar și mai ușor de testat.
+### Validări de formă vs validări de business
+
+Această separare este importantă:
+
+- `schemas.ts`
+  - verifică forma inputului
+  - de exemplu: lungime minimă, număr pozitiv, câmp obligatoriu
+- `validations.ts`
+  - verifică reguli de business și condiții de flux
+  - de exemplu: relația dintre tipul plății și fluxul de daună, existența pozițiilor valide, blocări la salvare
+
+### Persistență în `sessionStorage`
+
+Pentru unele filtre și stări de pagină, proiectul folosește:
+- `src/lib/pageState.ts`
+
+Prin `sessionStorage`:
+- valorile rămân cât timp sesiunea curentă din browser este activă
+- sunt utile pentru filtre și sortări per pagină
+- nu reprezintă o persistență de business sau o sursă de adevăr
+
+## Limitări cunoscute
+
+Aceste limitări trebuie considerate reale, nu doar temporare:
+
+- nu există backend/API real
+- nu există React Router activ
+- majoritatea modulelor folosesc încă state local
+- nu există store global
+- nu există sincronizare live completă între module
+- unele fluxuri sunt coerente doar la nivel de mock-uri comune
+- aplicația este bună pentru demo, onboarding și iterare de UI, dar nu încă pentru un flux complet persistent de producție
+- build-ul poate raporta warning de chunk mare în Vite
 
 ## Mini-ghid de onboarding pentru începători
 
@@ -260,65 +476,63 @@ Exemple:
 ))}
 ```
 
-Aici, pentru fiecare `pozitie`, React creează câte un rând de tabel.
+### Ce este un helper pur
 
-### De ce există `key={...}` în liste
+Un helper pur este o funcție care:
+- primește date
+- calculează un rezultat
+- nu modifică direct starea aplicației
 
-Când generăm mai multe elemente cu `.map(...)`, React are nevoie de un identificator stabil pentru fiecare element. Acesta este `key`.
+Exemple bune de helperi apar în:
+- `02operational/calculations.ts`
+- `02operational/pages/*helpers.ts`
+- `lib/pageState.ts`
 
-Fără `key`, React nu poate actualiza lista corect și apare warning.
+Avantajul este că logica devine mai ușor de testat și mai ușor de citit decât dacă ar fi amestecată în JSX.
 
-### Ce este `event.target.value`
+### Ce este o componentă container
 
-Când utilizatorul schimbă un `input` sau un `select`, React trimite un `event`.
+O componentă container:
+- deține starea
+- apelează helperi
+- face validări
+- decide ce trimite copiilor prin props
 
-`event.target.value` este valoarea curentă din acel câmp.
+O componentă de prezentare:
+- primește date
+- afișează UI
+- trimite evenimente înapoi
 
-Exemplu:
+### De ce folosim mock-uri comune
 
-```tsx
-onChange={(event) => setNume(event.target.value)}
-```
+Dacă fiecare modul și-ar inventa singur datele demo:
+- aceleași entități ar arăta diferit
+- numerele de documente nu s-ar potrivi
+- ar fi greu de urmărit un flux demo între ecrane
 
-### Ce este un callback
+De aceea folosim `src/mock/` ca sursă comună de seed-uri.
 
-Un callback este o funcție trimisă altei componente, ca acea componentă să poată anunța ceva înapoi.
+### Ce înseamnă persistență în `sessionStorage`
 
-Exemplu:
+`sessionStorage` înseamnă:
+- date păstrate doar în browserul curent
+- doar pe durata sesiunii curente
+- utile pentru filtre, sortări și mici stări de UI
 
-```tsx
-<SelectorVehicul onSelecteaza={setIdVehiculSelectat} />
-```
+Nu înseamnă:
+- bază de date
+- sursă globală de adevăr
+- persistență business
 
-Aici, `SelectorVehicul` nu decide singur ce face aplicația mai departe. El doar apelează callback-ul `onSelecteaza(...)`, iar componenta părinte decide ce actualizează.
+### De ce unele validări sunt în `schemas.ts` și altele în `validations.ts`
 
-### De ce folosim `className` și nu `class`
+Pentru că sunt două întrebări diferite:
 
-În React/JSX folosim `className` pentru clase CSS, deoarece `class` este un cuvânt special în JavaScript.
+- „arată bine inputul?”
+- „poate continua fluxul de business?”
 
-## Feedback în UI
+`schemas.ts` răspunde mai ales la prima întrebare.
 
-Proiectul folosește `sonner` pentru feedback non-blocant:
-- succes la salvare
-- confirmări operaționale
-- erori și avertizări simple
+`validations.ts` răspunde la a doua.
 
-Scopul este înlocuirea treptată a vechilor `alert(...)` cu toast-uri mai potrivite pentru un UI admin.
-
-## Limitări actuale
-
-În starea curentă:
-- nu există backend
-- datele nu se persistă după refresh
-- majoritatea modulelor nu împart încă o stare comună live
-- `02operational` este mai avansat decât restul codului
-
-Acest lucru este acceptabil pentru faza actuală de prototip și demo, dar trebuie avut în vedere pentru următoarele etape.
-
-## Direcție recomandată
-
-Pași rezonabili pentru evoluția frontend-ului:
-- unificarea treptată a tipurilor comune
-- împărțirea unei surse comune de date între modulele care au dependențe reale
-- extinderea folosirii componentelor UI comune
-- conectarea la backend atunci când fluxurile sunt suficient de stabile
+Această separare este folosită mai clar în `02operational` și este o convenție bună de urmat pentru zonele noi ale aplicației.
