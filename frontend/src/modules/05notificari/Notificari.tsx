@@ -1,196 +1,32 @@
-import { useEffect, useMemo, useState } from 'react';
+// src/modules/05notificari/Notificare.tsx
 import { Bell, CheckCheck, Archive, TriangleAlert } from 'lucide-react';
-import { toast } from 'sonner';
 import { ConfirmDialog } from '../../componente/ui/ConfirmDialog';
 import { EmptyState } from '../../componente/ui/EmptyState';
 import { StatCard } from '../../componente/ui/StatCard';
-import { usePageSessionState } from '../../lib/pageState';
-import { notificariMock } from '../../mock/notificari';
-import type { NotificareMock } from '../../mock/types';
-
-type TipNotificare = NotificareMock['tip'];
-type FiltruNotificari = 'Toate' | TipNotificare | 'Arhiva';
-
-interface NotificareStareUI {
-  arhivata: boolean;
-  citit: boolean;
-  stearsa: boolean;
-}
-
-type NotificareMapareUI = Record<number, NotificareStareUI>;
-
-interface ConfirmState {
-  action: 'clear-archive' | 'delete-one';
-  id?: number;
-}
+import { useNotificari, type TipNotificare } from './useNotificari';
 
 interface NotificareProps {
   onNavigate?: (pagina: string) => void;
 }
 
-const STORAGE_KEY = 'notificari-ui-v3';
-
-function stareInitiala(notificare: NotificareMock): NotificareStareUI {
-  return {
-    arhivata: false,
-    citit: notificare.tip === 'Succes',
-    stearsa: false,
-  };
-}
-
 export default function Notificare({ onNavigate }: NotificareProps) {
-  const [filtru, setFiltru] = usePageSessionState<FiltruNotificari>('notificari-filtru', 'Toate');
-  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
-  const [stariUI, setStariUI] = useState<NotificareMapareUI>(() => {
-    if (typeof window === 'undefined') {
-      return {};
-    }
-
-    const salvate = window.localStorage.getItem(STORAGE_KEY);
-    if (!salvate) {
-      return {};
-    }
-
-    try {
-      return JSON.parse(salvate) as NotificareMapareUI;
-    } catch {
-      return {};
-    }
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stariUI));
-  }, [stariUI]);
-
-  // Lista de bază vine din mock layer-ul comun; starea locală salvează doar
-  // ce a făcut utilizatorul cu fiecare element: citit, arhivat sau șters.
-  const notificari = useMemo(
-    () =>
-      notificariMock
-        .map((notificare) => ({
-          ...notificare,
-          ...stareInitiala(notificare),
-          ...(stariUI[notificare.id] ?? {}),
-        }))
-        .filter((notificare) => !notificare.stearsa),
-    [stariUI],
-  );
-
-  const notificariFiltrate = useMemo(() => {
-    return notificari.filter((notificare) => {
-      if (filtru === 'Arhiva') {
-        return notificare.arhivata;
-      }
-
-      if (notificare.arhivata) {
-        return false;
-      }
-
-      if (filtru === 'Toate') {
-        return true;
-      }
-
-      return notificare.tip === filtru;
-    });
-  }, [filtru, notificari]);
-
-  const necititeCount = notificari.filter((notificare) => !notificare.citit && !notificare.arhivata).length;
-  const arhivateCount = notificari.filter((notificare) => notificare.arhivata).length;
-  const avertizariCount = notificari.filter((notificare) => notificare.tip === 'Avertizare' && !notificare.arhivata).length;
-
-  const actualizeazaNotificare = (id: number, modificari: Partial<NotificareStareUI>) => {
-    const notificareBaza = notificariMock.find((item) => item.id === id);
-    setStariUI((previous) => ({
-      ...previous,
-      [id]: {
-        ...(previous[id] ?? (notificareBaza ? stareInitiala(notificareBaza) : { arhivata: false, citit: false, stearsa: false })),
-        ...modificari,
-      },
-    }));
-  };
-
-  const toggleCitit = (id: number) => {
-    const notificare = notificari.find((item) => item.id === id);
-    if (!notificare) return;
-    actualizeazaNotificare(id, { citit: !notificare.citit });
-  };
-
-  const arhiveazaNotificare = (id: number) => {
-    actualizeazaNotificare(id, { arhivata: true, citit: true });
-    toast.success('Notificarea a fost mutată în arhivă.');
-  };
-
-  const restaureazaNotificare = (id: number) => {
-    actualizeazaNotificare(id, { arhivata: false });
-    toast.success('Notificarea a fost restaurată în fluxul principal.');
-  };
-
-  const marcheazaToateCitite = () => {
-    const updates = notificari.reduce<NotificareMapareUI>((acc, notificare) => {
-      if (notificare.arhivata) return acc;
-      acc[notificare.id] = { arhivata: notificare.arhivata, citit: true, stearsa: false };
-      return acc;
-    }, {});
-    setStariUI((previous) => ({ ...previous, ...updates }));
-    toast.success('Toate notificările active au fost marcate ca citite.');
-  };
-
-  const arhiveazaCititele = () => {
-    const updates = notificari.reduce<NotificareMapareUI>((acc, notificare) => {
-      if (!notificare.citit || notificare.arhivata) return acc;
-      acc[notificare.id] = { arhivata: true, citit: true, stearsa: false };
-      return acc;
-    }, {});
-    setStariUI((previous) => ({ ...previous, ...updates }));
-    toast.success('Notificările deja citite au fost arhivate.');
-  };
-
-  const handleConfirm = () => {
-    if (!confirmState) return;
-
-    if (confirmState.action === 'delete-one' && confirmState.id !== undefined) {
-      actualizeazaNotificare(confirmState.id, { stearsa: true });
-      toast.success('Notificarea a fost ștearsă definitiv.');
-    }
-
-    if (confirmState.action === 'clear-archive') {
-      const updates = notificari.reduce<NotificareMapareUI>((acc, notificare) => {
-        if (!notificare.arhivata) return acc;
-        acc[notificare.id] = { arhivata: true, citit: true, stearsa: true };
-        return acc;
-      }, {});
-      setStariUI((previous) => ({ ...previous, ...updates }));
-      toast.success('Arhiva a fost golită.');
-    }
-
-    setConfirmState(null);
-  };
-
-  const handleActionClick = (notificare: NotificareMock) => {
-    if (!notificare.paginaDestinatie) {
-      return;
-    }
-
-    actualizeazaNotificare(notificare.id, { citit: true });
-
-    if (onNavigate) {
-      onNavigate(notificare.paginaDestinatie);
-      return;
-    }
-
-    toast.info('Navigarea nu este disponibilă în acest context.');
-  };
+  const {
+    loading, notificari, notificariFiltrate,
+    filtru, setFiltru, confirmState, setConfirmState,
+    necititeCount, arhivateCount, avertizariCount,
+    toggleCitit, arhiveazaNotificare, restaureazaNotificare,
+    marcheazaToateCitite, arhiveazaCititele, handleConfirm, handleActionClick
+  } = useNotificari(onNavigate);
 
   const getBadgeColor = (tip: TipNotificare) => {
     switch (tip) {
-      case 'Avertizare':
-        return 'border-amber-200 bg-amber-100 text-amber-700';
-      case 'Succes':
-        return 'border-emerald-200 bg-emerald-100 text-emerald-700';
-      default:
-        return 'border-blue-200 bg-blue-100 text-blue-700';
+      case 'Avertizare': return 'border-amber-200 bg-amber-100 text-amber-700';
+      case 'Succes': return 'border-emerald-200 bg-emerald-100 text-emerald-700';
+      default: return 'border-blue-200 bg-blue-100 text-blue-700';
     }
   };
+
+  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă notificările...</div>;
 
   return (
     <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-slate-100 bg-white font-sans shadow-sm">

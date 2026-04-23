@@ -1,134 +1,21 @@
-// Ecranul de facturare pornește din comenzi facturabile demo
-// și simulează emiterea unei facturi fiscale pe baza lor.
-import { useMemo, useState } from 'react';
+// src/modules/03facturare/Facturare.tsx
 import { FileClock, Receipt, Wallet } from 'lucide-react';
-import { toast } from 'sonner';
-import { EmptyState } from '../../componente/ui/EmptyState';
-import { StatCard } from '../../componente/ui/StatCard';
-import { usePageSessionState } from '../../lib/pageState';
-import {
-  obtineComenziFacturabileDinMock,
-  obtineLiniiFacturaDinComandaMock,
-} from '../../mock/facturare';
-import type { ComandaFacturabilaMock, LinieFacturaMock } from '../../mock/types';
-
-type FacturareSortField = 'data' | 'nrComanda' | 'valoare';
-type FacturareSortDir = 'asc' | 'desc';
+import { EmptyState } from '../../../componente/ui/EmptyState';
+import { StatCard } from '../../../componente/ui/StatCard';
+import { useFacturare } from './useFacturare';
 
 export default function Facturare() {
-  // Lista inițială vine din stratul comun de mock-uri.
-  // Componenta păstrează doar interacțiunile locale din sesiunea curentă.
-  const [comenziGata, setComenziGata] = useState<ComandaFacturabilaMock[]>(
-    () => obtineComenziFacturabileDinMock(),
-  );
-  const [comandaSelectata, setComandaSelectata] = useState<ComandaFacturabilaMock | null>(null);
+  const {
+    loading, comenziGata, comenziFiltrate, totalValoareFacturabila,
+    comandaSelectata, setComandaSelectata,
+    cautare, setCautare, sortField, sortDir, handleSort,
+    serieFactura, setSerieFactura, numarFactura, setNumarFactura,
+    termenPlata, setTermenPlata, discountProcent, setDiscountProcent,
+    liniiFactura, subtotal, valoareTVA, valoareDiscount, totalPlata, dataScadenta,
+    handleEmitereFactura
+  } = useFacturare();
 
-  const [serieFactura, setSerieFactura] = useState('F-SAG');
-  const [numarFactura, setNumarFactura] = useState('');
-  const [termenPlata, setTermenPlata] = useState<number>(0);
-  const [discountProcent, setDiscountProcent] = useState<number>(0);
-  const [cautare, setCautare] = usePageSessionState('facturare-cautare', '');
-  const [sortField, setSortField] = usePageSessionState<FacturareSortField>(
-    'facturare-sort-field',
-    'data',
-  );
-  const [sortDir, setSortDir] = usePageSessionState<FacturareSortDir>(
-    'facturare-sort-dir',
-    'desc',
-  );
-
-  const handleSort = (field: FacturareSortField) => {
-    // Click repetat pe aceeași coloană = inversăm direcția sortării.
-    if (sortField === field) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-      return;
-    }
-
-    setSortField(field);
-    setSortDir(field === 'data' ? 'desc' : 'asc');
-  };
-
-  const comenziFiltrate = useMemo(() => {
-    // Lista vizibilă este derivată din:
-    // - comenzi încă nefacturate
-    // - căutarea introdusă
-    // - starea curentă a sortării
-    const termen = cautare.trim().toLowerCase();
-
-    return [...comenziGata]
-      .filter((comanda) => {
-        if (termen === '') return true;
-        return [comanda.nrComanda, comanda.client, comanda.vehicul]
-          .some((camp) => camp.toLowerCase().includes(termen));
-      })
-      .sort((a, b) => {
-        let comparison = 0;
-        if (sortField === 'data') {
-          comparison = a.dataComanda.localeCompare(b.dataComanda);
-        } else if (sortField === 'nrComanda') {
-          comparison = a.nrComanda.localeCompare(b.nrComanda);
-        } else {
-          comparison = a.totalEstimat - b.totalEstimat;
-        }
-
-        return sortDir === 'asc' ? comparison : -comparison;
-      });
-  }, [cautare, comenziGata, sortDir, sortField]);
-
-  const totalValoareFacturabila = comenziGata.reduce(
-    (total, comanda) => total + comanda.totalEstimat,
-    0,
-  );
-
-  const liniiFactura: LinieFacturaMock[] = useMemo(() => {
-    // Liniile documentului depind direct de comanda selectată.
-    if (!comandaSelectata) return [];
-    return obtineLiniiFacturaDinComandaMock(comandaSelectata.idComanda);
-  }, [comandaSelectata]);
-
-  const { subtotal, valoareTVA, valoareDiscount, totalPlata, dataScadenta } = useMemo(() => {
-    // Toate sumele documentului sunt calculate într-un singur loc,
-    // ca să nu împrăștiem formulele financiare prin JSX.
-    const sub = liniiFactura.reduce((acc, linie) => acc + (linie.cantitate * linie.pretUnitar), 0);
-    const disc = sub * (discountProcent / 100);
-    const subDupaDiscount = sub - disc;
-    const tva = subDupaDiscount * 0.19;
-
-    const dataAzi = new Date();
-    dataAzi.setDate(dataAzi.getDate() + termenPlata);
-
-    return {
-      subtotal: sub,
-      valoareDiscount: disc,
-      valoareTVA: tva,
-      totalPlata: subDupaDiscount + tva,
-      dataScadenta: dataAzi.toISOString().split('T')[0],
-    };
-  }, [liniiFactura, discountProcent, termenPlata]);
-
-  const handleEmitereFactura = () => {
-    // În această aplicație demo "emiterea" actualizează doar starea locală
-    // și afișează feedback prin toast.
-    if (!comandaSelectata) {
-      toast.error('Selectează o comandă înainte de emiterea facturii.');
-      return;
-    }
-
-    if (!serieFactura || !numarFactura) {
-      toast.error('Te rog completează seria și numărul facturii.');
-      return;
-    }
-
-    toast.success(
-      `Factura ${serieFactura}-${numarFactura} a fost emisă pentru ${totalPlata.toFixed(2)} RON.`,
-    );
-
-    setComenziGata((prev) => prev.filter((comanda) => comanda.idComanda !== comandaSelectata.idComanda));
-    setComandaSelectata(null);
-    setNumarFactura('');
-    setDiscountProcent(0);
-    setTermenPlata(0);
-  };
+  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă comenzile...</div>;
 
   return (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
@@ -217,39 +104,39 @@ export default function Facturare() {
           ) : (
             <div className="overflow-hidden rounded-xl border border-slate-200">
               <table className="min-w-full bg-white text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-              <tr>
-                <th className="py-4 px-6">Nr. Comandă</th>
-                <th className="py-4 px-6">Data Pregătire</th>
-                <th className="py-4 px-6">Client / Vehicul</th>
-                <th className="py-4 px-6 text-right">Deviz Estimat</th>
-                <th className="py-4 px-6 text-center">Acțiune</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {comenziFiltrate.map((comanda) => (
-                  <tr key={comanda.idComanda} className="hover:bg-indigo-50/50 transition-colors group">
-                    <td className="py-4 px-6 font-bold text-slate-800">{comanda.nrComanda}</td>
-                    <td className="py-4 px-6 text-slate-500">{comanda.dataComanda}</td>
-                    <td className="py-4 px-6 text-slate-600">
-                      <div className="font-semibold text-slate-700">{comanda.client}</div>
-                      <div className="text-xs text-slate-500">{comanda.vehicul}</div>
-                    </td>
-                    <td className="py-4 px-6 text-right font-semibold text-slate-700">
-                      {comanda.totalEstimat.toFixed(2)} RON
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <button
-                        onClick={() => setComandaSelectata(comanda)}
-                        className="text-indigo-600 hover:text-indigo-800 font-bold text-sm tracking-wide hover:underline"
-                      >
-                        Deschide Factura ➔
-                      </button>
-                    </td>
+                <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th className="py-4 px-6">Nr. Comandă</th>
+                    <th className="py-4 px-6">Data Pregătire</th>
+                    <th className="py-4 px-6">Client / Vehicul</th>
+                    <th className="py-4 px-6 text-right">Deviz Estimat</th>
+                    <th className="py-4 px-6 text-center">Acțiune</th>
                   </tr>
-                ))}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {comenziFiltrate.map((comanda) => (
+                    <tr key={comanda.idComanda} className="hover:bg-indigo-50/50 transition-colors group">
+                      <td className="py-4 px-6 font-bold text-slate-800">{comanda.nrComanda}</td>
+                      <td className="py-4 px-6 text-slate-500">{comanda.dataComanda}</td>
+                      <td className="py-4 px-6 text-slate-600">
+                        <div className="font-semibold text-slate-700">{comanda.client}</div>
+                        <div className="text-xs text-slate-500">{comanda.vehicul}</div>
+                      </td>
+                      <td className="py-4 px-6 text-right font-semibold text-slate-700">
+                        {comanda.totalEstimat.toFixed(2)} RON
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        <button
+                          onClick={() => setComandaSelectata(comanda)}
+                          className="text-indigo-600 hover:text-indigo-800 font-bold text-sm tracking-wide hover:underline"
+                        >
+                          Deschide Factura ➔
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </>

@@ -205,7 +205,7 @@ export default function PreluareAutoHeader({
               {mesajeBlocare.length > 0 ? (
                 <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100/60 pt-3">
                   <span className="mr-1 text-xs font-bold uppercase tracking-wide text-rose-600">
-                    Câmpuri obligatorii lipsă:
+                    Câmpuri obligatorii sau observații:
                   </span>
                   {mesajeBlocare.map((mesaj) => (
                     <span

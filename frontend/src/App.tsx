@@ -5,7 +5,7 @@
 import { useState } from "react";
 import Sidebar from "./componente/Sidebar";
 import Operational from "./modules/02operational/Operational";
-import Facturare from "./modules/03facturare/Facturare";
+import Facturare from "./modules/03facturare/facturare/Facturare";
 import Incasari from "./modules/04incasari/Incasari";
 import Penalizare from "./modules/03facturare/penalizari/Penalizare";
 import Oferta from "./modules/03facturare/oferte/Oferta";
@@ -15,9 +15,9 @@ import Manopera from "./modules/00catalog/manopera/Manopera";
 import { Client } from './modules/01entitati/client/Client';
 import { Angajat } from './modules/01entitati/angajat/Angajat';
 import { Asigurator } from './modules/01entitati/asigurator/Asigurator';
-import Notificare from "./modules/05notificari/Notificare";
+import Notificare from "./modules/05notificari/Notificari";
 
-import IstoricFacturare from "./modules/03facturare/IstoricFacturare";
+import IstoricFacturare from "./modules/03facturare/istoric/IstoricFacturare";
 
 export default function App() {
   // `paginaCurenta` joacă rolul de "router local".

@@ -1,74 +1,23 @@
-// Ecranul de încasări folosește același set de facturi emise ca facturarea.
-// Aici nu mai ținem mock-uri locale rupte de restul aplicației: filtrăm facturile
-// restante comune și păstrăm doar starea locală a formularului din sesiunea curentă.
+// src/modules/04incasari/Incasari.tsx
 import { BanknoteArrowDown, Receipt, Wallet } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { toast } from 'sonner';
+import { useEffect, useRef } from 'react';
 import { EmptyState } from '../../componente/ui/EmptyState';
 import { StatCard } from '../../componente/ui/StatCard';
-import { usePageSessionState } from '../../lib/pageState';
-import { facturiRestanteMock, incasariMock } from '../../mock/incasari';
-import type { FacturaMock } from '../../mock/types';
-
-interface FacturaAlocabila extends FacturaMock {
-  sumaAlocata: number | '';
-}
-
-interface ClientPlata {
-  idClient: number;
-  identificatorFiscal: string;
-  nume: string;
-}
-
-const METODE_PLATA = [
-  { id: 'Transfer Bancar', label: 'OP / Bancă' },
-  { id: 'POS', label: 'Card (POS)' },
-  { id: 'Cash', label: 'Numerar / Bon' },
-] as const;
-
-type ModalitatePlata = (typeof METODE_PLATA)[number]['id'];
-
-function dataAziISO() {
-  return new Date().toISOString().split('T')[0];
-}
-
-function formatSuma(valoare: number) {
-  return `${valoare.toFixed(2)} RON`;
-}
-
-function formatData(data: string) {
-  return new Date(data).toLocaleDateString('ro-RO');
-}
-
-const clientiDisponibili: ClientPlata[] = Array.from(
-  facturiRestanteMock.reduce((map, factura) => {
-    if (!map.has(factura.idClient)) {
-      map.set(factura.idClient, {
-        idClient: factura.idClient,
-        identificatorFiscal: factura.idClient < 1000 ? `ID client #${factura.idClient}` : `Client #${factura.idClient}`,
-        nume: factura.client,
-      });
-    }
-    return map;
-  }, new Map<number, ClientPlata>()),
-).map(([, client]) => client);
+import { useIncasari, METODE_PLATA, formatSuma, formatData } from './useIncasari';
 
 export default function Incasari() {
-  // Păstrăm căutarea clientului în sesiune ca utilizatorul să poată reveni pe pagină
-  // fără să piardă termenul introdus.
-  const [searchClient, setSearchClient] = usePageSessionState('incasari-search-client', '');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const {
+    loading, facturiRestanteBD, istoricIncasariBD,
+    searchClient, showDropdown, setShowDropdown,
+    idClientSelectat, sumaIncasata, setSumaIncasata, modalitate, setModalitate,
+    dataIncasare, setDataIncasare, referinta, setReferinta,
+    clientiFiltrati, facturiRestante, totalDatorieClient, totalAlocat,
+    sumaNum, baniRamasi, areEroareSume, isReferintaObligatorie, referintaLipsa, facturiAlocate,
+    handleSelectClient, handleSchimbareCautare, handleAlocareSuma, aplicaSumaMaxima,
+    resetaAlocari, handleSalvare
+  } = useIncasari();
 
-  const [idClientSelectat, setIdClientSelectat] = useState<number | null>(null);
-  const [sumaIncasata, setSumaIncasata] = useState<number | ''>('');
-  const [modalitate, setModalitate] = usePageSessionState<ModalitatePlata>(
-    'incasari-modalitate',
-    'Transfer Bancar',
-  );
-  const [dataIncasare, setDataIncasare] = useState<string>(dataAziISO());
-  const [referinta, setReferinta] = useState('');
-  const [facturiRestante, setFacturiRestante] = useState<FacturaAlocabila[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -76,143 +25,11 @@ export default function Incasari() {
         setShowDropdown(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [setShowDropdown]);
 
-  const clientiFiltrati = useMemo(() => {
-    const termen = searchClient.trim().toLowerCase();
-    if (termen === '') {
-      return clientiDisponibili;
-    }
-
-    return clientiDisponibili.filter((client) =>
-      [client.nume, client.identificatorFiscal].some((camp) =>
-        camp.toLowerCase().includes(termen),
-      ),
-    );
-  }, [searchClient]);
-
-  const clientSelectat = useMemo(
-    () => clientiDisponibili.find((client) => client.idClient === idClientSelectat) ?? null,
-    [idClientSelectat],
-  );
-
-  const totalDatorieClient = useMemo(
-    () => facturiRestante.reduce((acc, factura) => acc + factura.restDePlata, 0),
-    [facturiRestante],
-  );
-
-  const totalAlocat = useMemo(
-    () => facturiRestante.reduce((acc, factura) => acc + (Number(factura.sumaAlocata) || 0), 0),
-    [facturiRestante],
-  );
-
-  const sumaNum = Number(sumaIncasata) || 0;
-  const baniRamasi = sumaNum - totalAlocat;
-  const areEroareSume = baniRamasi < 0;
-  const isReferintaObligatorie = modalitate === 'Transfer Bancar' || modalitate === 'POS';
-  const referintaLipsa = isReferintaObligatorie && referinta.trim() === '';
-  const facturiAlocate = facturiRestante.filter((factura) => Number(factura.sumaAlocata) > 0).length;
-
-  const handleSelectClient = (client: ClientPlata) => {
-    setIdClientSelectat(client.idClient);
-    setSearchClient(client.nume);
-    setShowDropdown(false);
-    setSumaIncasata('');
-    setReferinta('');
-
-    const facturiClient = facturiRestanteMock
-      .filter((factura) => factura.idClient === client.idClient)
-      .map((factura) => ({ ...factura, sumaAlocata: '' as const }));
-
-    setFacturiRestante(facturiClient);
-  };
-
-  const handleSchimbareCautare = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchClient(event.target.value);
-    setShowDropdown(true);
-
-    if (idClientSelectat !== null) {
-      setIdClientSelectat(null);
-      setFacturiRestante([]);
-      setSumaIncasata('');
-    }
-  };
-
-  // Alocarea nu mai rescrie automat "banii primiți". Asta repară regresia în care
-  // suma încasată devenea dependentă de tabel, deși în realitate utilizatorul o introduce separat.
-  const handleAlocareSuma = (idFactura: number, valoare: string) => {
-    setFacturiRestante((previous) =>
-      previous.map((factura) => {
-        if (factura.idFactura !== idFactura) return factura;
-
-        if (valoare === '') {
-          return { ...factura, sumaAlocata: '' as const };
-        }
-
-        const valoareNumerica = Number(valoare);
-        const clamped = Math.min(Math.max(0, valoareNumerica), factura.restDePlata);
-        return { ...factura, sumaAlocata: Number.isFinite(clamped) ? clamped : '' };
-      }),
-    );
-  };
-
-  const aplicaSumaMaxima = (idFactura: number, restDePlata: number) => {
-    handleAlocareSuma(idFactura, restDePlata.toString());
-  };
-
-  const resetaAlocari = () => {
-    setFacturiRestante((previous) =>
-      previous.map((factura) => ({ ...factura, sumaAlocata: '' as const })),
-    );
-  };
-
-  const reseteazaFormular = () => {
-    setIdClientSelectat(null);
-    setSearchClient('');
-    setSumaIncasata('');
-    setReferinta('');
-    setModalitate('Transfer Bancar');
-    setDataIncasare(dataAziISO());
-    setFacturiRestante([]);
-  };
-
-  const handleSalvare = (event: FormEvent) => {
-    event.preventDefault();
-
-    if (idClientSelectat === null || sumaNum <= 0) {
-      toast.error('Selectează clientul și introdu suma primită.');
-      return;
-    }
-
-    if (facturiAlocate === 0) {
-      toast.error('Alocă suma pe cel puțin o factură restantă.');
-      return;
-    }
-
-    if (areEroareSume) {
-      toast.error('Suma repartizată pe facturi depășește suma încasată.');
-      return;
-    }
-
-    if (referintaLipsa) {
-      toast.error(`Numărul documentului este obligatoriu pentru plata prin ${modalitate}.`);
-      return;
-    }
-
-    const mesajRest =
-      baniRamasi > 0
-        ? ` Au rămas ${formatSuma(baniRamasi)} nealocați pentru avans sau regularizare ulterioară.`
-        : '';
-
-    toast.success(
-      `Încasarea pentru ${clientSelectat?.nume ?? 'client'} a fost salvată cu ${formatSuma(totalAlocat)} repartizați.${mesajRest}`,
-    );
-
-    reseteazaFormular();
-  };
+  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă datele de încasări...</div>;
 
   return (
     <div className="mx-auto max-w-7xl font-sans">
@@ -226,18 +43,18 @@ export default function Incasari() {
       <div className="mb-6 grid gap-3 md:grid-cols-3">
         <StatCard
           label="Facturi restante"
-          value={facturiRestanteMock.length}
+          value={facturiRestanteBD.length}
           icon={<Receipt className="h-4 w-4" />}
         />
         <StatCard
           label="Valoare deschisă"
-          value={formatSuma(facturiRestanteMock.reduce((total, factura) => total + factura.restDePlata, 0))}
+          value={formatSuma(facturiRestanteBD.reduce((total, factura) => total + factura.restDePlata, 0))}
           tone="warning"
           icon={<Wallet className="h-4 w-4" />}
         />
         <StatCard
           label="Încasări demo"
-          value={incasariMock.length}
+          value={istoricIncasariBD.length}
           tone="success"
           icon={<BanknoteArrowDown className="h-4 w-4" />}
         />
@@ -256,12 +73,7 @@ export default function Incasari() {
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
               <input
@@ -415,13 +227,9 @@ export default function Incasari() {
                   className="w-full rounded-2xl border-2 border-slate-700 bg-slate-800 px-5 py-4 text-3xl font-light text-white outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500"
                   placeholder="0.00"
                   value={sumaIncasata}
-                  onChange={(event) =>
-                    setSumaIncasata(event.target.value === '' ? '' : Number(event.target.value))
-                  }
+                  onChange={(event) => setSumaIncasata(event.target.value === '' ? '' : Number(event.target.value))}
                 />
-                <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-slate-500">
-                  RON
-                </span>
+                <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-slate-500">RON</span>
               </div>
             </div>
 
@@ -467,9 +275,7 @@ export default function Incasari() {
                       ? 'border-rose-500/50 focus:border-rose-500'
                       : 'border-slate-600 focus:border-indigo-500'
                   }`}
-                  placeholder={
-                    modalitate === 'Cash' ? 'Ex: Nr. bon fiscal (opțional)' : 'Ex: Nr. OP / POS'
-                  }
+                  placeholder={modalitate === 'Cash' ? 'Ex: Nr. bon fiscal (opțional)' : 'Ex: Nr. OP / POS'}
                   value={referinta}
                   onChange={(event) => setReferinta(event.target.value)}
                 />

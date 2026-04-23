@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Search, Users, Building, Wallet, PenLine, Ban, CheckCircle2 } from 'lucide-react';
+import { Search, Users, Building, Wallet, PenLine, Ban, CheckCircle2, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { PageHeader } from '../../../componente/ui/PageHeader';
 import { StatCard } from '../../../componente/ui/StatCard';
 import { Card, CardContent } from '../../../componente/ui/Card';
@@ -12,26 +12,26 @@ import { Button } from '../../../componente/ui/Button';
 import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
 import { EmptyState } from '../../../componente/ui/EmptyState';
 import { clientSchema, type ClientFormValues } from '../schemas';
-import { useClient } from './useClient';
+import { useClient, type SortFieldClient } from './useClient';
 import type { ClientEntity } from '../entitati.service';
 
 export function Client() {
-  const { listaFiltrata, loading, cautare, setCautare, arataInactivi, setArataInactivi, salveaza, schimbaStatus, stats } = useClient();
+  const { 
+    listaFiltrata, loading, cautare, setCautare, arataInactivi, setArataInactivi, 
+    sortField, sortDir, toggleSort, 
+    salveaza, schimbaStatus, stats 
+  } = useClient();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [confirmStatus, setConfirmStatus] = useState<{ id: number, action: 'Activ' | 'Inactiv' } | null>(null);
 
-  // Am scos `watch` de aici și am adus `control`
   const { register, control, handleSubmit, formState: { errors }, reset } = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
     defaultValues: { tipClient: 'PF', soldDebitor: 0, status: 'Activ' }
   });
 
-  // Am folosit useWatch pentru a nu sparge memoizarea React Compiler-ului
-  const tipClient = useWatch({
-    control,
-    name: 'tipClient',
-  });
+  const tipClient = useWatch({ control, name: 'tipClient' });
 
   const deschideAdaugare = () => { reset({ tipClient: 'PF', soldDebitor: 0, status: 'Activ' }); setEditId(null); setIsFormOpen(true); };
   const deschideEditare = (client: ClientEntity) => { reset(client); setEditId(client.idClient); setIsFormOpen(true); };
@@ -39,6 +39,11 @@ export function Client() {
   const onSubmit = async (data: ClientFormValues) => {
     await salveaza(data, editId ?? undefined);
     setIsFormOpen(false);
+  };
+
+  const renderSortIcon = (field: SortFieldClient) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 text-slate-400" />;
+    return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 text-indigo-600" /> : <ArrowDown className="h-3 w-3 text-indigo-600" />;
   };
 
   if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă datele...</div>;
@@ -78,6 +83,7 @@ export function Client() {
             </label>
           </div>
 
+          {/* AICI ESTE FORMULARUL COMPLET CARE LISPEA */}
           {isFormOpen && (
             <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
               <h3 className="mb-4 text-lg font-bold text-slate-800">{editId ? 'Editare Client' : 'Adăugare Client Nou'}</h3>
@@ -121,7 +127,21 @@ export function Client() {
             <div className="overflow-x-auto rounded-xl border border-slate-200">
               <table className="min-w-full text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
-                  <tr><th className="px-6 py-4">Nume / Companie</th><th className="px-6 py-4">Contact</th><th className="px-6 py-4">Sold</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Acțiuni</th></tr>
+                  <tr>
+                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 select-none" onClick={() => toggleSort('nume')}>
+                      <div className="flex items-center gap-2">Nume / Companie {renderSortIcon('nume')}</div>
+                    </th>
+                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 select-none" onClick={() => toggleSort('telefon')}>
+                      <div className="flex items-center gap-2">Contact {renderSortIcon('telefon')}</div>
+                    </th>
+                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 select-none" onClick={() => toggleSort('soldDebitor')}>
+                      <div className="flex items-center gap-2">Sold {renderSortIcon('soldDebitor')}</div>
+                    </th>
+                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 select-none" onClick={() => toggleSort('status')}>
+                      <div className="flex items-center gap-2">Status {renderSortIcon('status')}</div>
+                    </th>
+                    <th className="px-6 py-4 text-right">Acțiuni</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {listaFiltrata.map(client => (
@@ -152,6 +172,7 @@ export function Client() {
         </CardContent>
       </Card>
 
+      {/* AICI ESTE DIALOGUL COMPLET CARE LIPSEA */}
       <ConfirmDialog 
         isOpen={!!confirmStatus}
         title={confirmStatus?.action === 'Inactiv' ? 'Dezactivare Client' : 'Reactivare Client'}
