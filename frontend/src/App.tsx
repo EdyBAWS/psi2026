@@ -9,12 +9,12 @@ import Facturare from "./modules/03facturare/Facturare";
 import Incasari from "./modules/04incasari/Incasari";
 import Penalizare from "./modules/03facturare/penalizari/Penalizare";
 import Oferta from "./modules/03facturare/oferte/Oferta";
-import Piesa from "./modules/00catalog/piese/Piesa";
+import Piesa from "./modules/00catalog/piesa/Piesa";
 import Manopera from "./modules/00catalog/manopera/Manopera";
 
-import Client from "./modules/01entitati/clienti/Client";
-import Angajat from "./modules/01entitati/angajati/Angajat";
-import Asigurator from "./modules/01entitati/asiguratori/Asigurator";
+import { Client } from './modules/01entitati/client/Client';
+import { Angajat } from './modules/01entitati/angajat/Angajat';
+import { Asigurator } from './modules/01entitati/asigurator/Asigurator';
 import Notificare from "./modules/05notificari/Notificare";
 
 import IstoricFacturare from "./modules/03facturare/IstoricFacturare";
