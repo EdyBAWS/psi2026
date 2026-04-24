@@ -1,7 +1,7 @@
 // Tabelul este componenta vizuală a listei de comenzi.
 // El nu filtrează și nu sortează singur datele; primește deja o listă pregătită
 // de pagina părinte și doar o afișează.
-import StatusBadge from "../../components/StatusBadge";
+import StatusBadge from "../../../shared-components/StatusBadge";
 import type {
   ComandaFiltrataContext,
   GestiuneSortDir,

@@ -3,8 +3,8 @@
 // datele principale pentru a crea unul nou la salvarea comenzii.
 // Componenta nu salvează nimic direct. Ea doar editează starea de formular
 // primită prin `value` și trimite modificările înapoi prin `onChange`.
-import type { StareDosarAsigurare } from "../formState";
-import type { Asigurator, DosarDauna, StatusDosar, Vehicul } from "../types";
+import type { StareDosarAsigurare } from "../../../receptie/formState";
+import type { Asigurator, DosarDauna, StatusDosar, Vehicul } from "../../../types";
 
 interface SelectorDosarProps {
   asiguratori: Asigurator[];

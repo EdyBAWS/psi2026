@@ -6,7 +6,7 @@ import {
   calculeazaRezumatPozitii,
   comandaEsteActiva,
   comandaEsteIntarziata,
-} from "../calculations";
+} from "../../calculations";
 import type {
   Asigurator,
   Client,
@@ -16,7 +16,7 @@ import type {
   PozitieComanda,
   StatusComanda,
   Vehicul,
-} from "../types";
+} from "../../types";
 
 export type GestiuneSortField =
   | "nrComanda"

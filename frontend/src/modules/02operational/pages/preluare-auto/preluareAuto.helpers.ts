@@ -1,16 +1,16 @@
 // Fișierul conține helperi puri pentru pagina `PreluareAuto`.
 // "Pur" înseamnă că funcțiile de aici nu modifică direct starea React
 // și nu afișează UI; ele doar calculează și întorc rezultate.
-import { calculeazaRezumatPozitii } from "../calculations";
-import { suntPozitiiValide } from "../validations";
+import { calculeazaRezumatPozitii } from "../../calculations";
+import { suntPozitiiValide } from "../../receptie/validations";
 import type {
   Client,
   ComandaService,
   DosarDauna,
   PozitieComandaDraft,
   Vehicul,
-} from "../types";
-import type { DetaliiPreluareForm } from "../formState";
+} from "../../types";
+import type { DetaliiPreluareForm } from "../../receptie/formState";
 
 export const formatSuma = (valoare: number) =>
   new Intl.NumberFormat("ro-RO", {

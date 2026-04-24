@@ -3,8 +3,8 @@
 // Acesta este un pattern important pentru începători:
 // - componenta copil afișează și colectează input-uri
 // - componenta părinte decide când datele sunt valide și când se salvează
-import TabelPozitii from "./TabelPozitii";
-import type { DetaliiPreluareForm } from "../formState";
+import TabelPozitii from "../../../shared-components/TabelPozitii";
+import type { DetaliiPreluareForm } from "../../../receptie/formState";
 import type {
   CatalogKit,
   CatalogManopera,
@@ -12,7 +12,7 @@ import type {
   Mecanic,
   PozitieComandaDraft,
   Vehicul,
-} from "../types";
+} from "../../../types";
 
 interface FormComandaProps {
   blocheazaTipPlataAsigurare: boolean;

@@ -10,7 +10,7 @@ import type {
   StatusDosar,
   TipPlata,
   TipPolita,
-} from "./types";
+} from "../types";
 
 // Această structură descrie doar starea vizibilă în formularul de daună.
 // De exemplu, datele sunt păstrate ca string pentru input-uri HTML de tip `date`,

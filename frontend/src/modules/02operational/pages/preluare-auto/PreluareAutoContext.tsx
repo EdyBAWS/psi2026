@@ -2,7 +2,7 @@
 // cine este clientul, ce vehicul a fost ales și dacă lucrarea merge pe asigurare.
 // Starea rămâne în componenta părinte; aici doar afișăm datele și trimitem evenimentele înapoi.
 import type { Client, ComandaService, Vehicul } from "../../types";
-import { formatData } from "../preluareAuto.helpers";
+import { formatData } from "./preluareAuto.helpers";
 
 interface PreluareAutoContextProps {
   clientSelectat: Client | null;

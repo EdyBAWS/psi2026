@@ -2,7 +2,7 @@
 // de business să fie mai ușor de citit și testat decât dacă ar rămâne în JSX.
 // Pagina `PreluareAuto` trimite starea curentă, iar acest fișier întoarce
 // rezultatul într-o formă ușor de afișat în interfață.
-import type { ComandaService, PozitieComandaDraft, Vehicul } from "./types";
+import type { ComandaService, PozitieComandaDraft, Vehicul } from "../types";
 import type { DetaliiPreluareForm, StareDosarAsigurare } from "./formState";
 import { dosarNouSchema } from "./schemas";
 
