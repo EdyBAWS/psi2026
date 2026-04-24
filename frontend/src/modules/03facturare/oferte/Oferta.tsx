@@ -1,122 +1,36 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import {
-  facturiEmiseMock,
-  obtineLiniiFacturaEmisaDinMock,
-} from '../../../mock/facturare';
-import type { FacturaMock } from '../../../mock/types';
+// src/modules/03facturare/oferte/Oferta.tsx
+import { useEffect, useRef } from 'react';
+import { useOferta } from './useOferta';
 
 export default function Oferta() {
-  const [idFacturaSelectata, setIdFacturaSelectata] = useState<number | ''>('');
-  const [tipOperatiune, setTipOperatiune] = useState<'discount' | 'storno'>('discount');
+  const {
+    loading, factura, facturiFiltrate, liniiFactura,
+    idFacturaSelectata, setIdFacturaSelectata,
+    tipOperatiune, setTipOperatiune,
+    searchTerm, setSearchTerm,
+    isDropdownOpen, setIsDropdownOpen,
+    tipDiscount, setTipDiscount,
+    valoareDiscount, setValoareDiscount,
+    motivOperatiune, setMotivOperatiune,
+    liniiStorno,
+    calculeFinale,
+    handleSelectFactura, toggleLinieStorno, handleSalvare
+  } = useOferta();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [tipDiscount, setTipDiscount] = useState<'procent' | 'valoare'>('procent');
-  const [valoareDiscount, setValoareDiscount] = useState<number>(0);
-  const [motivOperatiune, setMotivOperatiune] = useState('');
-  const [liniiStorno, setLiniiStorno] = useState<number[]>([]);
-
-  const facturiFiltrate = useMemo(() => {
-    if (!searchTerm) return facturiEmiseMock;
-    const term = searchTerm.toLowerCase();
-    return facturiEmiseMock.filter(
-      (factura) =>
-        factura.numar.toLowerCase().includes(term) ||
-        factura.client.toLowerCase().includes(term),
-    );
-  }, [searchTerm]);
-
-  const factura = useMemo(
-    () => facturiEmiseMock.find((item) => item.idFactura === idFacturaSelectata) || null,
-    [idFacturaSelectata],
-  );
-
-  const liniiFactura = useMemo(
-    () => (factura ? obtineLiniiFacturaEmisaDinMock(factura.idFactura) : []),
-    [factura],
-  );
-
+  // Logica pur legată de DOM (Click Outside) o lăsăm în componenta de UI
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [setIsDropdownOpen]);
 
-  const handleSelectFactura = (facturaGasita: FacturaMock) => {
-    setIdFacturaSelectata(facturaGasita.idFactura);
-    setSearchTerm(`${facturaGasita.numar} | ${facturaGasita.client}`);
-    setIsDropdownOpen(false);
-    setValoareDiscount(0);
-    setLiniiStorno([]);
-  };
-
-  const toggleLinieStorno = (idLinie: number) => {
-    setLiniiStorno((prev) =>
-      prev.includes(idLinie) ? prev.filter((id) => id !== idLinie) : [...prev, idLinie],
-    );
-  };
-
-  const calculeFinale = useMemo(() => {
-    if (!factura) return null;
-
-    let sumaScazuta = 0;
-
-    if (tipOperatiune === 'discount') {
-      sumaScazuta =
-        tipDiscount === 'procent'
-          ? factura.restDePlata * (valoareDiscount / 100)
-          : valoareDiscount;
-    } else {
-      sumaScazuta = liniiFactura
-        .filter((linie) => liniiStorno.includes(linie.idLinie))
-        .reduce((acc, linie) => acc + (linie.cantitate * linie.pretUnitar), 0);
-    }
-
-    sumaScazuta = Math.min(sumaScazuta, factura.restDePlata);
-    return { sumaScazuta, noulRestDePlata: factura.restDePlata - sumaScazuta };
-  }, [factura, tipOperatiune, tipDiscount, valoareDiscount, liniiFactura, liniiStorno]);
-
-  const handleSalvare = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!factura) {
-      toast.error('Selectează o factură mai întâi.');
-      return;
-    }
-
-    if (!motivOperatiune) {
-      toast.error('Motivul sau codul campaniei este obligatoriu.');
-      return;
-    }
-
-    if (tipOperatiune === 'discount') {
-      toast.success(
-        `Discount aplicat pe factura ${factura.numar}: -${calculeFinale?.sumaScazuta.toFixed(2)} RON.`,
-      );
-    } else {
-      if (liniiStorno.length === 0) {
-        toast.error('Selectează cel puțin o linie pentru a emite factura storno.');
-        return;
-      }
-      toast.success(
-        `Factura storno a fost pregătită pentru ${liniiStorno.length} articole în valoare de ${calculeFinale?.sumaScazuta.toFixed(2)} RON.`,
-      );
-    }
-
-    setIdFacturaSelectata('');
-    setSearchTerm('');
-    setMotivOperatiune('');
-    setValoareDiscount(0);
-    setLiniiStorno([]);
-  };
+  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă datele...</div>;
 
   return (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 max-w-4xl mx-auto">

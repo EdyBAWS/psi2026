@@ -1,32 +1,37 @@
 # Service Auto G
 
-`Service Auto G` este un frontend administrativ pentru un service auto. Proiectul este construit ca aplicație `React + TypeScript + Vite` și modelează fluxuri interne precum catalogul de piese și manoperă, gestiunea entităților de bază, recepția auto, comenzile de service, facturarea, încasările și notificările.
+`Service Auto G` este, în starea actuală a repo-ului, în principal frontend-ul administrativ al unei aplicații pentru service auto. Proiectul modelează fluxuri precum catalogul de piese și manoperă, gestiunea entităților de bază, recepția auto, comenzile de service, facturarea, încasările și notificările.
 
-În forma actuală, proiectul este un MVP frontend-only:
-- nu are backend
-- nu persistă datele după refresh
-- folosește în principal `useState` și date mock
-- are un modul operațional mai avansat decât restul aplicației
+În forma actuală, proiectul este un MVP tehnic `frontend-only`:
+
+- nu are backend real
+- nu are API integrat
+- nu persistă datele de business după refresh
+- folosește date demo/mock și stare locală în multe zone
+- are deja o structură suficient de matură pentru iterare și extindere incrementală
 
 ## Stack
 
 - React 19
 - TypeScript
-- Vite
+- Vite 8
 - Tailwind CSS v4
 - ESLint
-- `lucide-react` pentru iconografie
-- `clsx` + `tailwind-merge` + `class-variance-authority` pentru compunerea claselor și a variantelor UI
-- `react-hook-form` + `zod` pentru formularele moderne
+- `lucide-react` pentru iconuri
+- `clsx`, `tailwind-merge`, `class-variance-authority` pentru compunerea claselor UI
+- `react-hook-form` + `zod` pentru formulare și validare
 - `sonner` pentru toast-uri
 
-Observații:
-- `react-router-dom` există în dependințe, dar aplicația nu folosește React Router în acest moment
-- navigația este controlată prin stare locală în `frontend/src/App.tsx`
+Observații importante:
+
+- `react-router-dom` este instalat, dar nu este folosit în implementarea actuală
+- navigația este state-based în `frontend/src/App.tsx`
+- nu există store global de stare
 
 ## Pornire rapidă
 
 Cerințe:
+
 - Node.js 20+
 - npm
 
@@ -38,7 +43,7 @@ npm install
 npm run dev
 ```
 
-Verificări:
+Verificări standard:
 
 ```bash
 cd frontend
@@ -49,133 +54,128 @@ npm run build
 ## Arhitectură generală
 
 Frontend-ul pornește din:
+
 - `frontend/src/main.tsx`
 
 Shell-ul principal este format din:
+
 - `frontend/src/App.tsx`
 - `frontend/src/componente/Sidebar.tsx`
 
-Aplicația nu folosește router. `App.tsx` păstrează un `paginaCurenta` în `useState` și alege pagina activă printr-un `switch`. `Sidebar.tsx` doar schimbă acea stare prin `setPagina(...)`.
+Aplicația nu folosește router activ. `App.tsx` păstrează `paginaCurenta` într-un `useState` și decide pagina afișată printr-un `switch`. `Sidebar.tsx` schimbă această stare.
+
+În practică:
+
+- repo-ul conține în principal frontend-ul
+- frontend-ul este modularizat pe domenii funcționale
+- documentația detaliată pentru implementarea frontend-ului este în `frontend/README.md`
 
 ## Module principale
 
 ### `00catalog`
-Conține ecrane pentru:
+
 - piese auto
 - manoperă
 
-Aceste pagini sunt încă simple, locale, și folosesc date ținute în componentă. Au primit însă feedback modernizat cu toast-uri și unele elemente UI comune.
+Ecrane demo/CRUD care pornesc din mock-uri comune și folosesc feedback prin toast-uri.
 
 ### `01entitati`
-Conține ecrane pentru:
+
 - clienți
 - angajați
 - asigurători
 
-Aceste pagini folosesc acum:
-- `react-hook-form`
-- `zod`
-- componente UI comune
-- toast-uri pentru operațiile principale
-
-În continuare, datele sunt locale și nu se păstrează între refresh-uri.
+Folosește `react-hook-form`, `zod`, componente UI comune și confirmări UI.
 
 ### `02operational`
-Acesta este modulul cel mai matur și cel mai apropiat de un flux real de business.
+
+Modulul cel mai matur și cea mai bună referință pentru logică de business mai complexă.
 
 Acoperă:
+
 - preluare auto
 - selecție vehicul și context client
-- dosar de daună
+- flux de daună / asigurare
 - creare comandă service
 - poziții de deviz
-- calcule financiare
-- validări de business
-- gestiune comenzi cu filtre și panou de detalii
-
-Structura lui internă:
-
-```text
-frontend/src/modules/02operational/
-├── Operational.tsx
-├── types.ts
-├── formState.ts
-├── calculations.ts
-├── validations.ts
-├── schemas.ts
-├── mockData.ts
-├── components/
-├── pages/
-├── vehicule/
-├── comenziservice/
-└── daune/
-```
-
-Puncte importante:
-- `Operational.tsx` este containerul principal al modulului
-- în sidebar există două intrări separate:
-  - `Preluare Auto`
-  - `Gestiune Comenzi`
-- `PreluareAuto.tsx` orchestrează fluxul de recepție
-- `GestiuneComenzi.tsx` este pagina de listare și inspecție
-- `types.ts` definește tipurile de domeniu
-- `formState.ts` definește starea de formular și draft-urile
-- `calculations.ts` centralizează formulele
-- `validations.ts` centralizează regulile de business
-- `schemas.ts` introduce validări `zod` pentru formele relevante
-- `mockData.ts` oferă date locale realiste pentru demo
+- calcule și validări
+- gestiune comenzi
 
 ### `03facturare`
-Conține:
+
 - facturare comenzi
-- campanii / oferte
+- istoric facturare
+- oferte / campanii
 - penalizări
 
-Modulul folosește acum feedback prin toast-uri și componente UI comune. `Facturare.tsx` primește comenzile prin `App.tsx`, dar în prezent acestea sunt tot date mock, nu stare comună live cu modulul operațional.
-
 ### `04incasari`
-Conține un ecran pentru înregistrarea încasărilor și alocarea sumelor pe facturi. Folosește toast-uri pentru feedback și păstrează datele local.
+
+- înregistrarea încasărilor
+- alocarea sumelor pe facturi
 
 ### `05notificari`
-Conține un centru simplu de notificări, bazat pe date mock și afișare locală.
+
+- centru de notificări
+
+## Date demo și stare actuală
+
+Proiectul are acum un mock layer comun în:
+
+```text
+frontend/src/mock/
+```
+
+Asta înseamnă:
+
+- modulele importante consumă seed-uri coerente între ele
+- există coerență demo pentru documente, clienți, comenzi și facturi
+- nu există încă o sursă globală live de adevăr
+
+Pe scurt:
+
+- există mock-uri comune
+- există coerență demo între module
+- dar nu există sincronizare live completă între toate ecranele
 
 ## Sistem UI comun
 
-Frontend-ul are acum o bază comună de UI în:
+Frontend-ul are o bază comună de UI în:
 
 ```text
 frontend/src/componente/ui/
 ```
 
-Aici există componente reutilizabile precum:
-- `Button`
-- `Card`
-- `Field`
-- `SelectField`
-- `TextareaField`
-- `PageHeader`
-- `EmptyState`
-- `StatCard`
+Și un utilitar pentru compunerea claselor în:
 
-Există și utilitarul:
-- `frontend/src/lib/cn.ts`
+```text
+frontend/src/lib/cn.ts
+```
 
-Acesta unifică folosirea `clsx` și `tailwind-merge` pentru compunerea claselor.
+Acestea ajută la:
 
-## Starea actuală a aplicației
+- consistență vizuală
+- reducerea duplicării
+- extinderea mai ușoară a modulelor
 
-Ce este bine definit acum:
+Pentru convențiile detaliate de UI, validare, toast-uri, `ConfirmDialog`, `sessionStorage` și helperi, vezi `frontend/README.md`.
+
+## Starea actuală și limitări
+
+Ce este deja bine definit:
+
 - navigația pe module este clară și funcțională
-- `02operational` are structură coerentă și reguli de business separate
-- formularele din `01entitati` folosesc deja `react-hook-form` și `zod`
-- feedback-ul vizual a fost modernizat prin toast-uri în loc de `alert(...)`
-- există o bază comună de componente UI reutilizabile
+- `02operational` are structură coerentă și separare bună între UI, calcule și validări
+- `01entitati` folosește formulare moderne cu `react-hook-form` + `zod`
+- există componente UI comune și un mock layer comun
+- există coerență demo între `02operational`, `03facturare`, `04incasari` și `05notificari`
 
-Ce rămâne de făcut mai târziu:
-- unificarea surselor de date între module
-- persistarea datelor
-- conectarea la backend
-- alinierea tuturor modulelor la nivelul de structură din `02operational`
+Ce rămâne limitare reală:
+
+- nu există backend
+- nu există persistență reală de business
+- nu există React Router activ
+- nu există store global
+- fluxurile dintre module sunt coerente la nivel de mock-uri, nu complet live-sync
 
 ## Structura repo-ului
 
@@ -183,21 +183,31 @@ Ce rămâne de făcut mai târziu:
 psi2026/
 ├── README.md
 └── frontend/
+    ├── README.md
     ├── package.json
     ├── vite.config.ts
     └── src/
         ├── App.tsx
         ├── main.tsx
         ├── componente/
+        ├── mock/
         ├── modules/
         ├── lib/
         └── types/
 ```
 
-## Direcție recomandată
+## Documentație detaliată
 
-Pașii naturali pentru etapa următoare sunt:
-- conectarea modulelor la o sursă comună de date
-- unificarea treptată a tipurilor comune dintre `types/entitati.ts` și `02operational/types.ts`
-- extinderea modulelor non-operaționale cu aceeași disciplină de structură
-- adăugarea unui backend sau a unui strat de persistență
+Pentru detalii tehnice complete despre frontend, vezi:
+
+- [frontend/README.md](frontend/README.md)
+
+Acolo sunt documentate în detaliu:
+
+- mock layer-ul comun
+- arhitectura reală a frontend-ului
+- convențiile UI și helperii comuni
+- fluxurile demo dintre module
+- formularele, validările și persistența în `sessionStorage`
+- onboarding-ul React/JSX/TypeScript pentru colegii începători
+- limitările curente ale aplicației

@@ -15,7 +15,7 @@ export interface ComandaFacturabilaMock {
 
 export interface LinieFacturaMock {
   idLinie: number;
-  tip: 'Piesă' | 'Kit' | 'Manoperă';
+  tip: "Piesă" | "Kit" | "Manoperă";
   denumire: string;
   cantitate: number;
   pretUnitar: number;
@@ -32,7 +32,7 @@ export interface FacturaMock {
   client: string;
   totalInitial: number;
   restDePlata: number;
-  status: 'Emisa' | 'Achitata partial' | 'Achitata';
+  status: "Emisa" | "Achitata partial" | "Achitata";
 }
 
 export interface IncasareMock {
@@ -40,20 +40,28 @@ export interface IncasareMock {
   idFactura: number;
   dataIncasare: string;
   suma: number;
-  modalitate: 'Transfer Bancar' | 'Cash' | 'POS';
+  modalitate: "Transfer Bancar" | "Cash" | "POS";
 }
 
 export interface NotificareMock {
   id: number;
   data: string;
+  ora?: string;
   mesaj: string;
-  tip: 'Info' | 'Avertizare' | 'Succes';
+  paginaDestinatie?: string;
+  sursaModul?: string;
+  textActiune?: string;
+  tip: "Info" | "Avertizare" | "Succes";
 }
 
 export interface TranzactieIstoricMock {
   id: string;
   dataOra: string;
-  tipOperatiune: 'Facturare Comandă' | 'Penalizare' | 'Storno' | 'Discount Extra';
+  tipOperatiune:
+    | "Facturare Comandă"
+    | "Penalizare"
+    | "Storno"
+    | "Discount Extra";
   numarDocument: string;
   client: string;
   valoare: number;

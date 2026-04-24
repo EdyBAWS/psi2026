@@ -1,44 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { facturiRestanteMock } from '../../../mock/incasari';
-import { mockClienti } from '../../../mock/operational';
+// src/modules/03facturare/penalizari/Penalizare.tsx
+import { useEffect, useRef } from 'react';
+import { usePenalizare } from './usePenalizare';
 
 export default function Penalizare() {
-  const [idClientSelectat, setIdClientSelectat] = useState<number | ''>('');
-  const [idFacturaSelectata, setIdFacturaSelectata] = useState<number | ''>('');
+  const {
+    loading,
+    clientiFiltrati, facturiClient, factura,
+    idClientSelectat, setIdClientSelectat,
+    idFacturaSelectata, setIdFacturaSelectata,
+    searchTermClient, setSearchTermClient,
+    isClientDropdownOpen, setIsClientDropdownOpen,
+    dataCalcul, setDataCalcul,
+    procentPenalizare, setProcentPenalizare,
+    numarFacturaPenalizare, setNumarFacturaPenalizare,
+    calculePenalizare,
+    handleSelectClient, handleGenereazaPenalizare
+  } = usePenalizare();
 
-  const [searchTermClient, setSearchTermClient] = useState('');
-  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
   const clientDropdownRef = useRef<HTMLDivElement>(null);
 
-  const [dataCalcul, setDataCalcul] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [procentPenalizare, setProcentPenalizare] = useState<number>(1);
-  const [numarFacturaPenalizare, setNumarFacturaPenalizare] = useState<string>('');
-
-  const clientiMock = useMemo(
-    () =>
-      mockClienti
-        .filter((client) => facturiRestanteMock.some((factura) => factura.idClient === client.idClient))
-        .map((client) => ({
-          idClient: client.idClient,
-          nume: client.denumireCompanie ?? client.nume,
-          soldDebitor: facturiRestanteMock
-            .filter((factura) => factura.idClient === client.idClient)
-            .reduce((total, factura) => total + factura.restDePlata, 0),
-          CUI: client.email,
-        })),
-    [],
-  );
-
-  const clientiFiltrati = useMemo(() => {
-    if (!searchTermClient) return clientiMock;
-    const term = searchTermClient.toLowerCase();
-    return clientiMock.filter(
-      (client) =>
-        client.nume.toLowerCase().includes(term) || client.CUI.toLowerCase().includes(term),
-    );
-  }, [clientiMock, searchTermClient]);
-
+  // Logica de interfață pentru click în afara dropdown-ului
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (clientDropdownRef.current && !clientDropdownRef.current.contains(event.target as Node)) {
@@ -47,57 +28,9 @@ export default function Penalizare() {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [setIsClientDropdownOpen]);
 
-  const facturiClient = useMemo(
-    () => facturiRestanteMock.filter((factura) => factura.idClient === idClientSelectat),
-    [idClientSelectat],
-  );
-  const factura = useMemo(
-    () => facturiClient.find((item) => item.idFactura === idFacturaSelectata) || null,
-    [idFacturaSelectata, facturiClient],
-  );
-
-  const handleSelectClient = (client: (typeof clientiMock)[number]) => {
-    setIdClientSelectat(client.idClient);
-    setSearchTermClient(`${client.nume} (${client.CUI})`);
-    setIsClientDropdownOpen(false);
-    setIdFacturaSelectata('');
-  };
-
-  const calculePenalizare = useMemo(() => {
-    if (!factura) return { zileIntarziere: 0, valoarePenalizare: 0 };
-
-    const scadenta = new Date(factura.dataScadenta);
-    const calcul = new Date(dataCalcul);
-
-    const diferentaTimp = calcul.getTime() - scadenta.getTime();
-    const zileIntarziere = Math.ceil(diferentaTimp / (1000 * 3600 * 24));
-
-    const zileValide = zileIntarziere > 0 ? zileIntarziere : 0;
-    const valoare = factura.restDePlata * (procentPenalizare / 100) * zileValide;
-
-    return { zileIntarziere: zileValide, valoarePenalizare: valoare };
-  }, [factura, dataCalcul, procentPenalizare]);
-
-  const handleGenereazaPenalizare = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!factura || calculePenalizare.zileIntarziere <= 0) {
-      toast.error('Nu există zile de întârziere pentru a putea emite o penalizare.');
-      return;
-    }
-    if (!numarFacturaPenalizare) {
-      toast.error('Introdu un număr pentru factura de penalizare.');
-      return;
-    }
-
-    toast.success(
-      `Factura de penalizare PEN-${numarFacturaPenalizare} a fost emisă pentru ${calculePenalizare.valoarePenalizare.toFixed(2)} RON.`,
-    );
-
-    setIdFacturaSelectata('');
-    setNumarFacturaPenalizare('');
-  };
+  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă restanțele...</div>;
 
   return (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 max-w-5xl mx-auto">

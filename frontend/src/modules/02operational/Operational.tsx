@@ -1,56 +1,193 @@
-// Fișierul principal al modulului operațional.
-import { useState } from 'react';
-import { toast } from 'sonner';
-import {
-  mockAsiguratori,
-  mockCatalogKituri,
-  mockCatalogManopera,
-  mockCatalogPiese,
-  mockClienti,
-  mockComenzi,
-  mockDosareDauna,
-  mockMecanici,
-  mockPozitii,
-  mockVehicule,
-} from '../../mock/operational';
-import { comandaEsteActiva } from './calculations';
-import GestiuneComenzi from './pages/GestiuneComenzi';
-import PreluareAuto, { type SalvarePreluarePayload } from './pages/PreluareAuto';
+// src/modules/02operational/Operational.tsx
+//
+// Orchestratorul modulului operațional.
+// Responsabilități:
+//   1. Încarcă toate datele necesare prin operational.service.ts
+//   2. Menține starea shared între PreluareAuto și GestiuneComenzi
+//      (comenzi, dosare, pozitii — se pot schimba la recepție și trebuie
+//       reflectate imediat în gestiune, fără reîncărcare)
+//   3. Pasează date și callback-uri în jos ca props
+//
+// La integrarea Spring Boot: înlocuiești implementarea din service,
+// acest fișier rămâne neschimbat.
 
-export type OperationalView = 'preluare-auto' | 'gestiune-comenzi';
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { StatCard } from "../../componente/ui/StatCard";
+import { comandaEsteActiva } from "./calculations";
+import {
+  fetchAsiguratori,
+  fetchCatalogKituri,
+  fetchCatalogManopere,
+  fetchCatalogPiese,
+  fetchClienti,
+  fetchComenzi,
+  fetchDosareDauna,
+  fetchMecanici,
+  fetchPozitiiComanda,
+  fetchVehicule,
+  createComanda,
+  createDosarDauna,
+  createPozitiiComanda,
+} from "./operational.service";
+import GestiuneComenzi from "./pages/gestiune-comenzi/GestiuneComenzi";
+import PreluareAuto, {
+  type SalvarePreluarePayload,
+} from "./pages/preluare-auto/PreluareAuto";
+import type {
+  Asigurator,
+  CatalogKit,
+  CatalogManopera,
+  CatalogPiesa,
+  Client,
+  ComandaService,
+  DosarDauna,
+  Mecanic,
+  PozitieComanda,
+  Vehicul,
+} from "./types";
+
+export type OperationalView = "preluare-auto" | "gestiune-comenzi";
 
 interface OperationalProps {
   onNavigate: (pagina: string) => void;
   view: OperationalView;
 }
 
-export default function Operational({ onNavigate, view }: OperationalProps) {
-  const [comenzi, setComenzi] = useState(mockComenzi);
-  const [dosare, setDosare] = useState(mockDosareDauna);
-  const [pozitii, setPozitii] = useState(mockPozitii);
+// Starea de loading granulară — știm exact ce se încarcă,
+// astfel încât UI-ul să poată afișa indicatori specifici, nu un singur spinner global.
+interface LoadingState {
+  comenzi: boolean;
+  dosare: boolean;
+  pozitii: boolean;
+  referinta: boolean; // vehicule, mecanici, clienti, asiguratori, catalog
+}
 
-  const handleSalveazaPreluare = ({
+const loadingInitial: LoadingState = {
+  comenzi: true,
+  dosare: true,
+  pozitii: true,
+  referinta: true,
+};
+
+export default function Operational({ onNavigate, view }: OperationalProps) {
+  // ── Date mutabile (se pot modifica în timpul sesiunii) ────────────────────
+  const [comenzi, setComenzi] = useState<ComandaService[]>([]);
+  const [dosare, setDosare] = useState<DosarDauna[]>([]);
+  const [pozitii, setPozitii] = useState<PozitieComanda[]>([]);
+
+  // ── Date de referință (read-only în operațional) ──────────────────────────
+  const [vehicule, setVehicule] = useState<Vehicul[]>([]);
+  const [mecanici, setMecanici] = useState<Mecanic[]>([]);
+  const [clienti, setClienti] = useState<Client[]>([]);
+  const [asiguratori, setAsiguratori] = useState<Asigurator[]>([]);
+  const [catalogPiese, setCatalogPiese] = useState<CatalogPiesa[]>([]);
+  const [catalogKituri, setCatalogKituri] = useState<CatalogKit[]>([]);
+  const [catalogManopere, setCatalogManopere] = useState<CatalogManopera[]>([]);
+
+  const [loading, setLoading] = useState<LoadingState>(loadingInitial);
+
+  // ── Încărcare date ────────────────────────────────────────────────────────
+  useEffect(() => {
+    // Datele mutabile se încarcă în paralel, fiecare cu propriul flag de loading.
+    fetchComenzi()
+      .then(setComenzi)
+      .catch(() => toast.error("Nu s-au putut încărca comenzile."))
+      .finally(() => setLoading((prev) => ({ ...prev, comenzi: false })));
+
+    fetchDosareDauna()
+      .then(setDosare)
+      .catch(() => toast.error("Nu s-au putut încărca dosarele de daună."))
+      .finally(() => setLoading((prev) => ({ ...prev, dosare: false })));
+
+    fetchPozitiiComanda()
+      .then(setPozitii)
+      .catch(() => toast.error("Nu s-au putut încărca pozițiile comenzilor."))
+      .finally(() => setLoading((prev) => ({ ...prev, pozitii: false })));
+
+    // Datele de referință se încarcă în paralel printr-un singur Promise.all —
+    // sunt read-only și nu au nevoie de loading granular individual.
+    Promise.all([
+      fetchVehicule(),
+      fetchMecanici(),
+      fetchClienti(),
+      fetchAsiguratori(),
+      fetchCatalogPiese(),
+      fetchCatalogKituri(),
+      fetchCatalogManopere(),
+    ])
+      .then(
+        ([
+          vehiculeData,
+          mecaniciData,
+          clientiData,
+          asiguratoriData,
+          pieseCatalog,
+          kituriCatalog,
+          manopereCatalog,
+        ]) => {
+          setVehicule(vehiculeData);
+          setMecanici(mecaniciData);
+          setClienti(clientiData);
+          setAsiguratori(asiguratoriData);
+          setCatalogPiese(pieseCatalog);
+          setCatalogKituri(kituriCatalog);
+          setCatalogManopere(manopereCatalog);
+        },
+      )
+      .catch(() => toast.error("Nu s-au putut încărca datele de referință."))
+      .finally(() => setLoading((prev) => ({ ...prev, referinta: false })));
+  }, []);
+
+  // ── Salvare recepție (tranzacție: comanda + dosar opțional + pozitii) ─────
+  // Aceasta este singura operațiune de scriere din Operational.tsx.
+  // Pasul de scriere în baza de date (când vom avea Spring Boot) va fi
+  // o tranzacție atomică pe backend — frontend-ul va face un singur POST
+  // care va conține comanda, dosarul și pozițiile.
+  // Până atunci, simulăm secvențial cu service-urile locale.
+  const handleSalveazaPreluare = async ({
     comanda,
     dosarNou,
     pozitiiNoi,
   }: SalvarePreluarePayload) => {
-    setComenzi((previous) => [...previous, comanda]);
-    if (dosarNou) {
-      setDosare((previous) => [...previous, dosarNou]);
+    try {
+      // 1. Creăm comanda
+      const comandaSalvata = await createComanda(comanda);
+
+      // 2. Dacă există dosar nou, îl creăm și actualizăm referința în comandă
+      let dosarSalvat: DosarDauna | null = null;
+      if (dosarNou) {
+        dosarSalvat = await createDosarDauna(dosarNou);
+        setDosare((prev) => [...prev, dosarSalvat!]);
+      }
+
+      // 3. Creăm pozițiile legate de comanda nou creată
+      const pozitiiSalvate = await createPozitiiComanda(
+        comandaSalvata.idComanda,
+        pozitiiNoi,
+      );
+
+      // 4. Actualizăm starea locală — UI-ul reflectă imediat noile date
+      setComenzi((prev) => [...prev, comandaSalvata]);
+      setPozitii((prev) => [...prev, ...pozitiiSalvate]);
+
+      toast.success(`Comanda ${comandaSalvata.nrComanda} a fost deschisă cu succes.`);
+      onNavigate("operational-comenzi");
+    } catch {
+      toast.error("Comanda nu a putut fi salvată. Încearcă din nou.");
     }
-    setPozitii((previous) => [...previous, ...pozitiiNoi]);
-    
-    toast.success(`Comanda ${comanda.nrComanda} a fost deschisă cu succes.`);
-    onNavigate('operational-comenzi');
   };
 
-  // Re-aducem calculul statisticilor generale pentru antet
-  const comenziActive = comenzi.filter((comanda) => comandaEsteActiva(comanda.status)).length;
+  // ── Loading state ─────────────────────────────────────────────────────────
+  const seIncarca = Object.values(loading).some(Boolean);
+
+  // Statistici derivate din state — recalculate automat la orice schimbare.
+  const comenziActive = comenzi.filter((c) => comandaEsteActiva(c.status)).length;
 
   return (
     <section className="space-y-6 w-full">
-      {/* Antetul apare DOAR pe pagina de preluare auto (recepție) */}
-      {view === 'preluare-auto' && (
+      {/* Antetul apare DOAR pe pagina de preluare auto */}
+      {view === "preluare-auto" && (
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-2">
@@ -67,53 +204,53 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Vehicule disponibile
-                </p>
-                <p className="mt-2 text-2xl font-bold text-slate-800">{mockVehicule.length}</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Comenzi active
-                </p>
-                <p className="mt-2 text-2xl font-bold text-slate-800">{comenziActive}</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Dosare de daună
-                </p>
-                <p className="mt-2 text-2xl font-bold text-slate-800">{dosare.length}</p>
-              </div>
+              <StatCard
+                label="Vehicule disponibile"
+                value={seIncarca ? "—" : vehicule.length}
+              />
+              <StatCard
+                label="Comenzi active"
+                value={seIncarca ? "—" : comenziActive}
+                tone="warning"
+              />
+              <StatCard
+                label="Dosare de daună"
+                value={seIncarca ? "—" : dosare.length}
+                tone="info"
+              />
             </div>
           </div>
         </div>
       )}
 
-      {/* Rutele propriu-zise */}
-      {view === 'preluare-auto' ? (
+      {/* Stare de încărcare — afișată în locul conținutului până când datele sunt gata */}
+      {seIncarca ? (
+        <div className="flex items-center justify-center py-24 text-slate-400 text-sm">
+          Se încarcă datele operaționale...
+        </div>
+      ) : view === "preluare-auto" ? (
         <PreluareAuto
-          clienti={mockClienti}
-          vehicule={mockVehicule}
+          clienti={clienti}
+          vehicule={vehicule}
           dosare={dosare}
           comenzi={comenzi}
           pozitii={pozitii}
-          mecanici={mockMecanici}
-          asiguratori={mockAsiguratori}
-          catalogPiese={mockCatalogPiese}
-          catalogKituri={mockCatalogKituri}
-          catalogManopere={mockCatalogManopera}
+          mecanici={mecanici}
+          asiguratori={asiguratori}
+          catalogPiese={catalogPiese}
+          catalogKituri={catalogKituri}
+          catalogManopere={catalogManopere}
           onSalveazaPreluare={handleSalveazaPreluare}
         />
       ) : (
         <GestiuneComenzi
-          clienti={mockClienti}
+          clienti={clienti}
           comenzi={comenzi}
           dosare={dosare}
-          asiguratori={mockAsiguratori}
-          mecanici={mockMecanici}
+          asiguratori={asiguratori}
+          mecanici={mecanici}
           pozitii={pozitii}
-          vehicule={mockVehicule}
+          vehicule={vehicule}
         />
       )}
     </section>

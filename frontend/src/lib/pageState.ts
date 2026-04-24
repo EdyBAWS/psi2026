@@ -1,7 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
+// Acest fișier ne ajută să păstrăm mici bucăți de stare între navigări,
+// fără să introducem un store global.
+// Alegem `sessionStorage`, deci valorile rămân în sesiunea curentă din browser,
+// dar nu sunt gândite ca persistență "adevărată" de lungă durată.
 export function citesteStarePersistataPagina<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') {
+  // În timpul build-ului sau în medii fără `window`,
+  // nu avem acces la `sessionStorage`, deci folosim fallback-ul.
+  if (typeof window === "undefined") {
     return fallback;
   }
 
@@ -11,6 +17,8 @@ export function citesteStarePersistataPagina<T>(key: string, fallback: T): T {
   }
 
   try {
+    // Valorile sunt salvate ca string JSON,
+    // de aceea le parsăm când le citim înapoi.
     return JSON.parse(valoare) as T;
   } catch {
     return fallback;
@@ -18,7 +26,7 @@ export function citesteStarePersistataPagina<T>(key: string, fallback: T): T {
 }
 
 export function salveazaStarePersistataPagina<T>(key: string, value: T) {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return;
   }
 
@@ -26,7 +34,11 @@ export function salveazaStarePersistataPagina<T>(key: string, value: T) {
 }
 
 export function usePageSessionState<T>(key: string, fallback: T) {
-  const [value, setValue] = useState<T>(() => citesteStarePersistataPagina(key, fallback));
+  // Hook-ul acesta se comportă asemănător cu `useState`,
+  // dar sincronizează automat valoarea și în `sessionStorage`.
+  const [value, setValue] = useState<T>(() =>
+    citesteStarePersistataPagina(key, fallback),
+  );
 
   useEffect(() => {
     salveazaStarePersistataPagina(key, value);

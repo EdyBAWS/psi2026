@@ -1,167 +1,290 @@
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { manoperaCatalogMock, type ManoperaCatalogMock, type CategorieManopera } from '../../../mock/catalog';
+// src/modules/00catalog/manopera/Manopera.tsx
+//
+// Componentă de prezentare pură — toată logica se află în useManopera.ts.
+// Folosește componentele UI standardizate (Field, SelectField, Button etc.)
+// pentru consistență cu restul aplicației.
 
-type SortField = 'codManopera' | 'denumire' | 'durataStd';
-type SortDir = 'asc' | 'desc';
+import { ArrowUpDown, Clock, PenLine, Trash2 } from 'lucide-react';
+import { Button } from '../../../componente/ui/Button';
+import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
+import { EmptyState } from '../../../componente/ui/EmptyState';
+import { Field } from '../../../componente/ui/Field';
+import { PageHeader } from '../../../componente/ui/PageHeader';
+import { SelectField } from '../../../componente/ui/SelectField';
+import { StatCard } from '../../../componente/ui/StatCard';
+import { type CategorieManopera } from '../../../mock/catalog';
+import { useManopera, type SortFieldManopera } from './useManopera';
+import { useState } from 'react';
+
+// Opțiunile de categorie centralizate — sincronizate cu enum-ul din catalog.ts
+const CATEGORII_MANOPERA: { label: string; value: CategorieManopera }[] = [
+  { label: 'Mecanică Ușoară', value: 'Mecanică Ușoară' },
+  { label: 'Mecanică Grea', value: 'Mecanică Grea' },
+  { label: 'Diagnoză', value: 'Diagnoză' },
+  { label: 'Electrică', value: 'Electrică' },
+  { label: 'Tinichigerie', value: 'Tinichigerie' },
+];
+
+// Indicator vizual pentru coloana sortată activ.
+function SortIndicator({
+  field,
+  activeField,
+  dir,
+}: {
+  field: SortFieldManopera;
+  activeField: SortFieldManopera;
+  dir: 'asc' | 'desc';
+}) {
+  if (field !== activeField)
+    return <ArrowUpDown className="inline ml-1 h-3 w-3 opacity-30" />;
+  return (
+    <span className="inline ml-1 text-emerald-600 font-bold text-xs">
+      {dir === 'asc' ? '↑' : '↓'}
+    </span>
+  );
+}
 
 export default function Manopera() {
-  const [listaManopera, setListaManopera] = useState<ManoperaCatalogMock[]>(manoperaCatalogMock);
-  const [arataFormular, setArataFormular] = useState(false);
-  
-  // Filtre și Sortare
-  const [cautare, setCautare] = useState('');
-  const [filtruCategorie, setFiltruCategorie] = useState<CategorieManopera | 'TOATE'>('TOATE');
-  const [sortField, setSortField] = useState<SortField>('denumire');
-  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const {
+    lista,
+    listaFiltrata,
+    loading,
+    mediaNorma,
+    form,
+    setForm,
+    editId,
+    arataFormular,
+    cautare,
+    setCautare,
+    filtruCategorie,
+    setFiltruCategorie,
+    sortField,
+    sortDir,
+    handleSort,
+    handleSalvare,
+    handleEditeaza,
+    handleSterge,
+    handleDeschideAdaugare,
+    handleInchideFormular,
+  } = useManopera();
 
-  // Form State
-  const [form, setForm] = useState<Partial<ManoperaCatalogMock>>({ categorie: 'Mecanică Ușoară' });
+  // Confirmarea ștergerii este gestionată local în componentă (UI concern).
+  const [confirmSterge, setConfirmSterge] = useState<number | null>(null);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    else { setSortField(field); setSortDir('asc'); }
-  };
-
-  const listaFiltrata = listaManopera
-    .filter(m => 
-      (filtruCategorie === 'TOATE' || m.categorie === filtruCategorie) &&
-      (m.codManopera.toLowerCase().includes(cautare.toLowerCase()) || 
-       m.denumire.toLowerCase().includes(cautare.toLowerCase()))
-    )
-    .sort((a, b) => {
-      let comparison = 0;
-      if (sortField === 'codManopera') comparison = a.codManopera.localeCompare(b.codManopera);
-      if (sortField === 'denumire') comparison = a.denumire.localeCompare(b.denumire);
-      if (sortField === 'durataStd') comparison = a.durataStd - b.durataStd;
-      return sortDir === 'asc' ? comparison : -comparison;
-    });
-
-  const handleSalvare = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.codManopera || !form.denumire || !form.durataStd) {
-      toast.error('Completează toate câmpurile obligatorii.');
-      return;
-    }
-
-    const nouaOp = { ...form, idManopera: Date.now() } as ManoperaCatalogMock;
-    setListaManopera([nouaOp, ...listaManopera]);
-    toast.success('Operațiunea a fost salvată în nomenclator.');
-    setForm({ categorie: 'Mecanică Ușoară' });
-    setArataFormular(false);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24 text-slate-400">
+        Se încarcă nomenclatorul...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-10">
-      {/* HEADER */}
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2">
-          <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Tarife și Timpi</span>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-800">Nomenclator Manoperă</h2>
-          <p className="max-w-2xl text-sm text-slate-500">Administrează timpii tehnologici de reparație, structurați pe categorii de reparații.</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="flex flex-col px-4 border-r border-slate-200">
-             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Operațiuni</span>
-             <span className="text-xl font-black text-slate-700">{listaManopera.length}</span>
-          </div>
-          <div className="flex flex-col pl-4">
-             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Medie Normă</span>
-             <span className="text-xl font-black text-emerald-600">
-                {(listaManopera.reduce((acc, i) => acc + i.durataStd, 0) / (listaManopera.length || 1)).toFixed(1)} ore
-             </span>
-          </div>
-        </div>
-      </div>
-
-      {/* TOOLBAR */}
-      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex flex-1 flex-wrap gap-3 w-full">
-          <input 
-            type="text" placeholder="Caută operațiune sau cod..." value={cautare} onChange={e => setCautare(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm w-full md:w-72 focus:ring-2 focus:ring-emerald-500 outline-none"
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+        <PageHeader
+          title="Nomenclator Manoperă"
+          description="Administrează timpii tehnologici de reparație, structurați pe categorii de reparații."
+          actions={
+            <Button onClick={arataFormular ? handleInchideFormular : handleDeschideAdaugare}>
+              {arataFormular ? 'Închide Formularul' : '+ Adaugă Operațiune'}
+            </Button>
+          }
+        />
+        <div className="flex gap-4 mt-2">
+          <StatCard label="Total Operațiuni" value={lista.length} />
+          <StatCard
+            label="Medie Normă"
+            value={`${mediaNorma.toFixed(1)} ore`}
+            tone="success"
           />
-          <select value={filtruCategorie} onChange={e => setFiltruCategorie(e.target.value as CategorieManopera | 'TOATE')} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-            <option value="TOATE">Toate Categoriile</option>
-            <option value="Mecanică Ușoară">Mecanică Ușoară</option>
-            <option value="Mecanică Grea">Mecanică Grea</option>
-            <option value="Diagnoză">Diagnoză</option>
-            <option value="Electrică">Electrică</option>
-            <option value="Tinichigerie">Tinichigerie</option>
-          </select>
         </div>
-        <button onClick={() => setArataFormular(!arataFormular)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md shadow-emerald-600/20 transition-all shrink-0">
-          {arataFormular ? 'Închide Formularul' : '+ Adaugă Operațiune'}
-        </button>
       </div>
 
-      {/* FORMULAR ADĂUGARE */}
+      {/* ── TOOLBAR ─────────────────────────────────────────────────────────── */}
+      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-4 items-end">
+        <Field
+          label="Caută operațiune"
+          placeholder="Cod sau denumire..."
+          value={cautare}
+          onChange={(e) => setCautare(e.target.value)}
+          wrapperClassName="flex-1 min-w-[200px]"
+        />
+        <SelectField
+          label="Categorie"
+          value={filtruCategorie}
+          onChange={(e) =>
+            setFiltruCategorie(e.target.value as CategorieManopera | 'TOATE')
+          }
+          options={[
+            { label: 'Toate Categoriile', value: 'TOATE' },
+            ...CATEGORII_MANOPERA,
+          ]}
+          wrapperClassName="min-w-[200px]"
+        />
+      </div>
+
+      {/* ── FORMULAR ADĂUGARE / EDITARE ──────────────────────────────────────── */}
       {arataFormular && (
-        <form onSubmit={handleSalvare} className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-emerald-100 animate-in fade-in slide-in-from-top-4">
-          <h4 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3">Definire Normă de Lucru</h4>
+        <form
+          onSubmit={handleSalvare}
+          className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-emerald-100 animate-in fade-in slide-in-from-top-4"
+        >
+          <h4 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3">
+            {editId !== null ? 'Editare Normă de Lucru' : 'Definire Normă de Lucru'}
+          </h4>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Cod Oper. *</label>
-              <input type="text" required value={form.codManopera || ''} onChange={e => setForm({...form, codManopera: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Denumire Operațiune *</label>
-              <input type="text" required value={form.denumire || ''} onChange={e => setForm({...form, denumire: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Categorie *</label>
-              <select value={form.categorie} onChange={e => setForm({...form, categorie: e.target.value as CategorieManopera})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                <option value="Mecanică Ușoară">Mecanică Ușoară</option><option value="Mecanică Grea">Mecanică Grea</option><option value="Diagnoză">Diagnoză</option><option value="Electrică">Electrică</option><option value="Tinichigerie">Tinichigerie</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Normă de Timp (Ore) *</label>
-              <input type="number" step="0.1" required value={form.durataStd || ''} onChange={e => setForm({...form, durataStd: Number(e.target.value)})} placeholder="ex: 1.5" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
-            </div>
+            <Field
+              label="Cod Operațiune *"
+              value={form.codManopera ?? ''}
+              onChange={(e) => setForm({ ...form, codManopera: e.target.value })}
+              placeholder="ex: MAN-SCHIMB-ULEI"
+              required
+            />
+            <Field
+              label="Denumire Operațiune *"
+              value={form.denumire ?? ''}
+              onChange={(e) => setForm({ ...form, denumire: e.target.value })}
+              placeholder="ex: Schimb Ulei și Filtre"
+              wrapperClassName="md:col-span-2"
+              required
+            />
+            <SelectField
+              label="Categorie *"
+              value={form.categorie ?? 'Mecanică Ușoară'}
+              onChange={(e) =>
+                setForm({ ...form, categorie: e.target.value as CategorieManopera })
+              }
+              options={CATEGORII_MANOPERA}
+              required
+            />
+            <Field
+              label="Normă de Timp (Ore) *"
+              type="number"
+              step="0.1"
+              min="0.1"
+              value={form.durataStd ?? ''}
+              onChange={(e) =>
+                setForm({ ...form, durataStd: Number(e.target.value) })
+              }
+              placeholder="ex: 1.5"
+              hint="Durată standard în ore normate"
+              required
+            />
           </div>
-          <div className="mt-6 flex justify-end">
-            <button type="submit" className="bg-slate-800 hover:bg-slate-900 text-white px-8 py-2.5 rounded-xl font-bold shadow-md transition-all">
-              Salvează Tariful
-            </button>
+          <div className="mt-6 flex justify-end gap-3">
+            <Button variant="outline" type="button" onClick={handleInchideFormular}>
+              Anulează
+            </Button>
+            <Button variant="secondary" type="submit">
+              {editId !== null ? 'Salvează Modificările' : 'Adaugă în Nomenclator'}
+            </Button>
           </div>
         </form>
       )}
 
-      {/* TABEL */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors w-48" onClick={() => handleSort('codManopera')}>Cod Normă</th>
-              <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('denumire')}>Descriere Operațiune / Categorie</th>
-              <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors text-right w-40" onClick={() => handleSort('durataStd')}>Durată Standard</th>
-              <th className="px-6 py-4 text-center w-24">Acțiuni</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {listaFiltrata.map((item) => (
-              <tr key={item.idManopera} className="hover:bg-slate-50/80 transition-colors group">
-                <td className="px-6 py-4">
-                  <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded font-bold border border-slate-200">{item.codManopera}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <p className="font-bold text-slate-800 text-[13px]">{item.denumire}</p>
-                  <p className="text-xs text-slate-500 mt-1">{item.categorie}</p>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <p className="font-bold text-emerald-700 text-base">{item.durataStd.toFixed(1)} h</p>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <button className="text-emerald-600 hover:text-emerald-800 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Editează</button>
-                </td>
+      {/* ── TABEL ───────────────────────────────────────────────────────────── */}
+      {listaFiltrata.length === 0 ? (
+        <EmptyState
+          icon={<Clock className="h-5 w-5" />}
+          title="Nu au fost găsite operațiuni"
+          description="Încearcă să modifici filtrele sau adaugă o operațiune nouă."
+          actionLabel="+ Adaugă Operațiune"
+          onAction={handleDeschideAdaugare}
+        />
+      ) : (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200">
+              <tr>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors w-48"
+                  onClick={() => handleSort('codManopera')}
+                >
+                  Cod Normă{' '}
+                  <SortIndicator field="codManopera" activeField={sortField} dir={sortDir} />
+                </th>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors"
+                  onClick={() => handleSort('denumire')}
+                >
+                  Descriere Operațiune / Categorie{' '}
+                  <SortIndicator field="denumire" activeField={sortField} dir={sortDir} />
+                </th>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors text-right w-40"
+                  onClick={() => handleSort('durataStd')}
+                >
+                  Durată Standard{' '}
+                  <SortIndicator field="durataStd" activeField={sortField} dir={sortDir} />
+                </th>
+                <th className="px-6 py-4 text-center w-28">Acțiuni</th>
               </tr>
-            ))}
-            {listaFiltrata.length === 0 && (
-               <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-500 bg-slate-50 border-dashed border-2 border-slate-200">Nu am găsit operațiuni conform căutării.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {listaFiltrata.map((item) => (
+                <tr
+                  key={item.idManopera}
+                  className="hover:bg-slate-50/80 transition-colors group"
+                >
+                  <td className="px-6 py-4">
+                    <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded font-bold border border-slate-200">
+                      {item.codManopera}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="font-bold text-slate-800 text-[13px]">{item.denumire}</p>
+                    <p className="text-xs text-slate-500 mt-1">{item.categorie}</p>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <p className="font-bold text-emerald-700 text-base">
+                      {item.durataStd.toFixed(1)} h
+                    </p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditeaza(item)}
+                        title="Editează"
+                      >
+                        <PenLine className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setConfirmSterge(item.idManopera)}
+                        title="Șterge"
+                        className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="px-6 py-3 border-t border-slate-100 text-xs text-slate-400">
+            {listaFiltrata.length} din {lista.length} operațiuni afișate
+          </div>
+        </div>
+      )}
+
+      {/* ── CONFIRMARE ȘTERGERE ─────────────────────────────────────────────── */}
+      <ConfirmDialog
+        isOpen={confirmSterge !== null}
+        title="Ștergi operațiunea?"
+        description="Această acțiune este ireversibilă. Operațiunea va fi eliminată din nomenclator și nu va mai putea fi selectată pe comenzile noi."
+        confirmLabel="Da, șterge"
+        onConfirm={() => {
+          if (confirmSterge !== null) handleSterge(confirmSterge);
+          setConfirmSterge(null);
+        }}
+        onCancel={() => setConfirmSterge(null)}
+      />
     </div>
   );
 }
