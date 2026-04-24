@@ -48,8 +48,11 @@ export default function PreluareAutoHeader({
   }
 
   // 2. STARE: VEHICUL SELECTAT (Bara Sticky Premium)
+// 2. STARE: VEHICUL SELECTAT (Bara Sticky Premium)
   return (
-    <div className="sticky top-6 z-40 flex flex-col justify-between gap-4 rounded-2xl border border-indigo-100 bg-white/95 p-4 shadow-xl backdrop-blur-md lg:flex-row lg:items-center animate-in slide-in-from-top-2">
+    // AM MODIFICAT AICI: Am adăugat -mt-6 și top-[-24px] pentru a anula padding-ul părintelui. 
+    // Ajustează valoarea (ex: -mt-8 / top-[-32px]) dacă spațiul din layout-ul tău este mai mare.
+    <div className="sticky -mt-6 top-[-40px] z-40 flex flex-col justify-between gap-4 rounded-b-2xl border-b border-x border-indigo-100 bg-white/95 px-5 py-3 shadow-lg backdrop-blur-md lg:flex-row lg:items-center animate-in slide-in-from-top-2">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-white shadow-lg shadow-indigo-200">
           <Car className="h-4 w-4" />
@@ -78,7 +81,8 @@ export default function PreluareAutoHeader({
           {mesajeBlocare.length > 0 ? (
             <div className="group relative">
               <AlertCircle className="h-6 w-6 text-rose-500 cursor-help" />
-              <div className="absolute bottom-full right-0 mb-2 w-64 scale-0 rounded-xl bg-slate-800 p-3 text-[11px] text-white shadow-2xl transition-all group-hover:scale-100">
+              {/* AM MODIFICAT AICI: top-full, mt-2, origin-top-right și z-50 */}
+              <div className="absolute top-full right-0 mt-2 w-64 scale-0 z-50 origin-top-right rounded-xl bg-slate-800 p-3 text-[11px] text-white shadow-2xl transition-all group-hover:scale-100">
                 <p className="font-bold text-rose-300 mb-1">Erori de validare:</p>
                 {mesajeBlocare.map((m, i) => <p key={i}>• {m}</p>)}
               </div>

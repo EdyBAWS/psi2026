@@ -96,19 +96,6 @@ export function usePreluareAuto(props: UsePreluareAutoProps) {
     setPozitiiDraft([]);
     setIdMecanicSelectat(null);
     setEsteLucrareAsigurare(false);
-    
-    // Scroll sus și când dăm "Resetează"
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  // NOU: Funcție care setează vehiculul și forțează scroll-ul sus animat
-  const handleSelecteazaVehicul = (id: number | null) => {
-    setIdVehiculSelectat(id);
-    if (id !== null && typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
   };
 
   return {
@@ -116,9 +103,7 @@ export function usePreluareAuto(props: UsePreluareAutoProps) {
       idVehiculSelectat, detaliiPreluare, stareDosar, pozitiiDraft, idMecanicSelectat, esteLucrareAsigurare
     },
     setters: {
-      // Am expus handler-ul nostru nou care învelește setIdVehiculSelectat original
-      setIdVehiculSelectat: handleSelecteazaVehicul, 
-      setDetaliiPreluare, setStareDosar, setPozitiiDraft, setIdMecanicSelectat, schimbaFluxAsigurare, reseteazaFlux
+      setIdVehiculSelectat, setDetaliiPreluare, setStareDosar, setPozitiiDraft, setIdMecanicSelectat, schimbaFluxAsigurare, reseteazaFlux
     },
     derivate: {
       vehiculSelectat, clientSelectat, comandaActivaExistenta,

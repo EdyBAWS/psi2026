@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ConfirmDialog } from "../../../../componente/ui/ConfirmDialog";
 import { EmptyState } from "../../../../componente/ui/EmptyState";
 import FormComanda from "./components/FormComanda";
@@ -8,7 +8,7 @@ import PreluareAutoContext from "../preluare-auto/PreluareAutoContext";
 import PreluareAutoHeader from "../preluare-auto/PreluareAutoHeader";
 import { formatSuma } from "./preluareAuto.helpers";
 import { usePreluareAuto } from "./usePreluareAuto";
-import { comandaEsteActiva } from "../../calculations"; // <-- Import nou necesar pt statistici
+import { comandaEsteActiva } from "../../calculations";
 import type { Asigurator, CatalogKit, CatalogManopera, CatalogPiesa, Client, ComandaService, DosarDauna, Mecanic, PozitieComanda, Vehicul } from "../../types";
 
 export interface SalvarePreluarePayload {
@@ -34,6 +34,17 @@ interface PreluareAutoProps {
 export default function PreluareAuto(props: PreluareAutoProps) {
   const { stare, setters, derivate } = usePreluareAuto(props);
   const [esteDialogResetDeschis, setEsteDialogResetDeschis] = useState(false);
+  
+  // AM ADAUGAT AICI: Referința către cel mai de sus punct al paginii
+  const topRef = useRef<HTMLDivElement>(null);
+
+  // AM ADAUGAT AICI: Efectul care face scroll automat la orice schimbare a vehiculului selectat (sau la anulare)
+  useEffect(() => {
+    if (topRef.current) {
+      // scrollIntoView detectează containerul cu overflow și îl aduce în prim-plan
+      topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [stare.idVehiculSelectat]);
 
   const confirmaResetare = () => {
     setters.reseteazaFlux();
@@ -102,11 +113,11 @@ export default function PreluareAuto(props: PreluareAutoProps) {
     setters.reseteazaFlux();
   };
 
-  // Calculăm numărul de comenzi active pentru a le pasa header-ului
   const comenziActiveCount = props.comenzi.filter((c) => comandaEsteActiva(c.status)).length;
 
   return (
-    <div className="w-full">
+    /* AM ADAUGAT AICI: ref={topRef} pe cel mai de sus element */
+    <div className="w-full" ref={topRef}>
       <PreluareAutoHeader
         esteLucrareAsigurare={stare.esteLucrareAsigurare}
         mesajeBlocare={derivate.validare.mesajeBlocare}
@@ -116,7 +127,6 @@ export default function PreluareAuto(props: PreluareAutoProps) {
         rezumatTotal={derivate.indicatori.rezumatPozitii.total > 0 ? formatSuma(derivate.indicatori.rezumatPozitii.total) : null}
         stareDosarTipPolita={stare.esteLucrareAsigurare ? stare.stareDosar.tipPolita : null}
         vehiculSelectat={derivate.vehiculSelectat}
-        // Pasăm datele pentru statistici
         stats={{
           vehiculeDisponibile: props.vehicule.length,
           comenziActive: comenziActiveCount,
@@ -141,7 +151,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
                   <SelectorDosar
                     asiguratori={props.asiguratori}
                     dosare={props.dosare}
-                    nrDosarPreview={derivate.preview.nrDosarPreview}
+                    nrDosarPreview={derivate.preview.nrComandaPreview}
                     onChange={setters.setStareDosar}
                     value={stare.stareDosar}
                     vehicul={derivate.vehiculSelectat}
@@ -179,13 +189,13 @@ export default function PreluareAuto(props: PreluareAutoProps) {
               />
             </div>
 
-            <div className="sticky bottom-6 z-20 flex items-center justify-end gap-3 rounded-2xl border border-slate-200/50 bg-white/90 p-4 shadow-xl backdrop-blur-md">
+            <div className="sticky -mb-[40px] bottom-[-40px] z-20 flex items-center justify-end gap-3 rounded-t-2xl border-t border-x border-slate-200/70 bg-white/95 px-5 py-3 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => setEsteDialogResetDeschis(true)}
-                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-500 hover:text-white hover:border-rose-500"
               >
-                Resetează
+                Anulează
               </button>
               <button
                 type="button"
@@ -200,12 +210,12 @@ export default function PreluareAuto(props: PreluareAutoProps) {
 
           <ConfirmDialog
             cancelLabel="Înapoi"
-            confirmLabel="Da, resetează"
-            description="Toate datele completate în fluxul curent vor fi șterse, inclusiv vehiculul selectat, dosarul și pozițiile din deviz."
+            confirmLabel="Da, anulează"
+            description="Toate datele completate în fluxul curent vor fi șterse: vehiculul selectat, dosarul de daună și pozițiile din deviz."
             isOpen={esteDialogResetDeschis}
             onCancel={() => setEsteDialogResetDeschis(false)}
             onConfirm={confirmaResetare}
-            title="Confirmi resetarea fluxului?"
+            title="Anulezi fluxul curent?"
           />
         </>
       ) : (

@@ -1,7 +1,9 @@
 // src/modules/04incasari/Incasari.tsx
 import { BanknoteArrowDown, Receipt, Wallet } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import { Button } from '../../componente/ui/Button';
 import { EmptyState } from '../../componente/ui/EmptyState';
+import { PageHeader } from '../../componente/ui/PageHeader';
 import { StatCard } from '../../componente/ui/StatCard';
 import { useIncasari, METODE_PLATA, formatSuma, formatData } from './useIncasari';
 
@@ -29,71 +31,80 @@ export default function Incasari() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [setShowDropdown]);
 
-  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă datele de încasări...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24 text-slate-400">
+        Se încarcă datele de încasări...
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-7xl font-sans">
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold tracking-tight text-slate-800">Înregistrare Încasare</h2>
-        <p className="mt-1 font-medium text-slate-500">
-          Operează plățile clienților și stinge facturile restante din setul comun de mock-uri.
-        </p>
+    <div className="space-y-6 pb-10">
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+        <PageHeader
+          title="Înregistrare Încasare"
+          description="Operează plățile clienților și stinge facturile restante din setul comun de mock-uri."
+        />
+        <div className="flex flex-wrap gap-4 mt-2">
+          <StatCard
+            label="Facturi restante"
+            value={facturiRestanteBD.length}
+            icon={<Receipt className="h-4 w-4" />}
+          />
+          <StatCard
+            label="Valoare deschisă"
+            value={formatSuma(facturiRestanteBD.reduce((total, factura) => total + factura.restDePlata, 0))}
+            tone="warning"
+            icon={<Wallet className="h-4 w-4" />}
+          />
+          <StatCard
+            label="Încasări demo"
+            value={istoricIncasariBD.length}
+            tone="success"
+            icon={<BanknoteArrowDown className="h-4 w-4" />}
+          />
+        </div>
       </div>
 
-      <div className="mb-6 grid gap-3 md:grid-cols-3">
-        <StatCard
-          label="Facturi restante"
-          value={facturiRestanteBD.length}
-          icon={<Receipt className="h-4 w-4" />}
-        />
-        <StatCard
-          label="Valoare deschisă"
-          value={formatSuma(facturiRestanteBD.reduce((total, factura) => total + factura.restDePlata, 0))}
-          tone="warning"
-          icon={<Wallet className="h-4 w-4" />}
-        />
-        <StatCard
-          label="Încasări demo"
-          value={istoricIncasariBD.length}
-          tone="success"
-          icon={<BanknoteArrowDown className="h-4 w-4" />}
-        />
-      </div>
-
+      {/* ── CONȚINUT PRINCIPAL ──────────────────────────────────────────────── */}
       <form onSubmit={handleSalvare} className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+        
+        {/* PARTEA STÂNGĂ: Selecție Client și Facturi */}
         <div className="space-y-6 lg:col-span-8">
-          <div className="relative rounded-3xl border border-slate-200 bg-white p-6 shadow-sm" ref={dropdownRef}>
-            <div className="mb-4 flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-                1
-              </div>
-              <h3 className="font-bold text-slate-800">Cine plătește?</h3>
-            </div>
-
+          
+          {/* Bloc 1: Client */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100" ref={dropdownRef}>
+            <h4 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-[10px] font-bold text-indigo-700">1</span>
+              Cine plătește?
+            </h4>
+            
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
               <input
                 type="text"
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3.5 pl-11 pr-4 font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Caută clientul după nume..."
+                className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-[13px] text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="Caută clientul după nume sau CUI..."
                 value={searchClient}
                 onChange={handleSchimbareCautare}
                 onFocus={() => setShowDropdown(true)}
               />
 
               {showDropdown ? (
-                <div className="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
                   {clientiFiltrati.length > 0 ? (
-                    <ul className="py-2">
+                    <ul className="py-1">
                       {clientiFiltrati.map((client) => (
                         <li
                           key={client.idClient}
                           onClick={() => handleSelectClient(client)}
-                          className="cursor-pointer border-b border-slate-50 px-5 py-3 transition-colors hover:bg-indigo-50 last:border-0"
+                          className="cursor-pointer px-4 py-2 text-[13px] hover:bg-slate-50"
                         >
                           <div className="font-bold text-slate-800">{client.nume}</div>
                           <div className="text-xs text-slate-500">{client.identificatorFiscal}</div>
@@ -101,91 +112,79 @@ export default function Incasari() {
                       ))}
                     </ul>
                   ) : (
-                    <div className="px-5 py-4 text-center text-sm text-slate-500">Niciun client găsit.</div>
+                    <div className="px-4 py-3 text-center text-[13px] text-slate-500">Niciun client găsit.</div>
                   )}
                 </div>
               ) : null}
             </div>
           </div>
 
+          {/* Bloc 2: Facturi */}
           {idClientSelectat !== null ? (
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-                    2
-                  </div>
-                  <h3 className="font-bold text-slate-800">Ce facturi achită?</h3>
-                </div>
-                {facturiAlocate > 0 ? (
-                  <button
-                    type="button"
-                    onClick={resetaAlocari}
-                    className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-200"
-                  >
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+               <div className="mb-4 border-b border-slate-100 pb-3 flex items-center justify-between">
+                <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-[10px] font-bold text-indigo-700">2</span>
+                  Ce facturi achită?
+                </h4>
+                {facturiAlocate > 0 && (
+                  <Button variant="ghost" size="sm" type="button" onClick={resetaAlocari}>
                     Resetează Sumele
-                  </button>
-                ) : null}
+                  </Button>
+                )}
               </div>
 
               {facturiRestante.length > 0 ? (
-                <div className="space-y-4">
+                <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
                   {facturiRestante.map((factura) => {
                     const alocatNum = Number(factura.sumaAlocata) || 0;
                     const esteAchitatIntegral = alocatNum === factura.restDePlata && alocatNum > 0;
                     const estePlatitPartial = alocatNum > 0 && alocatNum < factura.restDePlata;
                     const restRamas = factura.restDePlata - alocatNum;
 
-                    const containerClass = esteAchitatIntegral
-                      ? 'border-emerald-200 bg-emerald-50/50'
-                      : estePlatitPartial
-                        ? 'border-amber-200 bg-amber-50/30'
-                        : 'border-slate-200 bg-slate-50/50 hover:border-slate-300';
-
                     return (
                       <div
                         key={factura.idFactura}
-                        className={`flex flex-col items-center justify-between gap-3 rounded-2xl border p-4 transition-all md:flex-row ${containerClass}`}
+                        className={`flex flex-col md:flex-row items-center justify-between p-4 transition-colors ${
+                          esteAchitatIntegral ? 'bg-emerald-50/50' : estePlatitPartial ? 'bg-amber-50/30' : 'bg-white hover:bg-slate-50/80'
+                        }`}
                       >
-                        <div className="mb-1 w-full flex-1 md:mb-0 md:w-auto">
+                        <div className="w-full flex-1 md:w-auto">
                           <div className="flex items-center gap-2">
-                            <div className="text-base font-bold text-slate-800">{factura.numar}</div>
-                            {esteAchitatIntegral ? (
-                              <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700">
-                                Achitat integral
-                              </span>
-                            ) : null}
-                            {estePlatitPartial ? (
-                              <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700">
-                                Rest rămas: {formatSuma(restRamas)}
-                              </span>
-                            ) : null}
+                            <div className="text-[13px] font-bold text-slate-800">{factura.numar}</div>
+                            {esteAchitatIntegral && (
+                              <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">Achitat</span>
+                            )}
+                            {estePlatitPartial && (
+                              <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">Rest: {formatSuma(restRamas)}</span>
+                            )}
                           </div>
                           <div className="mt-1 text-xs text-slate-500">
                             Emisă: {formatData(factura.dataEmitere)} • Rest curent:{' '}
-                            <span className="font-bold text-slate-700">{formatSuma(factura.restDePlata)}</span>
+                            <span className="font-semibold text-slate-700">{formatSuma(factura.restDePlata)}</span>
                           </div>
                         </div>
 
-                        <div className="flex w-full items-center gap-3 md:w-auto">
-                          <button
+                        <div className="mt-3 md:mt-0 flex w-full md:w-auto items-center gap-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
                             type="button"
                             onClick={() => aplicaSumaMaxima(factura.idFactura, factura.restDePlata)}
-                            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-500 shadow-sm transition-colors hover:text-indigo-600"
                           >
                             Plătește tot
-                          </button>
+                          </Button>
                           <input
                             type="number"
                             min="0"
                             max={factura.restDePlata}
                             step="0.01"
-                            className={`w-32 rounded-xl border bg-white px-3 py-2.5 text-right text-sm font-bold shadow-sm outline-none transition-all ${
+                            className={`w-28 rounded-md border px-3 py-1.5 text-right text-[13px] font-medium outline-none transition-all ${
                               esteAchitatIntegral
-                                ? 'border-emerald-300 text-emerald-700 focus:ring-2 focus:ring-emerald-200'
+                                ? 'border-emerald-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500'
                                 : estePlatitPartial
-                                  ? 'border-amber-300 text-amber-800 focus:ring-2 focus:ring-amber-200'
-                                  : 'border-slate-300 focus:ring-2 focus:ring-indigo-500'
+                                  ? 'border-amber-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500'
+                                  : 'border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
                             }`}
                             value={factura.sumaAlocata}
                             onChange={(event) => handleAlocareSuma(factura.idFactura, event.target.value)}
@@ -204,58 +203,57 @@ export default function Incasari() {
               )}
             </div>
           ) : (
-            <EmptyState
+             <EmptyState
               title="Niciun client selectat"
-              description="Alege un client din lista comună de facturi restante pentru a continua repartizarea."
+              description="Alege un client din listă pentru a continua repartizarea sumelor."
             />
           )}
         </div>
 
+        {/* PARTEA DREAPTĂ: Detalii și Sumar */}
         <div className="lg:col-span-4">
-          <div className="sticky top-6 flex h-full min-h-[32rem] flex-col rounded-3xl bg-slate-900 p-6 text-white shadow-xl">
-            <h3 className="mb-6 border-b border-slate-800 pb-4 text-sm font-bold uppercase tracking-widest text-slate-400">
-              Detalii Încasare
-            </h3>
+          <div className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-indigo-100 sticky top-6">
+            <h4 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
+               <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-[10px] font-bold text-indigo-700">3</span>
+               Detalii Încasare
+            </h4>
 
-            <div className="mb-6">
-              <label className="mb-2 block text-xs font-medium text-slate-400">Bani primiți</label>
-              <div className="relative">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-[13px] font-medium text-slate-700">Bani primiți (RON) *</label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full rounded-2xl border-2 border-slate-700 bg-slate-800 px-5 py-4 text-3xl font-light text-white outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base font-bold text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   placeholder="0.00"
                   value={sumaIncasata}
                   onChange={(event) => setSumaIncasata(event.target.value === '' ? '' : Number(event.target.value))}
                 />
-                <span className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-slate-500">RON</span>
               </div>
-            </div>
 
-            <div className="mb-6 space-y-4 rounded-2xl border border-slate-700/50 bg-slate-800/50 p-4">
               <div>
-                <label className="mb-2 block text-xs font-medium text-slate-400">Data încasării</label>
+                <label className="mb-1 block text-[13px] font-medium text-slate-700">Data încasării *</label>
                 <input
                   type="date"
-                  className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-[13px] text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={dataIncasare}
                   onChange={(event) => setDataIncasare(event.target.value)}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-medium text-slate-400">Metodă de plată</label>
+                <label className="mb-1 block text-[13px] font-medium text-slate-700">Metodă de plată *</label>
                 <div className="grid grid-cols-3 gap-2">
                   {METODE_PLATA.map((metoda) => (
                     <button
                       key={metoda.id}
                       type="button"
                       onClick={() => setModalitate(metoda.id)}
-                      className={`rounded-xl border py-2 text-[11px] font-bold transition-all ${
+                      className={`rounded-md border py-1.5 text-[11px] font-bold transition-all ${
                         modalitate === metoda.id
-                          ? 'border-indigo-500 bg-indigo-600 text-white shadow-md'
-                          : 'border-slate-600 bg-slate-800 text-slate-400 hover:bg-slate-700'
+                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                       }`}
                     >
                       {metoda.label}
@@ -265,42 +263,39 @@ export default function Incasari() {
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-medium text-slate-400">
-                  Referință document {isReferintaObligatorie ? <span className="text-rose-400">*</span> : null}
+                <label className="mb-1 block text-[13px] font-medium text-slate-700">
+                  Referință document {isReferintaObligatorie && <span className="text-rose-500">*</span>}
                 </label>
                 <input
                   type="text"
-                  className={`w-full rounded-xl border bg-slate-800 px-4 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none ${
+                  className={`w-full rounded-md border px-3 py-2 text-[13px] focus:outline-none focus:ring-1 ${
                     referintaLipsa
-                      ? 'border-rose-500/50 focus:border-rose-500'
-                      : 'border-slate-600 focus:border-indigo-500'
+                      ? 'border-rose-300 bg-rose-50/40 text-slate-900 focus:border-rose-500 focus:ring-rose-500'
+                      : 'border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-indigo-500'
                   }`}
-                  placeholder={modalitate === 'Cash' ? 'Ex: Nr. bon fiscal (opțional)' : 'Ex: Nr. OP / POS'}
+                  placeholder={modalitate === 'Cash' ? 'Ex: Nr. bon (opțional)' : 'Ex: Nr. OP / POS'}
                   value={referinta}
                   onChange={(event) => setReferinta(event.target.value)}
                 />
-                {referintaLipsa ? (
-                  <p className="mt-1 text-[10px] text-rose-400">Obligatoriu pentru bancă sau POS.</p>
-                ) : null}
               </div>
             </div>
 
-            <div className="mb-auto space-y-3 px-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Total datorie client</span>
-                <span className="font-medium text-slate-300">{formatSuma(totalDatorieClient)}</span>
+            <div className="mt-6 space-y-2 bg-slate-50 p-4 rounded-lg border border-slate-100">
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-slate-500">Total datorie</span>
+                <span className="font-semibold text-slate-700">{formatSuma(totalDatorieClient)}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-300">Total repartizat</span>
-                <span className="font-medium text-slate-200">{formatSuma(totalAlocat)}</span>
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-slate-500">Total repartizat</span>
+                <span className="font-semibold text-slate-700">{formatSuma(totalAlocat)}</span>
               </div>
-              <div className="flex items-center justify-between border-t border-slate-700/50 pt-2">
-                <span className="text-sm font-medium text-slate-300">
-                  {baniRamasi >= 0 ? 'Bani nealocați' : 'Bani lipsă'}
+              <div className="flex items-center justify-between border-t border-slate-200 pt-2 mt-2">
+                <span className="text-[13px] font-bold text-slate-700">
+                  {baniRamasi >= 0 ? 'Bani nealocați' : 'Eroare (Bani lipsă)'}
                 </span>
                 <span
-                  className={`text-lg font-bold ${
-                    baniRamasi < 0 ? 'text-rose-400' : baniRamasi > 0 ? 'text-emerald-400' : 'text-slate-200'
+                  className={`text-sm font-bold ${
+                    baniRamasi < 0 ? 'text-rose-600' : baniRamasi > 0 ? 'text-emerald-600' : 'text-slate-800'
                   }`}
                 >
                   {formatSuma(Math.abs(baniRamasi))}
@@ -308,21 +303,24 @@ export default function Incasari() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={idClientSelectat === null || sumaNum <= 0 || areEroareSume || referintaLipsa}
-              className="mt-8 w-full rounded-2xl bg-emerald-500 py-4 font-bold text-white shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none"
-            >
-              {idClientSelectat === null
-                ? '1. Alege clientul'
-                : sumaNum <= 0
-                  ? '2. Introdu suma'
-                  : areEroareSume
-                    ? 'Corectează sumele'
-                    : referintaLipsa
-                      ? 'Adaugă referința'
-                      : 'Înregistrează încasarea'}
-            </button>
+            <div className="mt-6">
+              <Button
+                variant="primary"
+                type="submit"
+                className="w-full justify-center"
+                disabled={idClientSelectat === null || sumaNum <= 0 || areEroareSume || referintaLipsa}
+              >
+                {idClientSelectat === null
+                  ? 'Alege clientul'
+                  : sumaNum <= 0
+                    ? 'Introdu suma'
+                    : areEroareSume
+                      ? 'Corectează sumele'
+                      : referintaLipsa
+                        ? 'Adaugă referința'
+                        : 'Înregistrează încasarea'}
+              </Button>
+            </div>
           </div>
         </div>
       </form>
