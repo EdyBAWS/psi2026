@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMERĂRI ────────────────────────────────────────────────────────
+
+enum StatusGeneral {
+  Activ
+  Inactiv
+}
+
+enum TipClient {
+  PF
+  PJ
+}
+
+enum TipAngajat {
+  Manager
+  Mecanic
+  Receptioner
+}
+
+enum TipPiesa {
+  NOUA
+  SH
+}
+
+// ─── ENTITĂȚI ─────────────────────────────────────────────────────────
+
+model Client {
+  idClient    Int           @id @default(autoincrement())
+  tipClient   TipClient
+  status      StatusGeneral @default(Activ)
+  nume        String        // Numele sau Denumirea companiei
+  prenume     String?       // Doar pentru PF
+  telefon     String
+  email       String?
+  adresa      String
+  soldDebitor Float         @default(0)
+  
+  // Date PF
+  CNP         String?       @unique
+  serieCI     String?
+  
+  // Date PJ
+  CUI         String?       @unique
+  IBAN        String?
+  nrRegCom    String?
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Angajat {
+  idAngajat     Int           @id @default(autoincrement())
+  status        StatusGeneral @default(Activ)
+  nume          String
+  prenume       String
+  CNP           String        @unique
+  telefon       String
+  email         String?
+  tipAngajat    TipAngajat
+  
+  // Specifice în funcție de rol
+  specializare  String?       // Pentru Mecanici
+  costOrar      Float?        // Pentru Mecanici
+  departament   String?       // Pentru Manager
+  sporConducere Float?        // Pentru Manager
+  nrBirou       String?       // Pentru Recepționeri
+  tura          String?       // Pentru Recepționeri
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Asigurator {
+  idAsigurator Int           @id @default(autoincrement())
+  status       StatusGeneral @default(Activ)
+  denumire     String
+  CUI          String        @unique
+  telefon      String
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// ─── CATALOG ──────────────────────────────────────────────────────────
+
+model Piesa {
+  idPiesa      Int      @id @default(autoincrement())
+  codPiesa     String   @unique
+  denumire     String
+  producator   String
+  categorie    String
+  pretBaza     Float
+  stoc         Int      @default(0)
+  tip          TipPiesa
+  luniGarantie Int?
+  gradUzura    String?  // Pentru piesele SH
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Manopera {
+  idManopera  Int      @id @default(autoincrement())
+  codManopera String   @unique
+  denumire    String
+  categorie   String
+  durataStd   Float
+  pretOra     Float?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
