@@ -35,46 +35,47 @@ model Client {
   idClient    Int           @id @default(autoincrement())
   tipClient   TipClient
   status      StatusGeneral @default(Activ)
-  nume        String        // Numele sau Denumirea companiei
-  prenume     String?       // Doar pentru PF
+  nume        String // Numele sau Denumirea companiei
+  prenume     String? // Doar pentru PF
   telefon     String
   email       String?
   adresa      String
   soldDebitor Float         @default(0)
-  
-  // Date PF
-  CNP         String?       @unique
-  serieCI     String?
-  
-  // Date PJ
-  CUI         String?       @unique
-  IBAN        String?
-  nrRegCom    String?
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  // Date PF
+  CNP     String? @unique
+  serieCI String?
+
+  // Date PJ
+  CUI      String? @unique
+  IBAN     String?
+  nrRegCom String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  facturas  Factura[]
 }
 
 model Angajat {
-  idAngajat     Int           @id @default(autoincrement())
-  status        StatusGeneral @default(Activ)
-  nume          String
-  prenume       String
-  CNP           String        @unique
-  telefon       String
-  email         String?
-  tipAngajat    TipAngajat
-  
-  // Specifice în funcție de rol
-  specializare  String?       // Pentru Mecanici
-  costOrar      Float?        // Pentru Mecanici
-  departament   String?       // Pentru Manager
-  sporConducere Float?        // Pentru Manager
-  nrBirou       String?       // Pentru Recepționeri
-  tura          String?       // Pentru Recepționeri
+  idAngajat  Int           @id @default(autoincrement())
+  status     StatusGeneral @default(Activ)
+  nume       String
+  prenume    String
+  CNP        String        @unique
+  telefon    String
+  email      String?
+  tipAngajat TipAngajat
 
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  // Specifice în funcție de rol
+  specializare  String? // Pentru Mecanici
+  costOrar      Float? // Pentru Mecanici
+  departament   String? // Pentru Manager
+  sporConducere Float? // Pentru Manager
+  nrBirou       String? // Pentru Recepționeri
+  tura          String? // Pentru Recepționeri
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Asigurator {
@@ -84,8 +85,8 @@ model Asigurator {
   CUI          String        @unique
   telefon      String
 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ─── CATALOG ──────────────────────────────────────────────────────────
@@ -100,20 +101,68 @@ model Piesa {
   stoc         Int      @default(0)
   tip          TipPiesa
   luniGarantie Int?
-  gradUzura    String?  // Pentru piesele SH
+  gradUzura    String? // Pentru piesele SH
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Manopera {
-  idManopera  Int      @id @default(autoincrement())
-  codManopera String   @unique
+  idManopera  Int    @id @default(autoincrement())
+  codManopera String @unique
   denumire    String
   categorie   String
   durataStd   Float
   pretOra     Float?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── FACTURARE ────────────────────────────────────────────────────────
+
+enum StatusFactura {
+  Emisa
+  Platita
+  Anulata
+}
+
+model Factura {
+  idFactura    Int           @id @default(autoincrement())
+  serie        String        @default("SN")
+  numar        Int           @unique
+  dataEmiterii DateTime      @default(now())
+  scadenta     DateTime
+  status       StatusFactura @default(Emisa)
+
+  // Relație cu Clientul
+  idClient Int
+  client   Client @relation(fields: [idClient], references: [idClient])
+
+  // Relație cu liniile din factură
+  iteme FacturaItem[]
+
+  totalFaraTVA Float @default(0)
+  tva          Float @default(0)
+  totalGeneral Float @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FacturaItem {
+  idItem    Int     @id @default(autoincrement())
+  idFactura Int
+  factura   Factura @relation(fields: [idFactura], references: [idFactura])
+
+  descriere  String // Denumirea piesei sau a serviciului
+  cantitate  Int
+  pretUnitar Float
+  cotaTva    Float  @default(19) // Ex: 19%
+
+  // Opțional: legătură cu catalogul
+  idPiesa    Int?
+  idManopera Int?
+
+  createdAt DateTime @default(now())
 }
