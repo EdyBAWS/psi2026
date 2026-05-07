@@ -8,6 +8,43 @@ import type { ComandaFacturabilaMock, LinieFacturaMock } from '../../../mock/typ
 export type FacturareSortField = 'data' | 'nrComanda' | 'valoare';
 export type FacturareSortDir = 'asc' | 'desc';
 
+const API_BASE = 'http://127.0.0.1:3000';
+
+interface BackendClient {
+  idClient: number;
+  nume: string;
+  prenume?: string | null;
+}
+
+const normalizeazaText = (valoare: string) =>
+  valoare
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+const scorPotrivireClient = (clientBackend: BackendClient, numeComanda: string) => {
+  const tinta = normalizeazaText(numeComanda);
+  const variante = [
+    clientBackend.nume,
+    `${clientBackend.nume} ${clientBackend.prenume ?? ''}`,
+    `${clientBackend.prenume ?? ''} ${clientBackend.nume}`,
+  ].map(normalizeazaText);
+
+  return variante.some((varianta) => varianta && (tinta.includes(varianta) || varianta.includes(tinta)));
+};
+
+async function rezolvaIdClientPentruComanda(comanda: ComandaFacturabilaMock) {
+  const response = await fetch(`${API_BASE}/entitati/clienti`);
+  if (!response.ok) throw new Error('Nu s-au putut încărca clienții pentru facturare.');
+
+  const clienti = (await response.json()) as BackendClient[];
+  const clientGasit = clienti.find((client) => scorPotrivireClient(client, comanda.client));
+
+  return clientGasit?.idClient ?? clienti[0]?.idClient;
+}
+
 export function useFacturare() {
   const [comenziGata, setComenziGata] = useState<ComandaFacturabilaMock[]>([]);
   const [comandaSelectata, setComandaSelectata] = useState<ComandaFacturabilaMock | null>(null);
@@ -103,24 +140,27 @@ export function useFacturare() {
       return;
     }
 
-    // 1. Pregătim datele pentru backend exact în formatul DTO-ului din NestJS
-    const dateBackend = {
-      numar: Number(numarFactura),
-      serie: serieFactura,
-      idClient: 1, // Setăm 1 pentru că baza de date are deja clientul 1
-      scadenta: new Date(dataScadenta).toISOString(),
-      iteme: liniiFactura.map((linie) => ({
-        descriere: linie.denumire,
-        cantitate: linie.cantitate,
-        pretUnitar: linie.pretUnitar,
-        // Dăm un ID de piesă sau manoperă în funcție de tip
-        ...(linie.tip === 'Manoperă' ? { idManopera: 1 } : { idPiesa: 1 })
-      }))
-    };
-
     try {
-      // 2. Facem apelul REAL către baza de date
-      const response = await fetch('http://localhost:3000/facturare', {
+      const idClient = await rezolvaIdClientPentruComanda(comandaSelectata);
+
+      if (!idClient) {
+        toast.error('Nu există niciun client valid în backend pentru emiterea facturii.');
+        return;
+      }
+
+      const dateBackend = {
+        numar: Number(numarFactura),
+        serie: serieFactura,
+        idClient,
+        scadenta: new Date(dataScadenta).toISOString(),
+        iteme: liniiFactura.map((linie) => ({
+          descriere: linie.denumire,
+          cantitate: linie.cantitate,
+          pretUnitar: linie.pretUnitar,
+        }))
+      };
+
+      const response = await fetch(`${API_BASE}/facturare`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +172,6 @@ export function useFacturare() {
         throw new Error('Eroare de la server');
       }
 
-      // 3. Dacă totul e ok, finalizăm acțiunea
       toast.success(`Factura ${serieFactura}-${numarFactura} a fost emisă și salvată în baza de date!`);
       
       setComenziGata((prev) => prev.filter((c) => c.idComanda !== comandaSelectata.idComanda));

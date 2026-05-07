@@ -13,7 +13,7 @@ export function useIstoric() {
     // Înlocuim apelul către mock-uri cu un apel către backend-ul tău real (GET)
     const incarcaIstoricReal = async () => {
       try {
-        const response = await fetch('http://localhost:3000/facturare');
+        const response = await fetch('http://127.0.0.1:3000/facturare');
         if (!response.ok) {
           throw new Error('Eroare la preluarea facturilor de la server');
         }

@@ -22,6 +22,11 @@ export class CatalogController {
     return this.catalogService.fetchPiese();
   }
 
+  @Get('piese/:id/istoric')
+  fetchIstoricPiesa(@Param('id', ParseIntPipe) id: number) {
+    return this.catalogService.fetchIstoricPiesa(id);
+  }
+
   @Post('piese')
   createPiesa(@Body() data: Prisma.PiesaCreateInput) {
     return this.catalogService.createPiesa(data);

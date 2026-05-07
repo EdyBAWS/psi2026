@@ -14,6 +14,15 @@ export class CatalogService {
     });
   }
 
+  async fetchIstoricPiesa(id: number) {
+    await this.prisma.piesa.findUniqueOrThrow({
+      where: { idPiesa: id },
+      select: { idPiesa: true },
+    });
+
+    return [];
+  }
+
   async createPiesa(data: Prisma.PiesaCreateInput) {
     return this.prisma.piesa.create({ data });
   }

@@ -37,7 +37,7 @@ export function useOferta() {
   useEffect(() => {
     const fetchFacturi = async () => {
       try {
-        const res = await fetch('http://localhost:3000/facturare');
+        const res = await fetch('http://127.0.0.1:3000/facturare');
         if (!res.ok) throw new Error('Eroare rețea');
         const data = await res.json();
         
@@ -70,7 +70,7 @@ export function useOferta() {
       
       try {
         // Facem un GET pe ID-ul facturii curente
-        const res = await fetch(`http://localhost:3000/facturare/${idFacturaSelectata}`);
+        const res = await fetch(`http://127.0.0.1:3000/facturare/${idFacturaSelectata}`);
         if (!res.ok) throw new Error('Eroare rețea');
         const facturaReala = await res.json();
         
@@ -163,7 +163,7 @@ export function useOferta() {
         liniiStorno: tipOperatiune === 'storno' ? liniiStorno : undefined
       };
 
-      const res = await fetch(`http://localhost:3000/facturare/${factura.idFactura}`, {
+      const res = await fetch(`http://127.0.0.1:3000/facturare/${factura.idFactura}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 import { type ManoperaCatalogMock, type PiesaCatalogMock } from '../../mock/catalog';
 
-const API_URL = 'http://localhost:3000/catalog';
+const API_URL = 'http://127.0.0.1:3000/catalog';
 
 async function handleResponse(response: Response) {
   if (!response.ok) {
@@ -35,7 +35,8 @@ export async function updateManopera(id: number, data: Partial<ManoperaCatalogMo
 }
 
 export async function deleteManopera(id: number): Promise<void> {
-  await fetch(`${API_URL}/manopera/${id}`, { method: 'DELETE' });
+  const response = await fetch(`${API_URL}/manopera/${id}`, { method: 'DELETE' });
+  await handleResponse(response);
 }
 
 // ─── Piese ──────────────────────────
@@ -68,5 +69,6 @@ export async function updatePiesa(id: number, data: Partial<PiesaCatalogMock>): 
 }
 
 export async function deletePiesa(id: number): Promise<void> {
-  await fetch(`${API_URL}/piese/${id}`, { method: 'DELETE' });
+  const response = await fetch(`${API_URL}/piese/${id}`, { method: 'DELETE' });
+  await handleResponse(response);
 }

@@ -22,8 +22,8 @@ export function usePenalizare() {
     const fetchToateDatele = async () => {
       try {
         const [resClienti, resFacturi] = await Promise.all([
-          fetch('http://localhost:3000/entitati/clienti'),
-          fetch('http://localhost:3000/facturare')
+          fetch('http://127.0.0.1:3000/entitati/clienti'),
+          fetch('http://127.0.0.1:3000/facturare')
         ]);
 
         const dataClienti = resClienti.ok ? await resClienti.json() : [];
@@ -148,7 +148,7 @@ export function usePenalizare() {
         ]
       };
 
-      const response = await fetch('http://localhost:3000/facturare', {
+      const response = await fetch('http://127.0.0.1:3000/facturare', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

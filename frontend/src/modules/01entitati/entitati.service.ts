@@ -17,8 +17,8 @@ export interface AsiguratorEntity {
   status: 'Activ' | 'Inactiv';
 }
 
-const API_URL = 'http://localhost:3000/entitati';
-const OPERATIONAL_API_URL = 'http://localhost:3000/operational';
+const API_URL = 'http://127.0.0.1:3000/entitati';
+const OPERATIONAL_API_URL = 'http://127.0.0.1:3000/operational';
 
 // ============================================================================
 // --- CLIENȚI (Conectat la Baza de Date) ---
