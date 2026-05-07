@@ -1,25 +1,19 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  private pool: Pool;
-
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   constructor() {
-    // Luăm URL-ul direct din proces sau aruncăm o eroare clară dacă lipsește
-    const connectionString = process.env.DATABASE_URL;
-    
-    if (!connectionString) {
+    // Verificăm doar dacă variabila de mediu există
+    if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not defined in .env file');
     }
 
-    const pool = new Pool({ connectionString });
-    const adapter = new PrismaPg(pool);
-    
-    super({ adapter });
-    this.pool = pool;
+    // Apelăm constructorul de bază al PrismaClient
+    super();
   }
 
   async onModuleInit() {
@@ -27,6 +21,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleDestroy() {
-    await this.pool.end();
+    await this.$disconnect();
   }
 }

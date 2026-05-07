@@ -89,7 +89,7 @@ export default function FormComanda({
             </h3>
             <p className="mt-2 text-sm text-slate-500">
               Vehicul selectat: {vehicul.marca} {vehicul.model} ·{" "}
-              {vehicul.nrInmatriculare}
+              {vehicul.numarInmatriculare}
             </p>
           </div>
 

@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { EntitatiModule } from './entitati/entitati.module';
 import { FacturareModule } from './facturare/facturare.module';
+import { OperationalModule } from './operational/operational.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { FacturareModule } from './facturare/facturare.module';
     CatalogModule,
     EntitatiModule,
     FacturareModule,
+    OperationalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

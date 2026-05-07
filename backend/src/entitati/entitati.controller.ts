@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { EntitatiService } from './entitati.service';
 import { Prisma, StatusGeneral } from '@prisma/client';
 
@@ -19,12 +27,18 @@ export class EntitatiController {
   }
 
   @Patch('clienti/:id')
-  updateClient(@Param('id', ParseIntPipe) id: number, @Body() data: Prisma.ClientUpdateInput) {
+  updateClient(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Prisma.ClientUpdateInput,
+  ) {
     return this.entitatiService.updateClient(id, data);
   }
 
   @Patch('clienti/:id/status')
-  schimbaStatusClient(@Param('id', ParseIntPipe) id: number, @Body('status') status: StatusGeneral) {
+  schimbaStatusClient(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: StatusGeneral,
+  ) {
     return this.entitatiService.schimbaStatusClient(id, status);
   }
 
@@ -41,12 +55,18 @@ export class EntitatiController {
   }
 
   @Patch('angajati/:id')
-  updateAngajat(@Param('id', ParseIntPipe) id: number, @Body() data: Prisma.AngajatUpdateInput) {
+  updateAngajat(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Prisma.AngajatUpdateInput,
+  ) {
     return this.entitatiService.updateAngajat(id, data);
   }
 
   @Patch('angajati/:id/status')
-  schimbaStatusAngajat(@Param('id', ParseIntPipe) id: number, @Body('status') status: StatusGeneral) {
+  schimbaStatusAngajat(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: StatusGeneral,
+  ) {
     return this.entitatiService.schimbaStatusAngajat(id, status);
   }
 
@@ -63,12 +83,18 @@ export class EntitatiController {
   }
 
   @Patch('asiguratori/:id')
-  updateAsigurator(@Param('id', ParseIntPipe) id: number, @Body() data: Prisma.AsiguratorUpdateInput) {
+  updateAsigurator(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Prisma.AsiguratorUpdateInput,
+  ) {
     return this.entitatiService.updateAsigurator(id, data);
   }
 
   @Patch('asiguratori/:id/status')
-  schimbaStatusAsigurator(@Param('id', ParseIntPipe) id: number, @Body('status') status: StatusGeneral) {
+  schimbaStatusAsigurator(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: StatusGeneral,
+  ) {
     return this.entitatiService.schimbaStatusAsigurator(id, status);
   }
 }

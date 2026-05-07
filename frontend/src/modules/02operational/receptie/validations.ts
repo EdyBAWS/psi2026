@@ -85,7 +85,7 @@ export function valideazaPreluare({
   }
   if (comandaActivaExistenta) {
     mesajeBlocare.push(
-      `Vehiculul are deja o comandă activă (${comandaActivaExistenta.nrComanda}).`,
+      `Vehiculul are deja o comandă activă (${comandaActivaExistenta.numarComanda}).`,
     );
   }
   if (idMecanicSelectat === null) {

@@ -1,4 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateEntitatiDto } from './create-entitati.dto';
+import { CreateAsiguratorDto } from './create-entitati.dto';
 
-export class UpdateEntitatiDto extends PartialType(CreateEntitatiDto) {}
+// Folosim noua denumire a clasei
+export class UpdateEntitatiDto extends PartialType(CreateAsiguratorDto) {}

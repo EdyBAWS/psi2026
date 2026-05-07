@@ -2,104 +2,179 @@ import type { ClientFormValues, AngajatFormValues, AsiguratorFormValues } from '
 
 export type ClientEntity = ClientFormValues & { idClient: number };
 export type AngajatEntity = AngajatFormValues & { idAngajat: number };
-export type AsiguratorEntity = AsiguratorFormValues & { idAsigurator: number };
 
-// --- MOCK DATA EXISTENT ---
-let mockClienti: ClientEntity[] = [
-  { idClient: 1, tipClient: 'PJ', nume: 'SC Auto Fleet SRL', CUI: 'RO9876543', telefon: '021 440 55 90', email: 'service@autofleet.ro', adresa: 'Bucuresti', soldDebitor: 1550, status: 'Activ' },
-  { idClient: 2, tipClient: 'PF', nume: 'Popescu', prenume: 'Ion', CNP: '1800101223344', serieCI: 'XZ123456', telefon: '0722 445 781', email: 'ion@gmail.com', adresa: 'Iasi', soldDebitor: 0, status: 'Activ' }
-];
+// Definim explicit entitatea Asiguratorului pentru a include toate câmpurile din Prisma
+export interface AsiguratorEntity {
+  idAsigurator: number;
+  denumire: string;
+  CUI: string;
+  telefon?: string;
+  nrRegCom?: string;
+  adresa?: string;
+  emailDaune?: string;
+  IBAN?: string;
+  termenPlataZile: number;
+  status: 'Activ' | 'Inactiv';
+}
 
-let mockAngajati: AngajatEntity[] = [
-  { idAngajat: 1, nume: 'Dumitrescu', prenume: 'Sorin', CNP: '1234567890123', telefon: '0721 100 204', email: 'sorin@service.ro', tipAngajat: 'Manager', departament: 'Operațional', status: 'Activ' },
-  { idAngajat: 2, nume: 'Ionescu', prenume: 'Mihai', CNP: '1900101223344', telefon: '0721 100 201', email: 'mihai@service.ro', tipAngajat: 'Mecanic', specializare: 'Mecanică generală', costOrar: 150, status: 'Activ' }
-];
+const API_URL = 'http://localhost:3000/entitati';
+const OPERATIONAL_API_URL = 'http://localhost:3000/operational';
 
-let mockAsiguratori: AsiguratorEntity[] = [
-  { idAsigurator: 1, denumire: 'Allianz-Țiriac', CUI: 'RO6120740', telefon: '021 208 22 22', status: 'Activ' },
-  { idAsigurator: 2, denumire: 'Groupama', CUI: 'RO6291812', telefon: '021 302 92 00', status: 'Activ' }
-];
-
-// --- CLIENTI ---
-export async function fetchClienti() { return [...mockClienti]; }
-export async function saveClient(data: ClientFormValues, id?: number) {
-  if (id) {
-    mockClienti = mockClienti.map(c => c.idClient === id ? { ...data, idClient: id } : c);
-    return mockClienti.find(c => c.idClient === id)!;
+// ============================================================================
+// --- CLIENȚI (Conectat la Baza de Date) ---
+// ============================================================================
+export async function fetchClienti(): Promise<ClientEntity[]> {
+  try {
+    const res = await fetch(`${API_URL}/clienti`);
+    if (!res.ok) throw new Error('Eroare backend la clienți');
+    return await res.json();
+  } catch (err) {
+    console.error("Eroare la fetchClienti:", err);
+    return []; // Protecție: returnăm listă goală ca să nu crape maparea
   }
-  const newEntity = { ...data, idClient: Date.now() };
-  mockClienti = [newEntity, ...mockClienti];
-  return newEntity;
-}
-export async function schimbaStatusClient(id: number, status: 'Activ' | 'Inactiv') {
-  mockClienti = mockClienti.map(c => c.idClient === id ? { ...c, status } : c);
 }
 
-// --- ANGAJATI ---
-export async function fetchAngajati() { return [...mockAngajati]; }
-export async function saveAngajat(data: AngajatFormValues, id?: number) {
-  if (id) {
-    mockAngajati = mockAngajati.map(a => a.idAngajat === id ? { ...data, idAngajat: id } : a);
-    return mockAngajati.find(a => a.idAngajat === id)!;
-  }
-  const newEntity = { ...data, idAngajat: Date.now() };
-  mockAngajati = [newEntity, ...mockAngajati];
-  return newEntity;
-}
-export async function schimbaStatusAngajat(id: number, status: 'Activ' | 'Inactiv') {
-  mockAngajati = mockAngajati.map(a => a.idAngajat === id ? { ...a, status } : a);
+export async function saveClient(data: ClientFormValues, id?: number): Promise<ClientEntity> {
+  const method = id ? 'PATCH' : 'POST';
+  const url = id ? `${API_URL}/clienti/${id}` : `${API_URL}/clienti`;
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Eroare la salvarea clientului');
+  return await res.json();
 }
 
-// --- ASIGURATORI ---
-export async function fetchAsiguratori() { return [...mockAsiguratori]; }
-export async function saveAsigurator(data: AsiguratorFormValues, id?: number) {
-  if (id) {
-    mockAsiguratori = mockAsiguratori.map(a => a.idAsigurator === id ? { ...data, idAsigurator: id } : a);
-    return mockAsiguratori.find(a => a.idAsigurator === id)!;
-  }
-  const newEntity = { ...data, idAsigurator: Date.now() };
-  mockAsiguratori = [newEntity, ...mockAsiguratori];
-  return newEntity;
-}
-export async function schimbaStatusAsigurator(id: number, status: 'Activ' | 'Inactiv') {
-  mockAsiguratori = mockAsiguratori.map(a => a.idAsigurator === id ? { ...a, status } : a);
+export async function schimbaStatusClient(id: number, status: 'Activ' | 'Inactiv'): Promise<void> {
+  const res = await fetch(`${API_URL}/clienti/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error('Eroare la schimbarea statusului clientului');
 }
 
 // ============================================================================
-// --- VEHICULE ---
+// --- ANGAJAȚI (Conectat la Baza de Date) ---
+// ============================================================================
+export async function fetchAngajati(): Promise<AngajatEntity[]> {
+  try {
+    const res = await fetch(`${API_URL}/angajati`);
+    if (!res.ok) throw new Error('Eroare backend la angajați');
+    return await res.json();
+  } catch (err) {
+    console.error("Eroare la fetchAngajati:", err);
+    return [];
+  }
+}
+
+export async function saveAngajat(data: AngajatFormValues, id?: number): Promise<AngajatEntity> {
+  const method = id ? 'PATCH' : 'POST';
+  const url = id ? `${API_URL}/angajati/${id}` : `${API_URL}/angajati`;
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Eroare la salvarea angajatului');
+  return await res.json();
+}
+
+export async function schimbaStatusAngajat(id: number, status: 'Activ' | 'Inactiv'): Promise<void> {
+  const res = await fetch(`${API_URL}/angajati/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error('Eroare la schimbarea statusului angajatului');
+}
+
+// ============================================================================
+// --- ASIGURĂTORI (Conectat la Baza de Date) ---
+// ============================================================================
+export async function fetchAsiguratori(): Promise<AsiguratorEntity[]> {
+  try {
+    const res = await fetch(`${API_URL}/asiguratori`);
+    if (!res.ok) throw new Error('Eroare backend la asigurători');
+    return await res.json();
+  } catch (err) {
+    console.error("Eroare la fetchAsiguratori:", err);
+    return [];
+  }
+}
+
+export async function saveAsigurator(data: AsiguratorFormValues, id?: number): Promise<AsiguratorEntity> {
+  const method = id ? 'PATCH' : 'POST';
+  const url = id ? `${API_URL}/asiguratori/${id}` : `${API_URL}/asiguratori`;
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Eroare la salvarea asigurătorului');
+  return await res.json();
+}
+
+export async function schimbaStatusAsigurator(id: number, status: 'Activ' | 'Inactiv'): Promise<void> {
+  const res = await fetch(`${API_URL}/asiguratori/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error('Eroare la schimbarea statusului asigurătorului');
+}
+
+// ============================================================================
+// --- VEHICULE (Conectat la Baza de Date via Modulul Operațional) ---
 // ============================================================================
 export type VehiculEntity = {
   idVehicul: number;
-  nrInmatriculare: string;
+  numarInmatriculare: string; // Adaptat exact la denumirea din Prisma
   marca: string;
   model: string;
-  an: number;
-  serieSasiu: string;
+  vin: string;                // Adaptat exact la denumirea din Prisma
   idClient: number;
   status: 'Activ' | 'Inactiv';
+  client?: ClientEntity;      // Returnat automat din backend prin logica de "include"
 };
 
-export type VehiculFormValues = Omit<VehiculEntity, 'idVehicul' | 'status'>;
+export type VehiculFormValues = {
+  numarInmatriculare: string;
+  marca: string;
+  model: string;
+  vin: string;
+  idClient: number;
+};
 
-let mockVehicule: VehiculEntity[] = [
-  { idVehicul: 1, nrInmatriculare: "IS 24 ABC", marca: "Volkswagen", model: "Passat", an: 2019, serieSasiu: "WVWZZZ3CZJE123456", idClient: 2, status: "Activ" },
-  { idVehicul: 2, nrInmatriculare: "B 101 FLT", marca: "Skoda", model: "Octavia", an: 2021, serieSasiu: "TMBJG7NE0M0123456", idClient: 1, status: "Activ" },
-];
-
-export async function fetchVehicule() { 
-  return [...mockVehicule]; 
-}
-
-export async function saveVehicul(data: VehiculFormValues, id?: number) {
-  if (id) {
-    mockVehicule = mockVehicule.map(v => v.idVehicul === id ? { ...data, idVehicul: id, status: v.status } : v);
-    return mockVehicule.find(v => v.idVehicul === id)!;
+export async function fetchVehicule(): Promise<VehiculEntity[]> {
+  try {
+    const res = await fetch(`${OPERATIONAL_API_URL}/vehicule`);
+    if (!res.ok) throw new Error('Eroare backend la vehicule');
+    return await res.json();
+  } catch (err) {
+    console.error("Eroare la fetchVehicule:", err);
+    return [];
   }
-  const newEntity: VehiculEntity = { ...data, idVehicul: Date.now(), status: 'Activ' };
-  mockVehicule = [newEntity, ...mockVehicule];
-  return newEntity;
 }
 
-export async function schimbaStatusVehicul(id: number, status: 'Activ' | 'Inactiv') {
-  mockVehicule = mockVehicule.map(v => v.idVehicul === id ? { ...v, status } : v);
+export async function saveVehicul(data: VehiculFormValues, id?: number): Promise<VehiculEntity> {
+  const method = id ? 'PATCH' : 'POST';
+  const url = id ? `${OPERATIONAL_API_URL}/vehicule/${id}` : `${OPERATIONAL_API_URL}/vehicule`;
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Eroare la salvarea vehiculului');
+  return await res.json();
+}
+
+export async function schimbaStatusVehicul(id: number, status: 'Activ' | 'Inactiv'): Promise<void> {
+  const res = await fetch(`${OPERATIONAL_API_URL}/vehicule/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error('Eroare la schimbarea statusului vehiculului');
 }

@@ -105,15 +105,15 @@ export function useManopera() {
     // Scroll-ul la formular este gestionat de componentă via ref dacă e nevoie.
   };
 
-  const handleSterge = async (id: number) => {
-    try {
-      await deleteManopera();
-      setLista((prev) => prev.filter((m) => m.idManopera !== id));
-      toast.success('Operațiunea a fost ștearsă.');
-    } catch {
-      toast.error('Ștergerea a eșuat.');
-    }
-  };
+const handleSterge = async (id: number) => {
+  try {
+    await deleteManopera(id); // <--- Adaugă id-ul aici
+    setLista((prev) => prev.filter((m) => m.idManopera !== id));
+    toast.success('Operațiunea a fost ștearsă.');
+  } catch {
+    toast.error('Ștergerea a eșuat.');
+  }
+};
 
   const handleInchideFormular = () => {
     setArataFormular(false);

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Car, Search, ClipboardList, ArrowUpDown, Plus, Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "../../../componente/ui/PageHeader";
@@ -9,17 +9,12 @@ import { Field } from "../../../componente/ui/Field";
 import { SelectField } from "../../../componente/ui/SelectField";
 import { ConfirmDialog } from "../../../componente/ui/ConfirmDialog";
 
-// Importăm funcțiile de execuție
-import { fetchVehicule, fetchClienti, saveVehicul, schimbaStatusVehicul } from "../entitati.service";
-// Importăm STRICT ca tipuri
 import type { VehiculEntity, VehiculFormValues, ClientEntity } from "../entitati.service";
+import { useVehicul, type SortField } from "./useVehicul";
 
 // ============================================================================
 // 1. COMPONENTE REUTILIZABILE EXTRASE DIN RENDER
 // ============================================================================
-
-type SortField = 'nrInmatriculare' | 'numeDetinator' | 'marca' | 'status';
-type SortDirection = 'asc' | 'desc';
 
 interface ThSortableProps {
   label: string;
@@ -43,7 +38,7 @@ function ThSortable({ label, field, currentSortField, onSort }: ThSortableProps)
 }
 
 // ============================================================================
-// 2. COMPONENTA PENTRU FORMULAR (Slide-over Adăugare / Modificare)
+// 2. COMPONENTA PENTRU FORMULAR
 // ============================================================================
 interface VehiculFormProps {
   initialData?: VehiculEntity | null;
@@ -54,11 +49,10 @@ interface VehiculFormProps {
 
 function VehiculForm({ initialData, clienti, onClose, onSave }: VehiculFormProps) {
   const [formData, setFormData] = useState<VehiculFormValues>({
-    nrInmatriculare: initialData?.nrInmatriculare || "",
+    numarInmatriculare: initialData?.numarInmatriculare || "",
     marca: initialData?.marca || "",
     model: initialData?.model || "",
-    an: initialData?.an || new Date().getFullYear(),
-    serieSasiu: initialData?.serieSasiu || "",
+    vin: initialData?.vin || "",
     idClient: initialData?.idClient || (clienti.length > 0 ? clienti[0].idClient : 0),
   });
 
@@ -66,7 +60,7 @@ function VehiculForm({ initialData, clienti, onClose, onSave }: VehiculFormProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nrInmatriculare || !formData.marca || !formData.idClient) {
+    if (!formData.numarInmatriculare || !formData.marca || !formData.idClient) {
       toast.error("Vă rugăm să completați câmpurile obligatorii.");
       return;
     }
@@ -103,55 +97,13 @@ function VehiculForm({ initialData, clienti, onClose, onSave }: VehiculFormProps
       </div>
 
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-5">
-        <Field
-          label="Număr Înmatriculare *"
-          placeholder="ex: B 100 ABC"
-          value={formData.nrInmatriculare}
-          onChange={(e) => setFormData({ ...formData, nrInmatriculare: e.target.value.toUpperCase() })}
-          required
-        />
+        <Field label="Număr Înmatriculare *" placeholder="ex: B 100 ABC" value={formData.numarInmatriculare} onChange={(e) => setFormData({ ...formData, numarInmatriculare: e.target.value.toUpperCase() })} required />
         <div className="grid grid-cols-2 gap-4">
-          <Field
-            label="Marcă *"
-            placeholder="ex: Volkswagen"
-            value={formData.marca}
-            onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-            required
-          />
-          <Field
-            label="Model *"
-            placeholder="ex: Golf"
-            value={formData.model}
-            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-            required
-          />
+          <Field label="Marcă *" placeholder="ex: Volkswagen" value={formData.marca} onChange={(e) => setFormData({ ...formData, marca: e.target.value })} required />
+          <Field label="Model *" placeholder="ex: Golf" value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} required />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Field
-            label="An Fabricație *"
-            type="number"
-            min={1950}
-            max={new Date().getFullYear() + 1}
-            value={formData.an}
-            onChange={(e) => setFormData({ ...formData, an: Number(e.target.value) })}
-            required
-          />
-          <Field
-            label="Serie Șasiu (VIN) *"
-            placeholder="17 caractere"
-            value={formData.serieSasiu}
-            onChange={(e) => setFormData({ ...formData, serieSasiu: e.target.value.toUpperCase() })}
-            required
-          />
-        </div>
-        <SelectField
-          label="Proprietar (Client) *"
-          options={clientOptions}
-          value={formData.idClient.toString()}
-          onChange={(e) => setFormData({ ...formData, idClient: Number(e.target.value) })}
-          placeholder="Selectează un client"
-          required
-        />
+        <Field label="Serie Șasiu (VIN) *" placeholder="17 caractere" value={formData.vin} onChange={(e) => setFormData({ ...formData, vin: e.target.value.toUpperCase() })} required />
+        <SelectField label="Proprietar (Client) *" options={clientOptions} value={formData.idClient.toString()} onChange={(e) => setFormData({ ...formData, idClient: Number(e.target.value) })} placeholder="Selectează un client" required />
 
         <div className="pt-4 border-t border-slate-100 flex gap-3">
           <Button type="button" variant="outline" fullWidth onClick={onClose}>Anulează</Button>
@@ -165,7 +117,7 @@ function VehiculForm({ initialData, clienti, onClose, onSave }: VehiculFormProps
 }
 
 // ============================================================================
-// 3. COMPONENTA PENTRU DETALII (Slide-over Vizualizare)
+// 3. COMPONENTA PENTRU DETALII
 // ============================================================================
 interface VehiculDetailProps {
   vehicul: VehiculEntity;
@@ -176,13 +128,9 @@ interface VehiculDetailProps {
 }
 
 function VehiculDetail({ vehicul, client, onInchide, onEdit, onDeleteRequest }: VehiculDetailProps) {
-  const istoricComenzi = [
-    { id: `CMD-2025-0${vehicul.idVehicul}1`, data: "12.05.2025", suma: "1,250.00 RON", status: "FINALIZAT" },
-  ];
+  const istoricComenzi: any[] = []; // Urmează să fie populat din backend
 
-  const numeClient = client 
-    ? (client.tipClient === 'PJ' ? client.nume : `${client.nume} ${client.prenume || ""}`).trim() 
-    : "Client Necunoscut";
+  const numeClient = client ? (client.tipClient === 'PJ' ? client.nume : `${client.nume} ${client.prenume || ""}`).trim() : "Client Necunoscut";
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm sticky top-6">
@@ -190,18 +138,12 @@ function VehiculDetail({ vehicul, client, onInchide, onEdit, onDeleteRequest }: 
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold text-slate-800">{vehicul.nrInmatriculare}</h3>
-              <span className={`inline-flex rounded-md border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
-                vehicul.status === 'Activ' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'
-              }`}>
-                {vehicul.status}
-              </span>
+              <h3 className="text-xl font-bold text-slate-800">{vehicul.numarInmatriculare}</h3>
+              <span className={`inline-flex rounded-md border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${vehicul.status === 'Activ' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>{vehicul.status}</span>
             </div>
             <p className="mt-1 text-sm font-medium text-slate-500">ID Sistem: VHC-{vehicul.idVehicul.toString().padStart(4, '0')}</p>
           </div>
-          <button onClick={onInchide} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
+          <button onClick={onInchide} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
       </div>
 
@@ -210,8 +152,7 @@ function VehiculDetail({ vehicul, client, onInchide, onEdit, onDeleteRequest }: 
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Specificații Auto</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div><p className="text-xs text-slate-500">Marcă & Model</p><p className="font-semibold text-slate-800">{vehicul.marca} {vehicul.model}</p></div>
-            <div><p className="text-xs text-slate-500">An Fabricație</p><p className="font-semibold text-slate-800">{vehicul.an}</p></div>
-            <div className="sm:col-span-2"><p className="text-xs text-slate-500">Serie Șasiu (VIN)</p><p className="text-sm font-mono font-medium text-slate-700">{vehicul.serieSasiu}</p></div>
+            <div className="sm:col-span-2"><p className="text-xs text-slate-500">Serie Șasiu (VIN)</p><p className="text-sm font-mono font-medium text-slate-700">{vehicul.vin || '-'}</p></div>
           </div>
         </div>
 
@@ -226,135 +167,68 @@ function VehiculDetail({ vehicul, client, onInchide, onEdit, onDeleteRequest }: 
 
         <ul className="divide-y divide-slate-100 p-5">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Istoric Comenzi ({istoricComenzi.length})</p>
-          {istoricComenzi.map((cmd) => (
-            <li key={cmd.id} className="py-3 first:pt-0 last:pb-0">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-bold text-slate-800 hover:text-indigo-600 cursor-pointer">{cmd.id}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">Data: {cmd.data}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-slate-800">{cmd.suma}</p>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{cmd.status}</span>
-                </div>
-              </div>
-            </li>
-          ))}
+          {istoricComenzi.length === 0 && <p className="text-sm text-slate-500">Nicio reparație înregistrată încă.</p>}
         </ul>
       </div>
 
       <div className="mt-auto border-t border-slate-100 p-4 bg-slate-50 flex gap-3">
-        <Button variant="outline" fullWidth onClick={onEdit} className="text-slate-600">
-          <Edit2 className="w-4 h-4 mr-2" /> Editează
-        </Button>
-        <Button variant="danger" fullWidth onClick={onDeleteRequest} disabled={vehicul.status === 'Inactiv'}>
-          <Trash2 className="w-4 h-4 mr-2" /> {vehicul.status === 'Activ' ? 'Dezactivează' : 'Inactiv'}
-        </Button>
+        <Button variant="outline" fullWidth onClick={onEdit} className="text-slate-600"><Edit2 className="w-4 h-4 mr-2" /> Editează</Button>
+        <Button variant="danger" fullWidth onClick={onDeleteRequest} disabled={vehicul.status === 'Inactiv'}><Trash2 className="w-4 h-4 mr-2" /> {vehicul.status === 'Activ' ? 'Dezactivează' : 'Inactiv'}</Button>
       </div>
     </div>
   );
 }
 
 // ============================================================================
-// 4. PAGINA PRINCIPALĂ (Tabel și Gestiune Stări)
+// 4. PAGINA PRINCIPALĂ (Acum folosește noul Hook)
 // ============================================================================
 export default function Vehicul() {
-  const [vehicule, setVehicule] = useState<VehiculEntity[]>([]);
-  const [clienti, setClienti] = useState<ClientEntity[]>([]);
-  const [cautare, setCautare] = useState("");
+  const { 
+    vehiculeProcesate, 
+    vehiculeFiltrateSiSortate, 
+    clienti, 
+    loading, 
+    cautare, 
+    setCautare, 
+    sortField, 
+    handleSort, 
+    stats, 
+    salveaza, 
+    schimbaStatus 
+  } = useVehicul();
+
   const [idVehiculSelectat, setIdVehiculSelectat] = useState<number | null>(null);
-  
-  // Stări pentru formulare și dialoguri
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [vehiculToEdit, setVehiculToEdit] = useState<VehiculEntity | null>(null);
   const [vehiculToDelete, setVehiculToDelete] = useState<number | null>(null);
 
-  const [sortField, setSortField] = useState<SortField>('nrInmatriculare');
-  const [sortDir, setSortDir] = useState<SortDirection>('asc');
-
-  const loadData = useCallback(() => {
-    Promise.all([fetchVehicule(), fetchClienti()])
-      .then(([v, c]) => {
-        setVehicule(v);
-        setClienti(c);
-      })
-      .catch((error) => console.error("Eroare la preluarea datelor:", error));
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    } else { 
-      setSortField(field); 
-      setSortDir('asc'); 
-    }
-  };
-
-  const handleSaveVehicul = async (data: VehiculFormValues, id?: number) => {
-    await saveVehicul(data, id);
-    loadData(); 
+  const handleSave = async (data: VehiculFormValues, id?: number) => {
+    await salveaza(data, id);
     if (id) setIdVehiculSelectat(id); 
   };
 
   const handleConfirmDeactivate = async () => {
     if (vehiculToDelete) {
-      await schimbaStatusVehicul(vehiculToDelete, 'Inactiv');
+      await schimbaStatus(vehiculToDelete, 'Inactiv');
       toast.success("Vehiculul a fost dezactivat cu succes!");
-      loadData();
       setIsConfirmOpen(false);
       setVehiculToDelete(null);
     }
   };
 
-  const vehiculeProcesate = useMemo(() => {
-    return vehicule.map((vehicul) => {
-      const client = clienti.find(c => c.idClient === vehicul.idClient);
-      const numeDetinator = client 
-        ? (client.tipClient === 'PJ' ? client.nume : `${client.nume} ${client.prenume || ""}`).trim() 
-        : "Necunoscut";
-      
-      return { ...vehicul, clientObj: client, numeDetinator };
-    });
-  }, [vehicule, clienti]);
-
-  const vehiculeFiltrateSiSortate = useMemo(() => {
-    let rezultat = vehiculeProcesate;
-    if (cautare) {
-      const term = cautare.toLowerCase();
-      rezultat = rezultat.filter(v => 
-        v.nrInmatriculare.toLowerCase().includes(term) ||
-        v.numeDetinator.toLowerCase().includes(term) ||
-        v.serieSasiu.toLowerCase().includes(term)
-      );
-    }
-
-    return rezultat.sort((a, b) => {
-      const valA = a[sortField].toString().toLowerCase();
-      const valB = b[sortField].toString().toLowerCase();
-      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [vehiculeProcesate, cautare, sortField, sortDir]);
-
   const vehiculSelectat = vehiculeProcesate.find(v => v.idVehicul === idVehiculSelectat);
+
+  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă vehiculele...</div>;
 
   return (
     <div className="space-y-6 pb-10">
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-        <PageHeader 
-          title="Registru Vehicule" 
-          description="Evidența detaliată a mașinilor introduse în service, istoricul reparațiilor și legăturile cu clienții proprietari."
-        />
+        <PageHeader title="Registru Vehicule" description="Evidența detaliată a mașinilor introduse în service, istoricul reparațiilor și legăturile cu clienții proprietari." />
         <div className="flex flex-wrap items-center justify-between mt-6">
           <div className="flex flex-wrap gap-4">
-            <StatCard label="Total Vehicule" value={vehicule.length} icon={<Car className="h-4 w-4" />} />
-            <StatCard label="Vehicule Active" value={vehicule.filter(v => v.status === 'Activ').length} tone="success" icon={<ClipboardList className="h-4 w-4" />} />
+            <StatCard label="Total Vehicule" value={stats.total} icon={<Car className="h-4 w-4" />} />
+            <StatCard label="Vehicule Active" value={stats.activi} tone="success" icon={<ClipboardList className="h-4 w-4" />} />
           </div>
           <Button variant="primary" onClick={() => { setVehiculToEdit(null); setIsFormOpen(true); setIdVehiculSelectat(null); }}>
             <Plus className="w-5 h-5 mr-2" /> Adaugă Vehicul Nou
@@ -367,29 +241,20 @@ export default function Vehicul() {
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Caută după număr, VIN sau deținător..."
-                value={cautare}
-                onChange={(e) => setCautare(e.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              />
+              <input type="text" placeholder="Caută după număr, VIN sau deținător..." value={cautare} onChange={(e) => setCautare(e.target.value)} className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
             </div>
           </div>
 
           {vehiculeFiltrateSiSortate.length === 0 ? (
              <div className="bg-white rounded-2xl border border-slate-100 p-12 shadow-sm">
-               <EmptyState
-                 title="Niciun vehicul găsit"
-                 description="Nu am găsit nicio mașină care să corespundă criteriilor tale de căutare."
-               />
+               <EmptyState title="Niciun vehicul găsit" description="Nu am găsit nicio mașină care să corespundă criteriilor tale de căutare." />
              </div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    <ThSortable label="Vehicul" field="nrInmatriculare" currentSortField={sortField} onSort={handleSort} />
+                    <ThSortable label="Vehicul" field="numarInmatriculare" currentSortField={sortField} onSort={handleSort} />
                     <ThSortable label="Client / Deținător" field="numeDetinator" currentSortField={sortField} onSort={handleSort} />
                     <ThSortable label="Detalii Tehnice" field="marca" currentSortField={sortField} onSort={handleSort} />
                     <ThSortable label="Status" field="status" currentSortField={sortField} onSort={handleSort} />
@@ -397,13 +262,9 @@ export default function Vehicul() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {vehiculeFiltrateSiSortate.map((v) => (
-                    <tr 
-                      key={v.idVehicul} 
-                      onClick={() => { setIdVehiculSelectat(v.idVehicul); setIsFormOpen(false); }}
-                      className={`cursor-pointer transition-colors hover:bg-slate-50 ${idVehiculSelectat === v.idVehicul ? 'bg-indigo-50/50' : ''}`}
-                    >
+                    <tr key={v.idVehicul} onClick={() => { setIdVehiculSelectat(v.idVehicul); setIsFormOpen(false); }} className={`cursor-pointer transition-colors hover:bg-slate-50 ${idVehiculSelectat === v.idVehicul ? 'bg-indigo-50/50' : ''}`}>
                       <td className="px-6 py-4">
-                        <p className="font-bold text-slate-900">{v.nrInmatriculare}</p>
+                        <p className="font-bold text-slate-900">{v.numarInmatriculare}</p>
                         <p className="text-xs text-slate-500 mt-0.5">VHC-{v.idVehicul.toString().padStart(4, '0')}</p>
                       </td>
                       <td className="px-6 py-4">
@@ -412,14 +273,10 @@ export default function Vehicul() {
                       </td>
                       <td className="px-6 py-4">
                         <p className="font-medium text-slate-700">{v.marca} {v.model}</p>
-                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">{v.serieSasiu}</p>
+                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">{v.vin || '-'}</p>
                       </td>
                       <td className="px-6 py-4">
-                         <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                            v.status === 'Activ' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-                          }`}>
-                            {v.status}
-                          </span>
+                         <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${v.status === 'Activ' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{v.status}</span>
                       </td>
                     </tr>
                   ))}
@@ -429,44 +286,18 @@ export default function Vehicul() {
           )}
         </div>
 
-        {/* Panoul Lateral (Dinamic: Formular SAU Detalii) */}
         {(isFormOpen || vehiculSelectat) && (
           <div className="w-full shrink-0 xl:w-[420px] animate-in fade-in slide-in-from-right-4">
             {isFormOpen ? (
-              <VehiculForm
-                initialData={vehiculToEdit}
-                clienti={clienti}
-                onClose={() => { setIsFormOpen(false); setVehiculToEdit(null); }}
-                onSave={handleSaveVehicul}
-              />
+              <VehiculForm initialData={vehiculToEdit} clienti={clienti} onClose={() => { setIsFormOpen(false); setVehiculToEdit(null); }} onSave={handleSave} />
             ) : vehiculSelectat ? (
-              <VehiculDetail 
-                vehicul={vehiculSelectat} 
-                client={vehiculSelectat.clientObj} 
-                onInchide={() => setIdVehiculSelectat(null)}
-                onEdit={() => {
-                  setVehiculToEdit(vehiculSelectat);
-                  setIsFormOpen(true);
-                }}
-                onDeleteRequest={() => {
-                  setVehiculToDelete(vehiculSelectat.idVehicul);
-                  setIsConfirmOpen(true);
-                }}
-              />
+              <VehiculDetail vehicul={vehiculSelectat} client={vehiculSelectat.clientObj} onInchide={() => setIdVehiculSelectat(null)} onEdit={() => { setVehiculToEdit(vehiculSelectat); setIsFormOpen(true); }} onDeleteRequest={() => { setVehiculToDelete(vehiculSelectat.idVehicul); setIsConfirmOpen(true); }} />
             ) : null}
           </div>
         )}
       </div>
 
-      <ConfirmDialog
-        isOpen={isConfirmOpen}
-        title="Dezactivare Vehicul"
-        description="Ești sigur că vrei să dezactivezi acest vehicul? El nu va mai putea fi selectat pentru comenzi noi în modulul de Recepție."
-        confirmLabel="Dezactivează"
-        cancelLabel="Renunță"
-        onCancel={() => { setIsConfirmOpen(false); setVehiculToDelete(null); }}
-        onConfirm={handleConfirmDeactivate}
-      />
+      <ConfirmDialog isOpen={isConfirmOpen} title="Dezactivare Vehicul" description="Ești sigur că vrei să dezactivezi acest vehicul? El nu va mai putea fi selectat pentru comenzi noi în modulul de Recepție." confirmLabel="Dezactivează" cancelLabel="Renunță" onCancel={() => { setIsConfirmOpen(false); setVehiculToDelete(null); }} onConfirm={handleConfirmDeactivate} />
     </div>
   );
 }
