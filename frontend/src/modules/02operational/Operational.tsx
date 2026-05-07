@@ -54,6 +54,10 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
     try {
       let idDosarComanda = comanda.idDosar;
 
+      // În modelul Prisma, comanda nu are legătură directă cu vehiculul.
+      // Relația corectă este Comanda -> DosarDauna -> Vehicul, deci creăm
+      // dosarul tehnic/de daună înainte de comandă când utilizatorul nu a ales
+      // deja un dosar existent.
       if (dosarNou) {
         const dosarSalvat = await createDosarDauna(dosarNou);
         idDosarComanda = dosarSalvat.idDosar;
@@ -67,6 +71,8 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
       const comandaSalvata = await createComanda({ ...comanda, idDosar: idDosarComanda });
       const pozitiiSalvate = await createPozitiiComanda(comandaSalvata.idComanda, pozitiiNoi);
 
+      // Reîncărcăm comenzile din backend ca lista să includă relațiile Prisma
+      // expandate: dosar, vehicul, client și mecanic.
       const comenziActualizate = await fetchComenzi();
       setComenzi(comenziActualizate);
       setPozitii((prev) => [...prev, ...pozitiiSalvate]);

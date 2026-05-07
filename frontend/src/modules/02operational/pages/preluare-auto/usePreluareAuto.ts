@@ -16,6 +16,9 @@ export function usePreluareAuto(props: {
   const [idMecanicSelectat, setIdMecanicSelectat] = usePageSessionState<number | null>("preluare-mecanic", null);
   const [esteLucrareAsigurare, setEsteLucrareAsigurare] = usePageSessionState<boolean>("preluare-este-asigurare", false);
 
+  // SelectorDosar păstrează toate informațiile despre dosar în `stareDosar`.
+  // Derivăm id-ul de aici ca să nu avem două surse de adevăr pentru același
+  // lucru.
   const idDosarSelectat = esteLucrareAsigurare && stareDosar.mod === "existent"
     ? stareDosar.idDosarSelectat
     : null;
@@ -41,6 +44,7 @@ export function usePreluareAuto(props: {
     detaliiPreluare, dosarValid: validare.dosarValid, esteLucrareAsigurare, idMecanicSelectat, poateSalva: validare.poateSalva, pozitiiDraft, vehiculSelectat
   }), [detaliiPreluare, validare.dosarValid, esteLucrareAsigurare, idMecanicSelectat, validare.poateSalva, pozitiiDraft, vehiculSelectat]);
 
+  // Când se schimbă vehiculul, dosarul selectat anterior nu mai este valid.
   useEffect(() => { setStareDosar(stareDosarInitiala); }, [idVehiculSelectat, setStareDosar]);
 
   const schimbaFluxAsigurare = (activ: boolean) => {

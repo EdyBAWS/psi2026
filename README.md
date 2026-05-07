@@ -97,6 +97,153 @@ Backend:
 - `class-validator`
 - Jest
 
+## Ce face fiecare tehnologie
+
+### React
+
+React este biblioteca folosită pentru interfață. În loc să modificăm manual HTML-ul din browser, scriem componente. O componentă primește date prin `props`, ține stare prin `useState` / hook-uri și întoarce JSX, adică descrierea ecranului.
+
+În acest proiect, React este folosit pentru pagini precum catalog, entități, operațional și facturare.
+
+### TypeScript
+
+TypeScript este JavaScript cu tipuri. Tipurile ne ajută să prindem erori înainte de rulare, de exemplu când folosim `numarComanda` greșit sau trimitem un câmp care nu există în model.
+
+În proiect, tipurile frontend sunt în fișiere precum:
+
+```text
+frontend/src/modules/02operational/types.ts
+frontend/src/types/
+```
+
+### Vite
+
+Vite este serverul de dezvoltare și tool-ul de build pentru frontend. Când rulezi frontend-ul, Vite servește aplicația pe:
+
+```text
+http://127.0.0.1:5173
+```
+
+La `npm run build --prefix frontend`, Vite creează varianta optimizată pentru producție în `frontend/dist`.
+
+### Tailwind CSS
+
+Tailwind oferă clase CSS gata de folosit direct în JSX. De exemplu, `rounded-xl`, `bg-white`, `text-sm`, `flex` și `gap-4` sunt clase Tailwind.
+
+Avantajul este că stilizarea rămâne aproape de componentă și se poate ajusta rapid fără fișiere CSS separate pentru fiecare componentă.
+
+### NestJS
+
+NestJS este framework-ul backend. El organizează codul în module, controllere și servicii.
+
+Rolurile principale:
+
+- `Module`: grupează codul unei zone, de exemplu `OperationalModule`
+- `Controller`: definește rutele HTTP, de exemplu `GET /operational/comenzi`
+- `Service`: conține logica reală și apelează baza de date
+- `DTO`: descrie ce date acceptă un request
+
+Exemplu simplificat:
+
+```text
+browser/front-end
+  -> POST /operational/comenzi
+  -> OperationalController
+  -> OperationalService
+  -> Prisma
+  -> PostgreSQL
+```
+
+### DTO și ValidationPipe
+
+DTO înseamnă `Data Transfer Object`. Este clasa care spune backend-ului ce formă trebuie să aibă datele primite.
+
+`ValidationPipe` citește DTO-ul și validează request-ul. În `backend/src/main.ts`, `whitelist: true` elimină câmpurile care nu sunt definite în DTO. Asta protejează API-ul de payload-uri greșite.
+
+Exemplu: dacă DTO-ul pentru comandă acceptă doar status `Activ` / `Inactiv`, frontend-ul nu trebuie să trimită status UI precum `In Lucru` sau `Asteapta piese`.
+
+### Prisma
+
+Prisma este stratul dintre codul TypeScript și baza de date. În loc să scriem SQL manual pentru fiecare operație, folosim Prisma Client:
+
+```ts
+prisma.comanda.findMany()
+prisma.comanda.create()
+prisma.vehicul.update()
+```
+
+Fișierul important este:
+
+```text
+backend/prisma/schema.prisma
+```
+
+Acolo sunt definite modelele, relațiile și enum-urile. După ce schimbi schema, rulezi:
+
+```bash
+npx prisma generate
+```
+
+### Migrații Prisma
+
+O migrare este istoricul unei schimbări de bază de date. Dacă adaugi un tabel sau un câmp nou, Prisma creează un fișier SQL în:
+
+```text
+backend/prisma/migrations/
+```
+
+Migrațiile fac ca baza de date altui coleg sau a mediului de producție să poată ajunge la aceeași structură.
+
+### PostgreSQL
+
+PostgreSQL este baza de date relațională. Ea păstrează datele reale: clienți, vehicule, dosare, comenzi, facturi și iteme.
+
+Relațional înseamnă că tabelele se leagă între ele. De exemplu:
+
+```text
+Client -> Vehicul -> DosarDauna -> Comanda -> Factura
+```
+
+În modulul operațional, comanda este legată de vehicul prin dosar:
+
+```text
+Comanda.idDosar -> DosarDauna.idDosar -> DosarDauna.idVehicul -> Vehicul.idVehicul
+```
+
+### Neon
+
+Neon este serviciul cloud care găzduiește baza PostgreSQL. Aplicația se conectează la Neon prin `DATABASE_URL` din:
+
+```text
+backend/.env
+```
+
+Fără `DATABASE_URL` corect, Prisma nu poate citi sau scrie date.
+
+### Seed data
+
+Seed-ul populează baza cu date inițiale pentru testare și demo. În proiect, seed-ul este în:
+
+```text
+backend/prisma/seedData.ts
+```
+
+Îl rulezi cu:
+
+```bash
+npm run seed --prefix backend
+```
+
+### Jest
+
+Jest rulează testele backend. Testele verifică rapid că modulele principale se construiesc și că metodele de bază răspund corect.
+
+Comandă:
+
+```bash
+npm test --prefix backend -- --runInBand
+```
+
 ## Cum este organizat repo-ul
 
 ```text
@@ -157,6 +304,28 @@ POST /operational/vehicule
 ```
 
 Aceeași idee se repetă în modulele `catalog`, `entitati`, `operational` și `facturare`.
+
+## Cum vorbește frontend-ul cu backend-ul
+
+Frontend-ul trimite cereri HTTP către backend prin `fetch`. De exemplu, modulul operațional citește comenzi din:
+
+```text
+GET http://127.0.0.1:3000/operational/comenzi
+```
+
+În `02operational`, fișierul care izolează comunicarea cu backend-ul este:
+
+```text
+frontend/src/modules/02operational/operational.service.ts
+```
+
+Acest fișier face trei lucruri importante:
+
+- apelează endpoint-urile NestJS
+- transformă răspunsurile backend în tipuri pe care UI-ul le poate folosi
+- traduce diferențele dintre statusurile simple din backend și statusurile mai descriptive din frontend
+
+Pentru începători: componenta React nu ar trebui să știe toate detaliile despre Prisma sau despre forma exactă a JSON-ului din backend. De aceea există acest strat de service pe frontend.
 
 ## Module backend
 
@@ -327,8 +496,9 @@ Pentru modulul operațional s-a verificat și un flux temporar `POST/PATCH` pent
 Stare frontend:
 
 - aplicația pornește local prin Vite
-- unele module folosesc încă mock-uri și tipuri vechi
-- `npm run build --prefix frontend` poate eșua până când toate mock-urile frontend sunt aliniate la câmpurile backend noi, de exemplu `numarComanda`, `numarInmatriculare`, `numarDosar`
+- `npm run build --prefix frontend` trece
+- `02operational` folosește backend real pentru vehicule, dosare, comenzi, clienți, mecanici, asiguratori, piese și manoperă
+- unele zone frontend păstrează încă state local sau mock-uri pentru fluxuri demo care nu au încă model backend complet
 
 ## Documentație detaliată
 

@@ -11,6 +11,112 @@ Backend-ul este un API `NestJS` pentru aplicația `Service Auto G`. El expune en
 - `class-validator`
 - Jest
 
+## Ce înseamnă stack-ul backend
+
+### NestJS
+
+NestJS este framework-ul care organizează API-ul. El ne ajută să separăm codul în bucăți clare:
+
+- `module.ts`: grupează controller-ul și service-ul unei zone
+- `controller.ts`: expune rutele HTTP
+- `service.ts`: conține logica aplicației
+- `dto/*.dto.ts`: definește și validează datele primite
+
+Exemplu:
+
+```text
+GET /operational/comenzi
+  -> OperationalController.getComenzi()
+  -> OperationalService.getComenzi()
+  -> prisma.comanda.findMany()
+```
+
+### Prisma
+
+Prisma este ORM-ul proiectului. ORM înseamnă că lucrăm cu baza de date prin obiecte TypeScript, nu prin SQL scris manual peste tot.
+
+Schema este în:
+
+```text
+prisma/schema.prisma
+```
+
+Dacă acolo există:
+
+```prisma
+model Comanda {
+  idComanda    Int    @id @default(autoincrement())
+  numarComanda String @unique
+}
+```
+
+în cod putem folosi:
+
+```ts
+prisma.comanda.findMany()
+prisma.comanda.create()
+```
+
+După modificări în `schema.prisma`, rulează `npx prisma generate` ca Prisma Client să știe noile modele.
+
+### PostgreSQL și Neon
+
+PostgreSQL este baza de date relațională. Neon este serviciul cloud unde este găzduită baza PostgreSQL.
+
+Backend-ul se conectează la DB prin:
+
+```text
+DATABASE_URL=...
+```
+
+din `backend/.env`.
+
+Relațiile importante sunt definite în Prisma, dar sunt aplicate în PostgreSQL prin migrații.
+
+### Migrații
+
+Migrațiile sunt fișiere SQL generate de Prisma când structura bazei se schimbă. Ele trăiesc în:
+
+```text
+prisma/migrations/
+```
+
+Nu edita baza manual pentru schimbări de structură. Schimbă `schema.prisma`, creează migrare, apoi rulează `generate`.
+
+### DTO, class-validator și ValidationPipe
+
+DTO-urile sunt contractul request-urilor. Ele spun ce câmpuri acceptă API-ul și ce tipuri trebuie să aibă.
+
+`class-validator` oferă decoratori precum:
+
+```ts
+@IsString()
+@IsNumber()
+@IsEnum(StatusGeneral)
+```
+
+`ValidationPipe` aplică aceste reguli global. Cu `whitelist: true`, câmpurile care nu sunt în DTO sunt ignorate.
+
+### Seed data
+
+Seed-ul creează date demo în baza de date:
+
+```text
+prisma/seedData.ts
+```
+
+Comandă:
+
+```bash
+npm run seed
+```
+
+Seed-ul este util după resetări sau când vrei să testezi frontend-ul cu date suficiente.
+
+### Jest
+
+Jest rulează testele backend. Pentru proiectul acesta, testele sunt folosite ca verificări rapide că modulele, controller-ele și service-urile nu s-au rupt.
+
 ## Pornire
 
 Din `backend/`:

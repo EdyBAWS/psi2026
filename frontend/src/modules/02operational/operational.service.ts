@@ -21,6 +21,9 @@ const POZITII_STORAGE_KEY = "psi-operational-pozitii-comanda";
 
 type BackendStatus = "Activ" | "Inactiv";
 
+// Backend-ul păstrează statusuri generale simple, iar UI-ul folosește statusuri
+// mai descriptive pentru fluxul de service. Aceste funcții sunt stratul de
+// traducere dintre cele două lumi.
 const statusBackendToUi = (status?: BackendStatus | null): StatusComanda =>
   status === "Inactiv" ? "Anulat" : "In asteptare diagnoza";
 
@@ -43,6 +46,8 @@ async function parseApiError(response: Response, fallback: string) {
   }
 }
 
+// Mapper-ele de mai jos normalizează răspunsurile API. Asta ține componentele
+// React decuplate de forma exactă în care Prisma/Nest întorc relațiile.
 const mapVehicul = (v: any): Vehicul => ({
   idVehicul: v.idVehicul,
   idClient: v.idClient,
@@ -103,6 +108,9 @@ const readPozitiiLocale = (): PozitieComanda[] => {
   }
 };
 
+// Schema backend actuală nu are încă tabel separat pentru pozițiile de comandă.
+// Le păstrăm local ca soluție intermediară, iar comanda și dosarul rămân
+// persistate real în PostgreSQL.
 const writePozitiiLocale = (pozitii: PozitieComanda[]) => {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(POZITII_STORAGE_KEY, JSON.stringify(pozitii));
@@ -125,6 +133,7 @@ export async function createComanda(data: Partial<ComandaService>): Promise<Coma
       idDosar: data.idDosar ?? undefined,
       idAngajat: data.idMecanic ?? undefined,
       dataPreconizata: data.termenPromis ? new Date(data.termenPromis).toISOString() : undefined,
+      // DTO-ul Nest acceptă doar enum-ul Prisma StatusGeneral: Activ/Inactiv.
       status: statusUiToBackend(data.status),
     }),
   });

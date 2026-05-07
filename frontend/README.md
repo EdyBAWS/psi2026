@@ -64,7 +64,7 @@ npm run build
 Observație:
 
 - `vite build` poate afișa un warning despre chunk-uri mari; în starea actuală a proiectului acesta este cunoscut și nu blochează build-ul
-- `npm run build` poate eșua cât timp mock-urile și tipurile frontend sunt încă în curs de aliniere cu modelele backend noi, mai ales pentru redenumiri precum `nrComanda` -> `numarComanda`, `nrInmatriculare` -> `numarInmatriculare`, `nrDosar` -> `numarDosar`
+- în starea actuală, `npm run build` trece; dacă reapare o eroare de tipuri, verifică mai întâi alinierea dintre câmpurile frontend și cele din `backend/prisma/schema.prisma`
 
 ## Structură importantă
 
@@ -275,6 +275,9 @@ Fișiere importante:
 Caracteristici importante:
 
 - container local cu stare comună pentru comenzi, dosare și poziții
+- `operational.service.ts` este stratul de integrare cu backend-ul NestJS
+- comenzile sunt persistate prin backend, iar legătura cu vehiculul se face prin dosar
+- pozițiile de comandă sunt păstrate local până când există model backend dedicat pentru ele
 - helperi puri pentru filtrare, sortare și calcule
 - subcomponente separate pentru header, context, detalii și tabel
 - comentarii beginner-friendly extinse

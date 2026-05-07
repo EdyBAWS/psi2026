@@ -33,6 +33,8 @@ export default function PreluareAuto(props: PreluareAutoProps) {
   const handleSalveaza = async () => {
     if (!derivate.validare.poateSalva || !derivate.vehiculSelectat || !derivate.clientSelectat || !stare.idMecanicSelectat || salvareInCurs) return;
 
+    // Pentru lucrări fără asigurare creăm tot un dosar tehnic. Backend-ul
+    // folosește dosarul ca punct de legătură între comandă, client și vehicul.
     const trebuieDosarNou = !stare.idDosarSelectat;
 
     const comanda: Omit<ComandaService, "idComanda"> = {
@@ -52,6 +54,8 @@ export default function PreluareAuto(props: PreluareAutoProps) {
       prioritate: stare.detaliiPreluare.prioritate
     };
 
+    // Pentru fluxul cu dosar existent trimitem doar comanda. Pentru flux nou,
+    // părintele salvează întâi dosarul, apoi creează comanda cu id-ul rezultat.
     const dosarNou: Omit<DosarDauna, "idDosar"> | null = trebuieDosarNou ? {
       numarDosar: stare.esteLucrareAsigurare ? derivate.preview.numarDosarPreview : `TECH-${derivate.preview.numarComandaPreview}`, 
       idClient: derivate.clientSelectat.idClient,
