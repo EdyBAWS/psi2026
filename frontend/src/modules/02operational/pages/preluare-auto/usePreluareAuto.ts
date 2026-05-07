@@ -10,13 +10,15 @@ export function usePreluareAuto(props: {
   clienti: Client[]; comenzi: ComandaService[]; dosare: DosarDauna[]; mecanici: Mecanic[]; vehicule: Vehicul[];
 }) {
   const [idVehiculSelectat, setIdVehiculSelectat] = usePageSessionState<number | null>("preluare-vehicul", null);
-  const [idDosarSelectat, setIdDosarSelectat] = usePageSessionState<number | null>("preluare-id-dosar", null);
   const [detaliiPreluare, setDetaliiPreluare] = usePageSessionState<DetaliiPreluareForm>("preluare-detalii", detaliiPreluareInitiale);
   const [stareDosar, setStareDosar] = usePageSessionState<StareDosarAsigurare>("preluare-dosar", stareDosarInitiala);
   const [pozitiiDraft, setPozitiiDraft] = usePageSessionState<PozitieComandaDraft[]>("preluare-pozitii", []);
   const [idMecanicSelectat, setIdMecanicSelectat] = usePageSessionState<number | null>("preluare-mecanic", null);
   const [esteLucrareAsigurare, setEsteLucrareAsigurare] = usePageSessionState<boolean>("preluare-este-asigurare", false);
 
+  const idDosarSelectat = esteLucrareAsigurare && stareDosar.mod === "existent"
+    ? stareDosar.idDosarSelectat
+    : null;
   const vehiculSelectat = useMemo(() => props.vehicule.find((v) => v.idVehicul === idVehiculSelectat) ?? null, [idVehiculSelectat, props.vehicule]);
   const dosarSelectat = useMemo(() => props.dosare.find(d => d.idDosar === idDosarSelectat) ?? null, [idDosarSelectat, props.dosare]);
   const clientSelectat = useMemo(() => vehiculSelectat ? (props.clienti.find((c) => c.idClient === vehiculSelectat.idClient) ?? null) : null, [vehiculSelectat, props.clienti]);
@@ -32,14 +34,14 @@ export function usePreluareAuto(props: {
   }), [comandaActivaExistenta, detaliiPreluare, esteLucrareAsigurare, idMecanicSelectat, pozitiiDraft, stareDosar, vehiculSelectat, totalCurent]);
 
   const indicatori = useMemo(() => calculeazaIndicatoriPreluare(
-    vehiculSelectat, esteLucrareAsigurare, !!idDosarSelectat, detaliiPreluare, idMecanicSelectat, pozitiiDraft
-  ), [vehiculSelectat, esteLucrareAsigurare, idDosarSelectat, detaliiPreluare, idMecanicSelectat, pozitiiDraft]);
+    vehiculSelectat, esteLucrareAsigurare, validare.dosarValid, detaliiPreluare, idMecanicSelectat, pozitiiDraft
+  ), [vehiculSelectat, esteLucrareAsigurare, validare.dosarValid, detaliiPreluare, idMecanicSelectat, pozitiiDraft]);
 
   const flux = useMemo(() => calculeazaFluxPreluare({
-    detaliiPreluare, dosarValid: !!idDosarSelectat || !esteLucrareAsigurare, esteLucrareAsigurare, idMecanicSelectat, poateSalva: validare.poateSalva, pozitiiDraft, vehiculSelectat
-  }), [detaliiPreluare, idDosarSelectat, esteLucrareAsigurare, idMecanicSelectat, validare.poateSalva, pozitiiDraft, vehiculSelectat]);
+    detaliiPreluare, dosarValid: validare.dosarValid, esteLucrareAsigurare, idMecanicSelectat, poateSalva: validare.poateSalva, pozitiiDraft, vehiculSelectat
+  }), [detaliiPreluare, validare.dosarValid, esteLucrareAsigurare, idMecanicSelectat, validare.poateSalva, pozitiiDraft, vehiculSelectat]);
 
-  useEffect(() => { setIdDosarSelectat(null); }, [idVehiculSelectat, setIdDosarSelectat]);
+  useEffect(() => { setStareDosar(stareDosarInitiala); }, [idVehiculSelectat, setStareDosar]);
 
   const schimbaFluxAsigurare = (activ: boolean) => {
     setEsteLucrareAsigurare(activ);
@@ -51,13 +53,13 @@ export function usePreluareAuto(props: {
   };
 
   const reseteazaFlux = () => {
-    setIdVehiculSelectat(null); setIdDosarSelectat(null); setDetaliiPreluare(detaliiPreluareInitiale); 
+    setIdVehiculSelectat(null); setDetaliiPreluare(detaliiPreluareInitiale);
     setStareDosar(stareDosarInitiala); setPozitiiDraft([]); setIdMecanicSelectat(null); setEsteLucrareAsigurare(false);
   };
 
   return {
     stare: { idVehiculSelectat, idDosarSelectat, detaliiPreluare, stareDosar, pozitiiDraft, idMecanicSelectat, esteLucrareAsigurare },
-    setters: { setIdVehiculSelectat, setIdDosarSelectat, setDetaliiPreluare, setStareDosar, setPozitiiDraft, setIdMecanicSelectat, setEsteLucrareAsigurare, reseteazaFlux, schimbaFluxAsigurare },
+    setters: { setIdVehiculSelectat, setDetaliiPreluare, setStareDosar, setPozitiiDraft, setIdMecanicSelectat, setEsteLucrareAsigurare, reseteazaFlux, schimbaFluxAsigurare },
     derivate: { vehiculSelectat, dosarSelectat, clientSelectat, comandaActivaExistenta, validare, indicatori, flux, preview: calculeazaPreviewDocumente(props.comenzi, props.dosare) }
   };
 }

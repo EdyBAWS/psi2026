@@ -68,7 +68,6 @@ export const formatSuma = (valoare: number) =>
     maximumFractionDigits: 2,
   }).format(valoare);
 
-// FIX EROARE 2345: Am adăugat 'undefined' în tipul parametrului
 export const formatData = (valoare: Date | string | null | undefined) => {
   if (!valoare) return "-";
   const dateObj = typeof valoare === 'string' ? new Date(valoare) : valoare;
@@ -132,6 +131,10 @@ export function filtreazaSiSorteazaComenzi(
         comparison = a.numarComanda.localeCompare(b.numarComanda);
       } else if (sortField === "status") {
         comparison = (a.status || "").localeCompare(b.status || "");
+      } else if (sortField === "vehicul") {
+        const vehiculA = vehicule.find((item) => item.idVehicul === a.idVehicul);
+        const vehiculB = vehicule.find((item) => item.idVehicul === b.idVehicul);
+        comparison = (vehiculA?.numarInmatriculare || "").localeCompare(vehiculB?.numarInmatriculare || "");
       } else {
         comparison = (a.totalEstimat ?? 0) - (b.totalEstimat ?? 0);
       }
@@ -164,7 +167,7 @@ export function rezolvaDetaliiComandaSelectata(
   vehicule: Vehicul[],
   mecanici: Mecanic[],
   dosare: DosarDauna[],
-  _asiguratori: Asigurator[], // FIX EROARE 6133: Adăugat underscore
+  _asiguratori: Asigurator[],
   pozitii: PozitieComanda[],
 ): DetaliiComandaSelectata {
   const comandaSelectata = idComandaSelectata === null ? null : (comenzi.find((c) => c.idComanda === idComandaSelectata) ?? null);

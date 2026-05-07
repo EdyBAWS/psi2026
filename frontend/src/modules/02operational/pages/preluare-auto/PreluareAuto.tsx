@@ -8,20 +8,21 @@ import PreluareAutoHeader from "./PreluareAutoHeader";
 import { formatSuma } from "./preluareAuto.helpers";
 import { usePreluareAuto } from "./usePreluareAuto";
 import { comandaEsteActiva } from "../../calculations";
-import type { Asigurator, CatalogKit, CatalogManopera, CatalogPiesa, Client, ComandaService, DosarDauna, Mecanic, PozitieComanda, Vehicul } from "../../types";
+import type { Asigurator, CatalogKit, CatalogManopera, CatalogPiesa, Client, ComandaService, DosarDauna, Mecanic, PozitieComanda, PozitieComandaDraft, Vehicul } from "../../types";
 
-export interface SalvarePreluarePayload { comanda: Omit<ComandaService, "idComanda">; dosarNou: Omit<DosarDauna, "idDosar"> | null; pozitiiNoi: any[]; }
+export interface SalvarePreluarePayload { comanda: Omit<ComandaService, "idComanda">; dosarNou: Omit<DosarDauna, "idDosar"> | null; pozitiiNoi: PozitieComandaDraft[]; }
 
 interface PreluareAutoProps {
   asiguratori: Asigurator[]; clienti: Client[]; comenzi: ComandaService[]; dosare: DosarDauna[]; mecanici: Mecanic[];
   vehicule: Vehicul[]; catalogPiese: CatalogPiesa[]; catalogManopere: CatalogManopera[]; catalogKituri: CatalogKit[];
   pozitii: PozitieComanda[]; 
-  onSalveazaPreluare: (payload: SalvarePreluarePayload) => void;
+  onSalveazaPreluare: (payload: SalvarePreluarePayload) => Promise<void>;
 }
 
 export default function PreluareAuto(props: PreluareAutoProps) {
   const { stare, setters, derivate } = usePreluareAuto(props);
   const [resetOpen, setResetOpen] = useState(false);
+  const [salvareInCurs, setSalvareInCurs] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { 
@@ -29,8 +30,8 @@ export default function PreluareAuto(props: PreluareAutoProps) {
       topRef.current.scrollIntoView({ behavior: "smooth" }); 
   }, [stare.idVehiculSelectat]);
 
-  const handleSalveaza = () => {
-    if (!derivate.validare.poateSalva || !derivate.vehiculSelectat || !stare.idMecanicSelectat) return;
+  const handleSalveaza = async () => {
+    if (!derivate.validare.poateSalva || !derivate.vehiculSelectat || !derivate.clientSelectat || !stare.idMecanicSelectat || salvareInCurs) return;
 
     const trebuieDosarNou = !stare.idDosarSelectat;
 
@@ -38,7 +39,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
       numarComanda: derivate.preview.numarComandaPreview, 
       idVehicul: derivate.vehiculSelectat.idVehicul, 
       idMecanic: stare.idMecanicSelectat,
-      idDosar: trebuieDosarNou ? null : stare.idDosarSelectat,
+      idDosar: stare.idDosarSelectat,
       status: "In asteptare diagnoza", 
       simptomeReclamate: stare.detaliiPreluare.simptomeReclamate, 
       termenPromis: new Date(stare.detaliiPreluare.termenPromis),
@@ -53,15 +54,20 @@ export default function PreluareAuto(props: PreluareAutoProps) {
 
     const dosarNou: Omit<DosarDauna, "idDosar"> | null = trebuieDosarNou ? {
       numarDosar: stare.esteLucrareAsigurare ? derivate.preview.numarDosarPreview : `TECH-${derivate.preview.numarComandaPreview}`, 
-      idClient: derivate.clientSelectat!.idClient, 
+      idClient: derivate.clientSelectat.idClient,
       idVehicul: derivate.vehiculSelectat.idVehicul,
-      idAsigurator: stare.esteLucrareAsigurare ? stare.stareDosar.idAsigurator! : undefined, 
+      idAsigurator: stare.esteLucrareAsigurare ? stare.stareDosar.idAsigurator : null,
       status: "Activ",
-      dataDeschidere: new Date().toISOString()
-    } as any : null;
+      dataDeschidere: new Date(),
+    } : null;
 
-    props.onSalveazaPreluare({ comanda, dosarNou, pozitiiNoi: stare.pozitiiDraft }); 
-    setters.reseteazaFlux();
+    setSalvareInCurs(true);
+    try {
+      await props.onSalveazaPreluare({ comanda, dosarNou, pozitiiNoi: stare.pozitiiDraft });
+      setters.reseteazaFlux();
+    } finally {
+      setSalvareInCurs(false);
+    }
   };
 
   return (
@@ -127,10 +133,10 @@ export default function PreluareAuto(props: PreluareAutoProps) {
             <button onClick={() => setResetOpen(true)} className="text-sm font-bold text-rose-600">Anulează</button>
             <button 
               onClick={handleSalveaza} 
-              disabled={!derivate.validare.poateSalva} 
+              disabled={!derivate.validare.poateSalva || salvareInCurs}
               className="rounded-xl bg-indigo-600 px-8 py-3 text-sm font-bold text-white shadow-md disabled:bg-slate-300"
             >
-              Deschide comanda
+              {salvareInCurs ? "Se salvează..." : "Deschide comanda"}
             </button>
           </div>
 

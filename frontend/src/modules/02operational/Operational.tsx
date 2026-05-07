@@ -52,20 +52,30 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
 
   const handleSalveazaPreluare = async ({ comanda, dosarNou, pozitiiNoi }: SalvarePreluarePayload) => {
     try {
-      const comandaSalvata = await createComanda(comanda);
+      let idDosarComanda = comanda.idDosar;
+
       if (dosarNou) {
         const dosarSalvat = await createDosarDauna(dosarNou);
+        idDosarComanda = dosarSalvat.idDosar;
         setDosare((prev) => [...prev, dosarSalvat]);
       }
+
+      if (!idDosarComanda) {
+        throw new Error("Comanda trebuie legată de un dosar tehnic sau de daună.");
+      }
+
+      const comandaSalvata = await createComanda({ ...comanda, idDosar: idDosarComanda });
       const pozitiiSalvate = await createPozitiiComanda(comandaSalvata.idComanda, pozitiiNoi);
-      
-      setComenzi((prev) => [...prev, comandaSalvata]);
+
+      const comenziActualizate = await fetchComenzi();
+      setComenzi(comenziActualizate);
       setPozitii((prev) => [...prev, ...pozitiiSalvate]);
 
       toast.success(`Comanda ${comandaSalvata.numarComanda} a fost deschisă cu succes.`);
       onNavigate("operational-comenzi");
-    } catch {
-      toast.error("Comanda nu a putut fi salvată.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Comanda nu a putut fi salvată.");
+      throw error;
     }
   };
 

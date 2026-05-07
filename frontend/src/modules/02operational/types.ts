@@ -30,8 +30,9 @@ export interface DosarDauna {
   idDosar: number;
   idClient: number;
   idVehicul: number;
-  idAsigurator: number;
+  idAsigurator?: number | null;
   numarDosar: string;
+  status?: "Activ" | "Inactiv";
   numarReferintaAsigurator?: string;
   tipPolita?: TipPolita;
   dataDeschidere?: Date;
@@ -47,7 +48,7 @@ export interface ComandaService {
   idComanda: number;
   idVehicul: number;
   idDosar: number | null;
-  idMecanic: number;
+  idMecanic: number | null;
   numarComanda: string;
   dataDeschidere?: Date;
   dataFinalizare?: Date | null;
