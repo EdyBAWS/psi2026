@@ -1,6 +1,6 @@
 # Backend Service Auto G
 
-Backend-ul este un API `NestJS` pentru aplicația `Service Auto G`. El expune endpoint-uri pentru catalog, entități, operațional și facturare și persistă datele prin `Prisma` într-o bază `PostgreSQL` / Neon.
+Backend-ul este un API `NestJS` pentru aplicația `Service Auto G`. El expune endpoint-uri pentru catalog, entități, operațional, facturare, încasări și notificări și persistă datele prin `Prisma` într-o bază `PostgreSQL` / Neon.
 
 ## Stack
 
@@ -112,6 +112,37 @@ npm run seed
 ```
 
 Seed-ul este util după resetări sau când vrei să testezi frontend-ul cu date suficiente.
+
+Ce include seed-ul curent:
+
+- 7 asiguratori;
+- 9 angajați;
+- 10 clienți PF/PJ;
+- 16 piese;
+- 12 manopere;
+- 10 vehicule;
+- 7 dosare de daună;
+- 8 comenzi de service;
+- 6 facturi cu stări diferite;
+- 2 încasări alocate pe facturi;
+- 8 notificări inițiale.
+
+Notificările seed-uite acoperă cazuri utile pentru UI:
+
+- factură emisă;
+- factură restantă;
+- plată parțială;
+- încasare înregistrată;
+- comandă operațională;
+- stoc critic.
+
+Rulează seed-ul când vrei să vezi aplicația cu date complete:
+
+```bash
+npm run seed
+```
+
+Atenție: seed-ul șterge datele demo existente și le recreează.
 
 ### Jest
 
@@ -281,6 +312,37 @@ La creare, service-ul calculează:
 - TVA
 - total general
 
+### `incasari`
+
+Gestionează plăți și alocarea sumelor pe facturi.
+
+```text
+GET  /incasari
+GET  /incasari/facturi-restante
+POST /incasari
+```
+
+La salvarea unei încasări, backend-ul:
+
+- verifică dacă facturile există;
+- verifică dacă facturile aparțin clientului selectat;
+- verifică să nu se aloce mai mult decât restul de plată;
+- marchează factura ca `Platita` când restul ajunge la zero;
+- creează notificare de succes.
+
+### `notificari`
+
+Gestionează notificările persistate în PostgreSQL.
+
+```text
+GET    /notificari
+POST   /notificari
+PATCH  /notificari/:id
+DELETE /notificari/:id
+```
+
+`GET /notificari` sincronizează și facturile restante: dacă există facturi scadente cu rest de plată, backend-ul creează notificări de avertizare.
+
 ## Modelul de date
 
 Schema este în:
@@ -301,6 +363,9 @@ Modele principale:
 - `Manopera`
 - `Factura`
 - `FacturaItem`
+- `Incasare`
+- `IncasareAlocare`
+- `Notificare`
 
 Relații importante:
 
@@ -310,6 +375,9 @@ Relații importante:
 - `DosarDauna -> Comanda`
 - `Comanda -> Factura`
 - `Factura -> FacturaItem`
+- `Factura -> IncasareAlocare -> Incasare`
+- `Factura -> Notificare`
+- `Comanda -> Notificare`
 
 ## Cum adaugi un model nou
 

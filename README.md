@@ -8,6 +8,7 @@
 - bază de date `PostgreSQL` găzduită în Neon
 
 Aplicația acoperă fluxuri precum catalogul de piese și manoperă, gestiunea clienților, angajaților și asiguratorilor, recepția auto, dosare de daună, comenzi de service și facturare.
+Fluxul curent include și încasări plus notificări persistate în baza de date.
 
 ## Pornire rapidă
 
@@ -233,6 +234,19 @@ backend/prisma/seedData.ts
 ```bash
 npm run seed --prefix backend
 ```
+
+Seed-ul curent creează date pentru toate modulele:
+
+- asiguratori, angajați și clienți PF/PJ;
+- piese și manopere cu stocuri diferite, inclusiv stoc critic;
+- vehicule, dosare de daună și comenzi de service;
+- facturi emise, facturi achitate, facturi restante și facturi cu plată parțială;
+- încasări reale alocate pe facturi;
+- notificări inițiale pentru facturi emise, facturi restante, încasări, comenzi și stoc critic.
+
+După seed, pagina `05 Notificări` nu trebuie să fie goală. Ar trebui să vezi notificări de tip `Info`, `Avertizare` și `Succes`.
+
+Important: `npm run seed --prefix backend` curăță datele demo existente și le recreează. Folosește comanda doar dacă e ok să pierzi datele de test introduse manual.
 
 ### Jest
 

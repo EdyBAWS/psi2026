@@ -6,6 +6,8 @@ import {
   TipAngajat,
   TipPiesa,
   StatusFactura,
+  ModalitateIncasare,
+  TipNotificare,
 } from '@prisma/client';
 
 // Folosim inițializarea clasică a Prisma
@@ -15,6 +17,9 @@ async function main() {
   console.log('Curățăm baza de date...');
 
   // Trebuie să ștergem și datele din tabelele noi adăugate anterior pentru a nu avea erori de Foreign Key
+  await prisma.notificare.deleteMany();
+  await prisma.incasareAlocare.deleteMany();
+  await prisma.incasare.deleteMany();
   await prisma.facturaItem.deleteMany();
   await prisma.factura.deleteMany();
   await prisma.comanda.deleteMany();
@@ -86,6 +91,28 @@ async function main() {
         IBAN: 'RO22RZBR0000000000055555',
         termenPlataZile: 15,
         adresa: 'Piața Charles de Gaulle 15, București',
+        status: StatusGeneral.Activ,
+      },
+      {
+        denumire: 'Grawe România',
+        CUI: 'RO9457880',
+        nrRegCom: 'J40/10921/1996',
+        telefon: '021 312 18 20',
+        emailDaune: 'daune@grawe.ro',
+        IBAN: 'RO77RNCB0000000000077777',
+        termenPlataZile: 20,
+        adresa: 'Str. Vulturilor 98A, București',
+        status: StatusGeneral.Activ,
+      },
+      {
+        denumire: 'Uniqa Asigurări',
+        CUI: 'RO1813613',
+        nrRegCom: 'J40/4211/1991',
+        telefon: '021 201 90 00',
+        emailDaune: 'daune@uniqa.ro',
+        IBAN: 'RO31TREZ0000000000088888',
+        termenPlataZile: 35,
+        adresa: 'Str. Nicolae Caramfil 25, București',
         status: StatusGeneral.Activ,
       },
     ],
@@ -170,6 +197,28 @@ async function main() {
         tipAngajat: TipAngajat.Receptioner,
         nrBirou: 'R-01',
         tura: 'După-amiază',
+        status: StatusGeneral.Activ,
+      },
+      {
+        nume: 'Tănase',
+        prenume: 'Cristian',
+        CNP: '1770501223344',
+        telefon: '0721 100 208',
+        email: 'cristian.tanase@serviceautog.ro',
+        tipAngajat: TipAngajat.Mecanic,
+        specializare: 'Diagnoză electrică avansată',
+        costOrar: 260,
+        status: StatusGeneral.Activ,
+      },
+      {
+        nume: 'Munteanu',
+        prenume: 'Bianca',
+        CNP: '2940909223344',
+        telefon: '0721 100 209',
+        email: 'bianca.munteanu@serviceautog.ro',
+        tipAngajat: TipAngajat.Receptioner,
+        nrBirou: 'R-03',
+        tura: 'Intermediară',
         status: StatusGeneral.Activ,
       },
     ],
@@ -268,6 +317,29 @@ async function main() {
         CUI: 'RO50887712',
         IBAN: 'RO11BTRL0000000000066666',
         nrRegCom: 'J40/9012/2020',
+        status: StatusGeneral.Activ,
+      },
+      {
+        tipClient: TipClient.PF,
+        nume: 'Georgescu',
+        prenume: 'Daniel',
+        telefon: '0740 210 330',
+        email: 'daniel.georgescu@gmail.com',
+        adresa: 'Str. Republicii 40, Constanța',
+        CNP: '1850822223344',
+        serieCI: 'CT112233',
+        status: StatusGeneral.Activ,
+      },
+      {
+        tipClient: TipClient.PJ,
+        nume: 'Urban Delivery SRL',
+        telefon: '031 700 44 55',
+        email: 'flota@urbandelivery.ro',
+        adresa: 'Calea Moșilor 250, București',
+        soldDebitor: 970,
+        CUI: 'RO77112233',
+        IBAN: 'RO66INGB0000000000099999',
+        nrRegCom: 'J40/4433/2022',
         status: StatusGeneral.Activ,
       },
     ],
@@ -407,6 +479,36 @@ async function main() {
         tip: TipPiesa.NOUA,
         luniGarantie: 24,
       },
+      {
+        codPiesa: 'SET-DIST-VW',
+        denumire: 'Kit Distribuție Volkswagen 1.6 TDI',
+        producator: 'Contitech',
+        categorie: 'Motor',
+        pretBaza: 890,
+        stoc: 6,
+        tip: TipPiesa.NOUA,
+        luniGarantie: 24,
+      },
+      {
+        codPiesa: 'SEN-PARCARE-OE',
+        denumire: 'Senzor Parcare Spate',
+        producator: 'Bosch',
+        categorie: 'Electrice',
+        pretBaza: 220,
+        stoc: 9,
+        tip: TipPiesa.NOUA,
+        luniGarantie: 12,
+      },
+      {
+        codPiesa: 'ANV-IARNA-205',
+        denumire: 'Anvelopă Iarnă 205/55 R16',
+        producator: 'Michelin',
+        categorie: 'Anvelope',
+        pretBaza: 430,
+        stoc: 20,
+        tip: TipPiesa.NOUA,
+        luniGarantie: 24,
+      },
     ],
   });
   console.log('✅ Piese inserate');
@@ -476,6 +578,20 @@ async function main() {
         durataStd: 1.2,
         pretOra: 220,
       },
+      {
+        codManopera: 'MAN-DISTRIB-VW',
+        denumire: 'Înlocuire Distribuție Volkswagen',
+        categorie: 'Mecanică Grea',
+        durataStd: 4.5,
+        pretOra: 240,
+      },
+      {
+        codManopera: 'MAN-SENZORI-PARCARE',
+        denumire: 'Montaj și Calibrare Senzori Parcare',
+        categorie: 'Electrică',
+        durataStd: 1.4,
+        pretOra: 230,
+      },
     ],
   });
   console.log('✅ Manopere inserate');
@@ -513,6 +629,8 @@ async function main() {
   const nordFleet = getRequired(clientByCui, 'RO30112244', 'client CUI');
   const vasilescu = getRequired(clientByCnp, '2920415223344', 'client CNP');
   const constructFleet = getRequired(clientByCui, 'RO50887712', 'client CUI');
+  const georgescu = getRequired(clientByCnp, '1850822223344', 'client CNP');
+  const urbanDelivery = getRequired(clientByCui, 'RO77112233', 'client CUI');
 
   // ─── OPERAȚIONAL: VEHICULE ───
   await prisma.vehicul.createMany({
@@ -581,6 +699,22 @@ async function main() {
         idClient: constructFleet.idClient,
         status: StatusGeneral.Activ,
       },
+      {
+        numarInmatriculare: 'CT-33-DNG',
+        marca: 'Volkswagen',
+        model: 'Passat',
+        vin: 'WVWZZZ3CZGE338120',
+        idClient: georgescu.idClient,
+        status: StatusGeneral.Activ,
+      },
+      {
+        numarInmatriculare: 'B-77-UDL',
+        marca: 'Peugeot',
+        model: 'Partner',
+        vin: 'VF3K9HN8CCR447210',
+        idClient: urbanDelivery.idClient,
+        status: StatusGeneral.Activ,
+      },
     ],
   });
   console.log('✅ Vehicule inserate');
@@ -630,6 +764,22 @@ async function main() {
         idClient: constructFleet.idClient,
         idVehicul: getRequired(vehiculByNr, 'B-901-CFM', 'vehicul').idVehicul,
         idAsigurator: getRequired(asiguratorByCui, 'RO2884407', 'asigurator')
+          .idAsigurator,
+        status: StatusGeneral.Activ,
+      },
+      {
+        numarDosar: 'DAUNA-2026-006',
+        idClient: georgescu.idClient,
+        idVehicul: getRequired(vehiculByNr, 'CT-33-DNG', 'vehicul').idVehicul,
+        idAsigurator: getRequired(asiguratorByCui, 'RO9457880', 'asigurator')
+          .idAsigurator,
+        status: StatusGeneral.Activ,
+      },
+      {
+        numarDosar: 'DAUNA-2026-007',
+        idClient: urbanDelivery.idClient,
+        idVehicul: getRequired(vehiculByNr, 'B-77-UDL', 'vehicul').idVehicul,
+        idAsigurator: getRequired(asiguratorByCui, 'RO1813613', 'asigurator')
           .idAsigurator,
         status: StatusGeneral.Activ,
       },
@@ -693,6 +843,22 @@ async function main() {
         dataPreconizata: new Date('2026-05-10T10:30:00'),
         status: StatusGeneral.Inactiv,
       },
+      {
+        numarComanda: 'CMD-2026-007',
+        idDosar: getRequired(dosarByNumar, 'DAUNA-2026-006', 'dosar').idDosar,
+        idAngajat: getRequired(angajatByCnp, '1770501223344', 'angajat')
+          .idAngajat,
+        dataPreconizata: new Date('2026-05-18T13:30:00'),
+        status: StatusGeneral.Activ,
+      },
+      {
+        numarComanda: 'CMD-2026-008',
+        idDosar: getRequired(dosarByNumar, 'DAUNA-2026-007', 'dosar').idDosar,
+        idAngajat: getRequired(angajatByCnp, '1791215223344', 'angajat')
+          .idAngajat,
+        dataPreconizata: new Date('2026-05-19T09:30:00'),
+        status: StatusGeneral.Activ,
+      },
     ],
   });
   console.log('✅ Comenzi inserate');
@@ -703,7 +869,7 @@ async function main() {
   );
 
   // ─── FACTURARE: FACTURI ȘI ITEME ───
-  await prisma.factura.create({
+  const facturaReviziePopescu = await prisma.factura.create({
     data: {
       serie: 'SAG',
       numar: 2026001,
@@ -740,7 +906,7 @@ async function main() {
     },
   });
 
-  await prisma.factura.create({
+  const facturaTehnoparts = await prisma.factura.create({
     data: {
       serie: 'SAG',
       numar: 2026002,
@@ -783,7 +949,7 @@ async function main() {
     },
   });
 
-  await prisma.factura.create({
+  const facturaConstructFleet = await prisma.factura.create({
     data: {
       serie: 'SAG',
       numar: 2026003,
@@ -819,7 +985,254 @@ async function main() {
       },
     },
   });
+
+  const facturaRestantaAutoFleet = await prisma.factura.create({
+    data: {
+      serie: 'SAG',
+      numar: 2026004,
+      idClient: autoFleet.idClient,
+      idComanda: getRequired(comandaByNumar, 'CMD-2026-002', 'comanda')
+        .idComanda,
+      scadenta: new Date('2026-05-02T00:00:00'),
+      status: StatusFactura.Emisa,
+      totalFaraTVA: 3220,
+      tva: 611.8,
+      totalGeneral: 3831.8,
+      iteme: {
+        create: [
+          {
+            descriere: 'Bară față Skoda Octavia',
+            cantitate: 1,
+            pretUnitar: 1820,
+            cotaTva: 19,
+          },
+          {
+            descriere: 'Far stânga Skoda Octavia',
+            cantitate: 1,
+            pretUnitar: 640,
+            cotaTva: 19,
+          },
+          {
+            descriere: 'Tinichigerie și vopsitorie',
+            cantitate: 4,
+            pretUnitar: 190,
+            cotaTva: 19,
+          },
+        ],
+      },
+    },
+  });
+
+  const facturaPartialNordFleet = await prisma.factura.create({
+    data: {
+      serie: 'SAG',
+      numar: 2026005,
+      idClient: nordFleet.idClient,
+      idComanda: getRequired(comandaByNumar, 'CMD-2026-006', 'comanda')
+        .idComanda,
+      scadenta: new Date('2026-05-06T00:00:00'),
+      status: StatusFactura.Emisa,
+      totalFaraTVA: 1540,
+      tva: 292.6,
+      totalGeneral: 1832.6,
+      iteme: {
+        create: [
+          {
+            descriere: 'Set plăcuțe frână față',
+            cantitate: 1,
+            pretUnitar: 265,
+            cotaTva: 19,
+          },
+          {
+            descriere: 'Disc frână ventilat',
+            cantitate: 2,
+            pretUnitar: 410,
+            cotaTva: 19,
+          },
+          {
+            descriere: 'Înlocuire plăcuțe și discuri față',
+            cantitate: 2.5,
+            pretUnitar: 182,
+            cotaTva: 19,
+          },
+        ],
+      },
+    },
+  });
+
+  const facturaUrbanDelivery = await prisma.factura.create({
+    data: {
+      serie: 'SAG',
+      numar: 2026006,
+      idClient: urbanDelivery.idClient,
+      idComanda: getRequired(comandaByNumar, 'CMD-2026-008', 'comanda')
+        .idComanda,
+      scadenta: new Date('2026-05-28T00:00:00'),
+      status: StatusFactura.Emisa,
+      totalFaraTVA: 1265,
+      tva: 240.35,
+      totalGeneral: 1505.35,
+      iteme: {
+        create: [
+          {
+            descriere: 'Senzor parcare spate',
+            cantitate: 3,
+            pretUnitar: 220,
+            cotaTva: 19,
+          },
+          {
+            descriere: 'Montaj și calibrare senzori parcare',
+            cantitate: 1.4,
+            pretUnitar: 230,
+            cotaTva: 19,
+          },
+          {
+            descriere: 'Diagnoză computerizată',
+            cantitate: 1,
+            pretUnitar: 283,
+            cotaTva: 19,
+          },
+        ],
+      },
+    },
+  });
   console.log('✅ Facturi și iteme inserate');
+
+  const incasareTehnoparts = await prisma.incasare.create({
+    data: {
+      idClient: tehnoparts.idClient,
+      data: new Date('2026-05-07T10:20:00'),
+      suma: 3503.36,
+      modalitate: ModalitateIncasare.TransferBancar,
+      referinta: 'OP-TEH-2026-004',
+      alocari: {
+        create: [
+          {
+            idFactura: facturaTehnoparts.idFactura,
+            sumaAlocata: 3503.36,
+          },
+        ],
+      },
+    },
+  });
+
+  const incasareNordPartial = await prisma.incasare.create({
+    data: {
+      idClient: nordFleet.idClient,
+      data: new Date('2026-05-07T14:45:00'),
+      suma: 700,
+      modalitate: ModalitateIncasare.POS,
+      referinta: 'POS-NLF-174',
+      alocari: {
+        create: [
+          {
+            idFactura: facturaPartialNordFleet.idFactura,
+            sumaAlocata: 700,
+          },
+        ],
+      },
+    },
+  });
+
+  console.log('✅ Încasări inserate');
+
+  await prisma.notificare.createMany({
+    data: [
+      {
+        tip: TipNotificare.Succes,
+        mesaj: `Factura ${facturaReviziePopescu.serie}-${facturaReviziePopescu.numar} a fost emisă pentru Popescu Ion.`,
+        paginaDestinatie: 'facturare-istoric',
+        sursaModul: 'Facturare',
+        textActiune: 'Vezi istoricul',
+        idFactura: facturaReviziePopescu.idFactura,
+        idComanda: getRequired(comandaByNumar, 'CMD-2026-001', 'comanda')
+          .idComanda,
+        metadata: { event: 'factura-creata', seed: true },
+      },
+      {
+        tip: TipNotificare.Avertizare,
+        mesaj: `Factura ${facturaRestantaAutoFleet.serie}-${facturaRestantaAutoFleet.numar} este scadentă și are 3831.80 RON de încasat.`,
+        paginaDestinatie: 'incasari',
+        sursaModul: 'Încasări',
+        textActiune: 'Deschide Încasări',
+        idFactura: facturaRestantaAutoFleet.idFactura,
+        idComanda: getRequired(comandaByNumar, 'CMD-2026-002', 'comanda')
+          .idComanda,
+        metadata: { event: 'factura-restanta', seed: true },
+      },
+      {
+        tip: TipNotificare.Avertizare,
+        mesaj: `Factura ${facturaPartialNordFleet.serie}-${facturaPartialNordFleet.numar} are plată parțială; rest de încasat 1132.60 RON.`,
+        paginaDestinatie: 'incasari',
+        sursaModul: 'Încasări',
+        textActiune: 'Deschide Încasări',
+        idFactura: facturaPartialNordFleet.idFactura,
+        idComanda: getRequired(comandaByNumar, 'CMD-2026-006', 'comanda')
+          .idComanda,
+        metadata: {
+          event: 'factura-restanta',
+          seed: true,
+          idIncasare: incasareNordPartial.idIncasare,
+        },
+      },
+      {
+        tip: TipNotificare.Succes,
+        mesaj: `Încasare de 3503.36 RON înregistrată pentru Tehnoparts Solutions.`,
+        paginaDestinatie: 'incasari',
+        sursaModul: 'Încasări',
+        textActiune: 'Deschide Încasări',
+        idFactura: facturaTehnoparts.idFactura,
+        idComanda: getRequired(comandaByNumar, 'CMD-2026-004', 'comanda')
+          .idComanda,
+        metadata: {
+          event: 'incasare-creata',
+          seed: true,
+          idIncasare: incasareTehnoparts.idIncasare,
+        },
+      },
+      {
+        tip: TipNotificare.Info,
+        mesaj: 'Comanda CMD-2026-007 așteaptă confirmarea pieselor pentru Volkswagen Passat.',
+        paginaDestinatie: 'operational-comenzi',
+        sursaModul: 'Operațional',
+        textActiune: 'Deschide comenzi',
+        idComanda: getRequired(comandaByNumar, 'CMD-2026-007', 'comanda')
+          .idComanda,
+        metadata: { event: 'comanda-creata', seed: true },
+      },
+      {
+        tip: TipNotificare.Info,
+        mesaj: `Factura ${facturaUrbanDelivery.serie}-${facturaUrbanDelivery.numar} are termen de plată în 20 de zile.`,
+        paginaDestinatie: 'facturare-istoric',
+        sursaModul: 'Facturare',
+        textActiune: 'Vezi istoricul',
+        idFactura: facturaUrbanDelivery.idFactura,
+        idComanda: getRequired(comandaByNumar, 'CMD-2026-008', 'comanda')
+          .idComanda,
+        metadata: { event: 'factura-creata', seed: true },
+      },
+      {
+        tip: TipNotificare.Avertizare,
+        mesaj: 'Stoc critic: Compresor AC mai are o singură bucată disponibilă.',
+        paginaDestinatie: 'catalog-piese',
+        sursaModul: 'Catalog',
+        textActiune: 'Verifică stocul',
+        metadata: { event: 'stoc-critic', seed: true },
+      },
+      {
+        tip: TipNotificare.Succes,
+        mesaj: `Factura ${facturaConstructFleet.serie}-${facturaConstructFleet.numar} a fost pregătită pentru Construct Fleet Management SRL.`,
+        paginaDestinatie: 'facturare-istoric',
+        sursaModul: 'Facturare',
+        textActiune: 'Vezi istoricul',
+        idFactura: facturaConstructFleet.idFactura,
+        idComanda: getRequired(comandaByNumar, 'CMD-2026-005', 'comanda')
+          .idComanda,
+        metadata: { event: 'factura-creata', seed: true },
+      },
+    ],
+  });
+  console.log('✅ Notificări inserate');
 }
 
 main()
