@@ -144,6 +144,28 @@ export async function createComanda(data: Partial<ComandaService>): Promise<Coma
   return mapComanda(comanda, data);
 }
 
+export async function updateComanda(
+  idComanda: number,
+  data: Partial<ComandaService>,
+): Promise<ComandaService> {
+  const res = await fetch(`${API_OP}/comenzi/${idComanda}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      numarComanda: data.numarComanda,
+      idDosar: data.idDosar ?? undefined,
+      idAngajat: data.idMecanic ?? undefined,
+      dataPreconizata: data.termenPromis ? new Date(data.termenPromis).toISOString() : undefined,
+      status: data.status ? statusUiToBackend(data.status) : undefined,
+    }),
+  });
+
+  if (!res.ok) throw new Error(await parseApiError(res, "Eroare la actualizarea comenzii"));
+
+  const comanda = await res.json();
+  return mapComanda(comanda, data);
+}
+
 export async function createDosarDauna(data: Partial<DosarDauna>): Promise<DosarDauna> {
   const res = await fetch(`${API_OP}/dosare`, {
     method: "POST",
