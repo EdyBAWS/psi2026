@@ -1,6 +1,3 @@
-// `Sidebar` este meniul principal al aplicației.
-// El nu face routing real ca în React Router, ci doar trimite către `App`
-// ID-ul paginii selectate prin `setPagina(...)`.
 import { useState } from 'react';
 
 interface SidebarProps {
@@ -9,13 +6,9 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
-  // Aici păstrăm ce meniuri dropdown sunt deschise.
-  // Fiecare element din array este titlul unei categorii expandate.
   const [meniuriDeschise, setMeniuriDeschise] = useState<string[]>(['Catalog', 'Facturare']);
 
   const toggleMeniu = (numeMeniu: string) => {
-    // Dacă meniul există deja în listă, îl închidem.
-    // Dacă nu există, îl adăugăm și devine deschis.
     setMeniuriDeschise(prev => 
       prev.includes(numeMeniu) 
         ? prev.filter(m => m !== numeMeniu)
@@ -23,9 +16,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
     );
   };
 
-  // `categorii` este configurația meniului.
-  // Avantajul acestei abordări este că JSX-ul de mai jos doar "citește"
-  // configurația și nu repetă manual structura pentru fiecare buton.
   const categorii = [
     {
       titlu: 'Catalog',
@@ -35,6 +25,12 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
         { id: 'catalog-piese', label: 'Piese Auto' },
         { id: 'catalog-manopera', label: 'Manoperă' }
       ]
+    },
+    {
+      titlu: 'Asiguratori',
+      isDropdown: false,
+      id: 'entitati-asiguratori',
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
     },
     {
       titlu: 'Angajați',
@@ -49,10 +45,10 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
     },
     {
-      titlu: 'Asiguratori',
+      titlu: 'Vehicule',
       isDropdown: false,
-      id: 'entitati-asiguratori',
-      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      id: 'entitati-vehicule',
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V9a2 2 0 012-2zM5 16h14a2 2 0 002-2v-3a2 2 0 00-2-2H5a2 2 0 00-2 2v3a2 2 0 002 2zM7 16v2a1 1 0 001 1h2a1 1 0 001-1v-2m4 0v2a1 1 0 001 1h2a1 1 0 001-1v-2" />
     },
     {
       titlu: 'Operațional',
@@ -85,7 +81,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
   ];
 
   return (
-    // Sidebar-ul ocupă toată înălțimea paginii și rămâne separat vizual de conținut.
     <div className="w-72 bg-slate-900 flex flex-col shadow-2xl z-10 border-r border-slate-800 h-screen">
       <div className="p-8 border-b border-slate-800/60 shrink-0">
         <h1 className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-cyan-300">
@@ -96,9 +91,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
 
       <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {categorii.map((categorie) => {
-          // Pentru categoriile de tip dropdown afișăm:
-          // 1. butonul principal
-          // 2. lista internă de sub-pagini, doar dacă meniul este deschis
           if (categorie.isDropdown) {
             const isDeschis = meniuriDeschise.includes(categorie.titlu);
             const hasActiveChild = categorie.subItems?.some(item => item.id === paginaCurenta);
@@ -143,7 +135,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
             );
           }
 
-          // Pentru categoriile fără dropdown randăm direct un singur buton.
           return (
             <button
               key={categorie.titlu}
@@ -160,7 +151,6 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
           );
         })}
 
-        {/* `Notificări` este buton separat, nu o categorie cu dropdown. */}
         <button
           onClick={() => setPagina('notificari')}
           className={`w-full flex items-center px-4 py-3 rounded-xl transition-all font-semibold text-sm mt-4 ${

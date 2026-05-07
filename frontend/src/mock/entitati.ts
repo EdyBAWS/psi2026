@@ -1,15 +1,19 @@
+// mock/entitati.ts
+
 import type {
   Angajat as AngajatEntitate,
   Asigurator as AsiguratorEntitate,
   Client as ClientEntitate,
+  Vehicul as VehiculEntitate,
 } from "../types/entitati";
 
+// --- CLIENȚI ---
 export const clientiEntitateMock: ClientEntitate[] = [
   {
     idClient: 1,
     tipClient: "PF",
-    status: "Activ", // Adăugat
-    nume: "Popescu", // Adăugat (lipsea și apărea "-" în tabel)
+    status: "Activ",
+    nume: "Popescu",
     prenume: "Ion",
     telefon: "0722 445 781",
     email: "ion.popescu@gmail.com",
@@ -22,7 +26,7 @@ export const clientiEntitateMock: ClientEntitate[] = [
     idClient: 2,
     tipClient: "PJ",
     status: "Activ",
-    nume: "SC Auto Fleet SRL", // Adăugat
+    nume: "SC Auto Fleet SRL",
     telefon: "021 440 55 90",
     email: "service@autofleet.ro",
     adresa: "Bd. Timișoara 101, București",
@@ -35,7 +39,7 @@ export const clientiEntitateMock: ClientEntitate[] = [
     idClient: 3,
     tipClient: "PF",
     status: "Activ",
-    nume: "Marinescu", // Adăugat
+    nume: "Marinescu",
     prenume: "Ana",
     telefon: "0744 118 620",
     email: "ana.marinescu@yahoo.com",
@@ -48,7 +52,7 @@ export const clientiEntitateMock: ClientEntitate[] = [
     idClient: 4,
     tipClient: "PJ",
     status: "Activ",
-    nume: "Tehnoparts Solutions", // Adăugat
+    nume: "Tehnoparts Solutions",
     telefon: "031 808 44 12",
     email: "office@tehnoparts.ro",
     adresa: "Șos. Industriilor 22, București",
@@ -60,8 +64,8 @@ export const clientiEntitateMock: ClientEntitate[] = [
   {
     idClient: 5,
     tipClient: "PF",
-    status: "Inactiv", // Exemplu de client inactiv conform imaginii tale
-    nume: "Ilie", // Adăugat
+    status: "Inactiv",
+    nume: "Ilie",
     prenume: "Marius",
     telefon: "0733 905 118",
     email: "marius.ilie@gmail.com",
@@ -69,100 +73,10 @@ export const clientiEntitateMock: ClientEntitate[] = [
     soldDebitor: 380,
     CNP: "1900714223345",
     serieCI: "NT778899",
-  },
-  {
-    idClient: 6,
-    tipClient: "PJ",
-    status: "Activ",
-    nume: "Nord Logistic Fleet",
-    telefon: "0264 401 118",
-    email: "contabilitate@nordfleet.ro",
-    adresa: "Str. Fabricii 9, Cluj-Napoca",
-    soldDebitor: 2840,
-    CUI: "RO30112244",
-    IBAN: "RO76BTRL01301234QWER8901",
-    nrRegCom: "J12/4401/2017",
-  },
-  {
-    idClient: 7,
-    tipClient: "PF",
-    status: "Activ",
-    nume: "Georgescu",
-    prenume: "Raluca",
-    telefon: "0755 110 982",
-    email: "raluca.georgescu@outlook.com",
-    adresa: "Str. Soveja 32, Constanța",
-    soldDebitor: 0,
-    CNP: "2910523123456",
-    serieCI: "CT441122",
-  },
-  {
-    idClient: 8,
-    tipClient: "PJ",
-    status: "Activ",
-    nume: "Urban Delivery Services",
-    telefon: "021 667 19 19",
-    email: "flota@urbandelivery.ro",
-    adresa: "Str. Ziduri Moși 44, București",
-    soldDebitor: 6125,
-    CUI: "RO55667788",
-    IBAN: "RO18INGB0000999910101010",
-    nrRegCom: "J40/5566/2020",
-  },
-  {
-    idClient: 9,
-    tipClient: "PF",
-    status: "Activ",
-    nume: "Stan",
-    prenume: "Vlad",
-    telefon: "0726 331 904",
-    email: "vlad.stan@gmail.com",
-    adresa: "Str. Primăverii 6, Brașov",
-    soldDebitor: 250,
-    CNP: "1950910123456",
-    serieCI: "BV904455",
-  },
-  {
-    idClient: 10,
-    tipClient: "PF",
-    status: "Activ",
-    nume: "Toma",
-    prenume: "Cristina",
-    telefon: "0748 772 611",
-    email: "cristina.toma@yahoo.com",
-    adresa: "Bd. Republicii 75, Ploiești",
-    soldDebitor: 0,
-    CNP: "2891129123456",
-    serieCI: "PH228811",
-  },
-  {
-    idClient: 11,
-    tipClient: "PJ",
-    status: "Inactiv",
-    nume: "Metal Construct Grup",
-    telefon: "0256 302 401",
-    email: "office@metalconstruct.ro",
-    adresa: "Calea Buziașului 18, Timișoara",
-    soldDebitor: 1380,
-    CUI: "RO22334455",
-    IBAN: "RO11RNCB0099123400002233",
-    nrRegCom: "J35/991/2014",
-  },
-  {
-    idClient: 12,
-    tipClient: "PF",
-    status: "Activ",
-    nume: "Enache",
-    prenume: "Daniel",
-    telefon: "0731 219 550",
-    email: "daniel.enache@mail.com",
-    adresa: "Str. Independenței 14, Bacău",
-    soldDebitor: 540,
-    CNP: "1860408123456",
-    serieCI: "BC551199",
-  },
+  }
 ];
 
+// --- ANGAJAȚI ---
 export const angajatiEntitateMock: AngajatEntitate[] = [
   {
     idAngajat: 1,
@@ -199,33 +113,10 @@ export const angajatiEntitateMock: AngajatEntitate[] = [
     tipAngajat: "Receptioner",
     nrBirou: "R-02",
     tura: "Dimineață",
-  },
-  {
-    idAngajat: 4,
-    status: "Activ",
-    nume: "Dumitrescu",
-    prenume: "Sorin",
-    CNP: "1811111223344",
-    telefon: "0721 100 204",
-    email: "sorin.dumitrescu@serviceautog.ro",
-    tipAngajat: "Manager",
-    departament: "Operațional",
-    sporConducere: 1500,
-  },
-  {
-    idAngajat: 5,
-    status: "Activ",
-    nume: "Neagu",
-    prenume: "Alexandra",
-    CNP: "2890305223344",
-    telefon: "0721 100 205",
-    email: "alexandra.neagu@serviceautog.ro",
-    tipAngajat: "Mecanic",
-    specializare: "Electrică și AC",
-    costOrar: 230,
-  },
+  }
 ];
 
+// --- ASIGURATORI ---
 export const asiguratoriEntitateMock: AsiguratorEntitate[] = [
   {
     idAsigurator: 1,
@@ -247,19 +138,59 @@ export const asiguratoriEntitateMock: AsiguratorEntitate[] = [
     denumire: "Omniasig Vienna Insurance Group",
     CUI: "RO5587260",
     telefon: "021 405 74 20",
+  }
+];
+
+// --- VEHICULE (MOCK NOU ADĂUGAT) ---
+export const vehiculeEntitateMock: VehiculEntitate[] = [
+  {
+    idVehicul: 1,
+    nrInmatriculare: "IS 24 ABC",
+    marca: "Volkswagen",
+    model: "Passat B8",
+    anFabricatie: 2019,
+    vin: "WVWZZZ3CZJE123456",
+    idClient: 1, // Popescu Ion
+    status: "Activ",
   },
   {
-    idAsigurator: 4,
+    idVehicul: 2,
+    nrInmatriculare: "B 101 FLT",
+    marca: "Skoda",
+    model: "Octavia",
+    anFabricatie: 2021,
+    vin: "TMBJG7NE0M0123456",
+    idClient: 2, // SC Auto Fleet SRL
     status: "Activ",
-    denumire: "Asirom Vienna Insurance Group",
-    CUI: "RO336290",
-    telefon: "021 9146",
   },
   {
-    idAsigurator: 5,
+    idVehicul: 3,
+    nrInmatriculare: "CJ 55 ANA",
+    marca: "BMW",
+    model: "Seria 3 G20",
+    anFabricatie: 2020,
+    vin: "WBA5L31080FL12345",
+    idClient: 3, // Marinescu Ana
     status: "Activ",
-    denumire: "Generali România",
-    CUI: "RO2884407",
-    telefon: "021 312 36 35",
   },
+  {
+    idVehicul: 4,
+    nrInmatriculare: "NT 07 MAR",
+    marca: "Dacia",
+    model: "Duster",
+    anFabricatie: 2018,
+    vin: "UU1HSDCW662123456",
+    idClient: 5, // Ilie Marius
+    status: "Inactiv",
+  },
+  {
+    idVehicul: 5,
+    nrInmatriculare: "IS 99 XYZ",
+    marca: "Audi",
+    model: "A6 C8",
+    anFabricatie: 2022,
+    vin: "WAUZZZF20NN123456",
+    idClient: 1, // Popescu Ion (a doua mașină)
+    status: "Activ",
+  }
 ];

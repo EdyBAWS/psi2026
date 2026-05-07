@@ -1,11 +1,10 @@
-// src/modules/01entitati/entitati.service.ts
 import type { ClientFormValues, AngajatFormValues, AsiguratorFormValues } from './schemas';
 
 export type ClientEntity = ClientFormValues & { idClient: number };
 export type AngajatEntity = AngajatFormValues & { idAngajat: number };
 export type AsiguratorEntity = AsiguratorFormValues & { idAsigurator: number };
 
-// --- MOCK DATA ---
+// --- MOCK DATA EXISTENT ---
 let mockClienti: ClientEntity[] = [
   { idClient: 1, tipClient: 'PJ', nume: 'SC Auto Fleet SRL', CUI: 'RO9876543', telefon: '021 440 55 90', email: 'service@autofleet.ro', adresa: 'Bucuresti', soldDebitor: 1550, status: 'Activ' },
   { idClient: 2, tipClient: 'PF', nume: 'Popescu', prenume: 'Ion', CNP: '1800101223344', serieCI: 'XZ123456', telefon: '0722 445 781', email: 'ion@gmail.com', adresa: 'Iasi', soldDebitor: 0, status: 'Activ' }
@@ -64,4 +63,43 @@ export async function saveAsigurator(data: AsiguratorFormValues, id?: number) {
 }
 export async function schimbaStatusAsigurator(id: number, status: 'Activ' | 'Inactiv') {
   mockAsiguratori = mockAsiguratori.map(a => a.idAsigurator === id ? { ...a, status } : a);
+}
+
+// ============================================================================
+// --- VEHICULE ---
+// ============================================================================
+export type VehiculEntity = {
+  idVehicul: number;
+  nrInmatriculare: string;
+  marca: string;
+  model: string;
+  an: number;
+  serieSasiu: string;
+  idClient: number;
+  status: 'Activ' | 'Inactiv';
+};
+
+export type VehiculFormValues = Omit<VehiculEntity, 'idVehicul' | 'status'>;
+
+let mockVehicule: VehiculEntity[] = [
+  { idVehicul: 1, nrInmatriculare: "IS 24 ABC", marca: "Volkswagen", model: "Passat", an: 2019, serieSasiu: "WVWZZZ3CZJE123456", idClient: 2, status: "Activ" },
+  { idVehicul: 2, nrInmatriculare: "B 101 FLT", marca: "Skoda", model: "Octavia", an: 2021, serieSasiu: "TMBJG7NE0M0123456", idClient: 1, status: "Activ" },
+];
+
+export async function fetchVehicule() { 
+  return [...mockVehicule]; 
+}
+
+export async function saveVehicul(data: VehiculFormValues, id?: number) {
+  if (id) {
+    mockVehicule = mockVehicule.map(v => v.idVehicul === id ? { ...data, idVehicul: id, status: v.status } : v);
+    return mockVehicule.find(v => v.idVehicul === id)!;
+  }
+  const newEntity: VehiculEntity = { ...data, idVehicul: Date.now(), status: 'Activ' };
+  mockVehicule = [newEntity, ...mockVehicule];
+  return newEntity;
+}
+
+export async function schimbaStatusVehicul(id: number, status: 'Activ' | 'Inactiv') {
+  mockVehicule = mockVehicule.map(v => v.idVehicul === id ? { ...v, status } : v);
 }

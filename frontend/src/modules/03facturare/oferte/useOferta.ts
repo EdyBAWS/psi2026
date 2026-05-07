@@ -1,12 +1,25 @@
 // src/modules/03facturare/oferte/useOferta.ts
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { FacturareService } from '../facturare.service';
-import type { FacturaMock, LinieFacturaMock } from '../../../mock/types';
+
+// Tipurile pe care UI-ul le așteaptă
+interface FacturaUI {
+  idFactura: number;
+  numar: string;
+  client: string;
+  restDePlata: number;
+}
+
+interface LinieUI {
+  idLinie: number;
+  denumire: string;
+  cantitate: number;
+  pretUnitar: number;
+}
 
 export function useOferta() {
-  const [facturiEmise, setFacturiEmise] = useState<FacturaMock[]>([]);
-  const [liniiFactura, setLiniiFactura] = useState<LinieFacturaMock[]>([]);
+  const [facturiEmise, setFacturiEmise] = useState<FacturaUI[]>([]);
+  const [liniiFactura, setLiniiFactura] = useState<LinieUI[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [idFacturaSelectata, setIdFacturaSelectata] = useState<number | ''>('');
@@ -20,21 +33,63 @@ export function useOferta() {
   const [motivOperatiune, setMotivOperatiune] = useState('');
   const [liniiStorno, setLiniiStorno] = useState<number[]>([]);
 
-  // 1. Încărcarea datelor inițiale
+  // 1. Încărcarea facturilor reale din baza de date
   useEffect(() => {
-    FacturareService.fetchFacturiEmise().then((data) => {
-      setFacturiEmise(data);
-      setLoading(false);
-    });
+    const fetchFacturi = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/facturare');
+        if (!res.ok) throw new Error('Eroare rețea');
+        const data = await res.json();
+        
+        const mappedData = data.map((f: any) => ({
+          idFactura: f.idFactura,
+          numar: `${f.serie}-${f.numar}`,
+          client: f.client?.nume || f.client?.numeFirma || `Client ID: ${f.idClient}`,
+          restDePlata: f.totalGeneral // Presupunem că tot totalul e de plată momentan
+        }));
+        
+        setFacturiEmise(mappedData);
+      } catch (error) {
+        console.error('Eroare la aducerea facturilor', error);
+        toast.error('Nu s-au putut încărca facturile.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchFacturi();
   }, []);
 
-  // 2. Încărcarea liniilor când se selectează o factură
+  // 2. Încărcarea liniilor (itemelor) când se selectează o factură
   useEffect(() => {
-    if (idFacturaSelectata) {
-      FacturareService.fetchLiniiFacturaEmisa(Number(idFacturaSelectata)).then(setLiniiFactura);
-    } else {
-      setLiniiFactura([]);
-    }
+    const fetchLinii = async () => {
+      if (!idFacturaSelectata) {
+        setLiniiFactura([]);
+        return;
+      }
+      
+      try {
+        // Facem un GET pe ID-ul facturii curente
+        const res = await fetch(`http://localhost:3000/facturare/${idFacturaSelectata}`);
+        if (!res.ok) throw new Error('Eroare rețea');
+        const facturaReala = await res.json();
+        
+        // Extragem itemele și le mapăm pentru tabelul tău de storno
+        if (facturaReala.iteme && Array.isArray(facturaReala.iteme)) {
+          const mappedLinii = facturaReala.iteme.map((item: any) => ({
+            idLinie: item.idItem || Math.random(), // Folosim id-ul real dacă există
+            denumire: item.descriere,
+            cantitate: item.cantitate,
+            pretUnitar: item.pretUnitar
+          }));
+          setLiniiFactura(mappedLinii);
+        }
+      } catch (error) {
+        console.error('Eroare la aducerea detaliilor facturii', error);
+      }
+    };
+
+    fetchLinii();
   }, [idFacturaSelectata]);
 
   const facturiFiltrate = useMemo(() => {
@@ -52,7 +107,7 @@ export function useOferta() {
     [idFacturaSelectata, facturiEmise]
   );
 
-  const handleSelectFactura = (facturaGasita: FacturaMock) => {
+  const handleSelectFactura = (facturaGasita: FacturaUI) => {
     setIdFacturaSelectata(facturaGasita.idFactura);
     setSearchTerm(`${facturaGasita.numar} | ${facturaGasita.client}`);
     setIsDropdownOpen(false);
@@ -99,14 +154,40 @@ export function useOferta() {
     }
 
     try {
-      // Apelăm service-ul pentru a salva datele
-      await FacturareService.salveazaAjustare({
-        idFactura: factura.idFactura,
+      // Trimitem acțiunea curentă către backend printr-un PATCH request (Update)
+      // Chiar dacă backend-ul nu procesează încă storno, cererea de rețea va fi reală.
+      const payload = {
         tipOperatiune,
-        valoare: calculeFinale?.sumaScazuta,
+        valoareAjustare: calculeFinale?.sumaScazuta,
         motiv: motivOperatiune,
         liniiStorno: tipOperatiune === 'storno' ? liniiStorno : undefined
+      };
+
+      const res = await fetch(`http://localhost:3000/facturare/${factura.idFactura}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
       });
+
+      if (!res.ok) throw new Error('Eroare la salvarea pe server');
+      // --- INCEPUT HACK LOCAL STORAGE ---
+      const actiuneExtra = {
+        id: `local-${Date.now()}`, // ID fals pentru tabel
+        client: factura.client,
+        numarDocument: factura.numar,
+        tipOperatiune: tipOperatiune === 'discount' ? 'Discount Extra' : 'Storno',
+        valoare: -(calculeFinale?.sumaScazuta || 0), // O punem cu minus ca să se vadă roșu în tabel
+        dataOra: new Date().toLocaleDateString('ro-RO') + ' - ' + new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }),
+        detalii: motivOperatiune || 'Modificare aplicată',
+        utilizator: 'Admin'
+      };
+
+      // Citim istoricul vechi din browser, adăugăm noua acțiune și salvăm la loc
+      const istoricBrowser = JSON.parse(localStorage.getItem('istoric_facturare_extra') || '[]');
+      localStorage.setItem('istoric_facturare_extra', JSON.stringify([actiuneExtra, ...istoricBrowser]));
+      // --- SFARSIT HACK LOCAL STORAGE ---
 
       if (tipOperatiune === 'discount') {
         toast.success(`Discount aplicat pe factura ${factura.numar}: -${calculeFinale?.sumaScazuta.toFixed(2)} RON.`);
@@ -125,7 +206,8 @@ export function useOferta() {
       setValoareDiscount(0);
       setLiniiStorno([]);
     } catch (error) {
-      toast.error('Eroare la procesarea operațiunii.');
+      console.error(error);
+      toast.error('Eroare la procesarea operațiunii pe server.');
     }
   };
 

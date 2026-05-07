@@ -103,12 +103,37 @@ export function useFacturare() {
       return;
     }
 
+    // 1. Pregătim datele pentru backend exact în formatul DTO-ului din NestJS
+    const dateBackend = {
+      numar: Number(numarFactura),
+      serie: serieFactura,
+      idClient: 1, // Setăm 1 pentru că baza de date are deja clientul 1
+      scadenta: new Date(dataScadenta).toISOString(),
+      iteme: liniiFactura.map((linie) => ({
+        descriere: linie.denumire,
+        cantitate: linie.cantitate,
+        pretUnitar: linie.pretUnitar,
+        // Dăm un ID de piesă sau manoperă în funcție de tip
+        ...(linie.tip === 'Manoperă' ? { idManopera: 1 } : { idPiesa: 1 })
+      }))
+    };
+
     try {
-      await FacturareService.emiteFactura(comandaSelectata.idComanda, {
-        serie: serieFactura, numar: numarFactura, termenPlata, discountProcent, totalPlata
+      // 2. Facem apelul REAL către baza de date
+      const response = await fetch('http://localhost:3000/facturare', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dateBackend),
       });
 
-      toast.success(`Factura ${serieFactura}-${numarFactura} a fost emisă pentru ${totalPlata.toFixed(2)} RON.`);
+      if (!response.ok) {
+        throw new Error('Eroare de la server');
+      }
+
+      // 3. Dacă totul e ok, finalizăm acțiunea
+      toast.success(`Factura ${serieFactura}-${numarFactura} a fost emisă și salvată în baza de date!`);
       
       setComenziGata((prev) => prev.filter((c) => c.idComanda !== comandaSelectata.idComanda));
       setComandaSelectata(null);
@@ -116,7 +141,8 @@ export function useFacturare() {
       setDiscountProcent(0);
       setTermenPlata(0);
     } catch (error) {
-      toast.error('Eroare la emiterea facturii.');
+      console.error(error);
+      toast.error('A apărut o eroare la salvarea facturii în baza de date.');
     }
   };
 
