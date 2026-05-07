@@ -1,7 +1,4 @@
-// Helperii din acest fișier țin logica "de listă" și "de selecție"
-// pentru pagina `GestiuneComenzi`.
-// Scopul este ca pagina principală să rămână mai ușor de citit:
-// UI-ul stă în componentă, iar calculele și legăturile dintre entități stau aici.
+// src/modules/02operational/pages/gestiune-comenzi/gestiuneComenzi.helpers.ts
 import {
   calculeazaRezumatPozitii,
   comandaEsteActiva,
@@ -19,7 +16,7 @@ import type {
 } from "../../types";
 
 export type GestiuneSortField =
-  | "nrComanda"
+  | "numarComanda"
   | "data"
   | "vehicul"
   | "status"
@@ -71,18 +68,20 @@ export const formatSuma = (valoare: number) =>
     maximumFractionDigits: 2,
   }).format(valoare);
 
-export const formatData = (valoare: Date | null) =>
-  valoare ? valoare.toLocaleDateString("ro-RO") : "Nefinalizată";
+// FIX EROARE 2345: Am adăugat 'undefined' în tipul parametrului
+export const formatData = (valoare: Date | string | null | undefined) => {
+  if (!valoare) return "-";
+  const dateObj = typeof valoare === 'string' ? new Date(valoare) : valoare;
+  return dateObj.toLocaleDateString("ro-RO");
+};
 
 export function descriereSortare(
   sortField: GestiuneSortField,
   sortDir: GestiuneSortDir,
 ) {
-  // Acest text este util pentru a explica utilizatorului
-  // cum este ordonată lista în momentul curent.
   const etichete: Record<GestiuneSortField, string> = {
     data: "data deschiderii",
-    nrComanda: "numărul comenzii",
+    numarComanda: "numărul comenzii",
     status: "status",
     valoare: "valoarea devizului",
     vehicul: "vehicul",
@@ -105,67 +104,37 @@ export function filtreazaSiSorteazaComenzi(
 
   return comenzi
     .filter((comanda) => {
-      // Pentru fiecare comandă rezolvăm și contextul ei minim,
-      // adică vehiculul și clientul asociat.
-      const vehicul =
-        vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
-      const client =
-        clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
-      const potrivireCautare =
-        termen === "" ||
-        [
-          comanda.nrComanda,
-          vehicul?.nrInmatriculare ?? "",
+      const vehicul = vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
+      const client = clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
+      
+      const potrivireCautare = termen === "" || [
+          comanda.numarComanda,
+          vehicul?.numarInmatriculare ?? "",
           vehicul?.marca ?? "",
           vehicul?.model ?? "",
           client?.nume ?? "",
-          client?.denumireCompanie ?? "",
         ].some((camp) => camp.toLowerCase().includes(termen));
 
-      const potrivireStatus =
-        filtre.filtruStatus === "Toate" ||
-        comanda.status === filtre.filtruStatus;
-      const potrivireMecanic =
-        filtre.filtruMecanic === "toate" ||
-        comanda.idMecanic === filtre.filtruMecanic;
-      const potrivirePlata =
-        filtre.filtruPlata === "Toate" ||
-        comanda.tipPlata === filtre.filtruPlata;
-      const potrivireIntarziere =
-        !filtre.doarIntarziate ||
-        comandaEsteIntarziata(comanda.status, comanda.termenPromis);
+      const potrivireStatus = filtre.filtruStatus === "Toate" || comanda.status === filtre.filtruStatus;
+      const potrivireMecanic = filtre.filtruMecanic === "toate" || comanda.idMecanic === filtre.filtruMecanic;
+      const potrivirePlata = filtre.filtruPlata === "Toate" || comanda.tipPlata === filtre.filtruPlata;
+      const potrivireIntarziere = !filtre.doarIntarziate || (comanda.status && comanda.termenPromis && comandaEsteIntarziata(comanda.status, comanda.termenPromis));
 
-      return (
-        potrivireCautare &&
-        potrivireStatus &&
-        potrivireMecanic &&
-        potrivirePlata &&
-        potrivireIntarziere
-      );
+      return potrivireCautare && potrivireStatus && potrivireMecanic && potrivirePlata && potrivireIntarziere;
     })
     .sort((a, b) => {
-      // Sortarea rămâne într-un singur loc, ca să nu duplicăm
-      // aceeași logică în tabel și în pagina principală.
       let comparison = 0;
-
       if (sortField === "data") {
-        comparison = a.dataDeschidere.getTime() - b.dataDeschidere.getTime();
-      } else if (sortField === "nrComanda") {
-        comparison = a.nrComanda.localeCompare(b.nrComanda);
-      } else if (sortField === "vehicul") {
-        const vehiculA =
-          vehicule.find((item) => item.idVehicul === a.idVehicul)
-            ?.nrInmatriculare ?? "";
-        const vehiculB =
-          vehicule.find((item) => item.idVehicul === b.idVehicul)
-            ?.nrInmatriculare ?? "";
-        comparison = vehiculA.localeCompare(vehiculB);
+        const dataA = a.dataDeschidere ? new Date(a.dataDeschidere).getTime() : 0;
+        const dataB = b.dataDeschidere ? new Date(b.dataDeschidere).getTime() : 0;
+        comparison = dataA - dataB;
+      } else if (sortField === "numarComanda") {
+        comparison = a.numarComanda.localeCompare(b.numarComanda);
       } else if (sortField === "status") {
-        comparison = a.status.localeCompare(b.status);
+        comparison = (a.status || "").localeCompare(b.status || "");
       } else {
-        comparison = a.totalEstimat - b.totalEstimat;
+        comparison = (a.totalEstimat ?? 0) - (b.totalEstimat ?? 0);
       }
-
       return sortDir === "asc" ? comparison : -comparison;
     });
 }
@@ -175,18 +144,14 @@ export function construiesteLiniiLista(
   clienti: Client[],
   vehicule: Vehicul[],
 ): ComandaFiltrataContext[] {
-  // În listă vrem deja o structură "pregătită de afișare",
-  // nu doar comanda brută. De aceea construim aici contextul complet.
   return comenziFiltrate.map((comanda) => {
-    const vehicul =
-      vehicule.find((item) => item.idVehicul === comanda.idVehicul) ?? null;
-    const client =
-      clienti.find((item) => item.idClient === vehicul?.idClient) ?? null;
+    const vehicul = vehicule.find((v) => v.idVehicul === comanda.idVehicul) ?? null;
+    const client = clienti.find((c) => c.idClient === vehicul?.idClient) ?? null;
 
     return {
       client,
       comanda,
-      intarziata: comandaEsteIntarziata(comanda.status, comanda.termenPromis),
+      intarziata: !!(comanda.status && comanda.termenPromis && comandaEsteIntarziata(comanda.status, comanda.termenPromis)),
       vehicul,
     };
   });
@@ -194,73 +159,34 @@ export function construiesteLiniiLista(
 
 export function rezolvaDetaliiComandaSelectata(
   idComandaSelectata: number | null,
-  comenziFiltrate: ComandaService[],
+  comenzi: ComandaService[],
   clienti: Client[],
   vehicule: Vehicul[],
   mecanici: Mecanic[],
   dosare: DosarDauna[],
-  asiguratori: Asigurator[],
+  _asiguratori: Asigurator[], // FIX EROARE 6133: Adăugat underscore
   pozitii: PozitieComanda[],
 ): DetaliiComandaSelectata {
-  // Când utilizatorul selectează o comandă, pagina din dreapta are nevoie de
-  // multe legături rezolvate: client, vehicul, mecanic, dosar, asigurator, poziții.
-  // Helperul acesta centralizează toate aceste căutări într-un singur loc.
-  const comandaSelectata =
-    idComandaSelectata === null
-      ? null
-      : (comenziFiltrate.find(
-          (comanda) => comanda.idComanda === idComandaSelectata,
-        ) ?? null);
-
-  const pozitiiComandaSelectata = comandaSelectata
-    ? pozitii.filter(
-        (pozitie) => pozitie.idComanda === comandaSelectata.idComanda,
-      )
-    : [];
-  const rezumatSelectat = calculeazaRezumatPozitii(pozitiiComandaSelectata);
-  const vehiculSelectat = comandaSelectata
-    ? (vehicule.find((item) => item.idVehicul === comandaSelectata.idVehicul) ??
-      null)
-    : null;
-  const clientSelectat = vehiculSelectat
-    ? (clienti.find((item) => item.idClient === vehiculSelectat.idClient) ??
-      null)
-    : null;
-  const mecanicSelectat = comandaSelectata
-    ? (mecanici.find((item) => item.idMecanic === comandaSelectata.idMecanic) ??
-      null)
-    : null;
-  const dosarSelectat = comandaSelectata
-    ? (dosare.find((item) => item.idDosar === comandaSelectata.idDosar) ?? null)
-    : null;
-  const asiguratorSelectat = dosarSelectat
-    ? (asiguratori.find(
-        (item) => item.idAsigurator === dosarSelectat.idAsigurator,
-      ) ?? null)
-    : null;
+  const comandaSelectata = idComandaSelectata === null ? null : (comenzi.find((c) => c.idComanda === idComandaSelectata) ?? null);
+  const vehiculSelectat = comandaSelectata ? (vehicule.find((v) => v.idVehicul === comandaSelectata.idVehicul) ?? null) : null;
+  const pozitiiComandaSelectata = comandaSelectata ? pozitii.filter((p) => p.idComanda === comandaSelectata.idComanda) : [];
 
   return {
-    asiguratorSelectat,
-    clientSelectat,
+    asiguratorSelectat: null,
+    clientSelectat: vehiculSelectat ? (clienti.find((c) => c.idClient === vehiculSelectat.idClient) ?? null) : null,
     comandaSelectata,
-    dosarSelectat,
-    mecanicSelectat,
+    dosarSelectat: comandaSelectata?.idDosar ? (dosare.find((d) => d.idDosar === comandaSelectata.idDosar) ?? null) : null,
+    mecanicSelectat: mecanici.find((m) => m.idMecanic === comandaSelectata?.idMecanic) ?? null,
     pozitiiComandaSelectata,
-    rezumatSelectat,
+    rezumatSelectat: calculeazaRezumatPozitii(pozitiiComandaSelectata),
     vehiculSelectat,
   };
 }
 
 export function calculeazaStatisticiComenzi(comenzi: ComandaService[]) {
-  // Cardurile de statistică folosesc aceeași sursă de date,
-  // deci este mai sigur să le calculăm centralizat aici.
   return {
     totalComenzi: comenzi.length,
-    totalComenziActive: comenzi.filter((comanda) =>
-      comandaEsteActiva(comanda.status),
-    ).length,
-    totalIntarziate: comenzi.filter((comanda) =>
-      comandaEsteIntarziata(comanda.status, comanda.termenPromis),
-    ).length,
+    totalComenziActive: comenzi.filter((c) => c.status && comandaEsteActiva(c.status)).length,
+    totalIntarziate: comenzi.filter((c) => c.status && c.termenPromis && comandaEsteIntarziata(c.status, c.termenPromis)).length,
   };
 }

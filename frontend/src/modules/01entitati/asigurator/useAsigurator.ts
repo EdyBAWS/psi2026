@@ -1,43 +1,63 @@
-// src/modules/01entitati/useAsigurator.ts
 import { useState, useEffect, useMemo } from 'react';
 import { fetchAsiguratori, saveAsigurator, schimbaStatusAsigurator, type AsiguratorEntity } from '../entitati.service';
 import type { AsiguratorFormValues } from '../schemas';
 
 export function useAsigurator() {
-  const [lista, setLista] = useState<AsiguratorEntity[]>([]);
+  const [asiguratori, setAsiguratori] = useState<AsiguratorEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [cautare, setCautare] = useState('');
   const [arataInactivi, setArataInactivi] = useState(false);
 
-  useEffect(() => {
-    fetchAsiguratori().then(setLista).finally(() => setLoading(false));
-  }, []);
-
-  const listaFiltrata = useMemo(() => {
-    return lista.filter(a => {
-      if (!arataInactivi && a.status === 'Inactiv') return false;
-      const matchText = `${a.denumire} ${a.CUI || ''}`.toLowerCase();
-      return matchText.includes(cautare.toLowerCase());
-    });
-  }, [lista, cautare, arataInactivi]);
-
-  const salveaza = async (data: AsiguratorFormValues, editId?: number) => {
-    const saved = await saveAsigurator(data, editId);
-    if (editId) {
-      setLista(prev => prev.map(a => a.idAsigurator === editId ? saved : a));
-    } else {
-      setLista(prev => [saved, ...prev]);
+  const incarcaDate = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchAsiguratori();
+      setAsiguratori(data);
+    } catch (error) {
+      console.error("Eroare la încărcarea datelor:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const schimbaStatus = async (id: number, noulStatus: 'Activ' | 'Inactiv') => {
-    await schimbaStatusAsigurator(id, noulStatus);
-    setLista(prev => prev.map(a => a.idAsigurator === id ? { ...a, status: noulStatus } : a));
+  useEffect(() => {
+    incarcaDate();
+  }, []);
+
+  const listaFiltrata = useMemo(() => {
+    return asiguratori.filter((asig) => {
+      const matchCautare = asig.denumire.toLowerCase().includes(cautare.toLowerCase()) || 
+                           asig.CUI.toLowerCase().includes(cautare.toLowerCase());
+      const matchStatus = arataInactivi ? true : asig.status === 'Activ';
+      return matchCautare && matchStatus;
+    });
+  }, [asiguratori, cautare, arataInactivi]);
+
+  const stats = useMemo(() => {
+    return {
+      totalActivi: asiguratori.filter(a => a.status === 'Activ').length
+    };
+  }, [asiguratori]);
+
+  const salveaza = async (data: AsiguratorFormValues, id?: number) => {
+    await saveAsigurator(data, id);
+    await incarcaDate(); 
+  };
+
+  const schimbaStatus = async (id: number, status: 'Activ' | 'Inactiv') => {
+    await schimbaStatusAsigurator(id, status);
+    await incarcaDate(); 
   };
 
   return {
-    listaFiltrata, loading, cautare, setCautare, arataInactivi, setArataInactivi,
-    salveaza, schimbaStatus,
-    stats: { totalActivi: lista.filter(a => a.status === 'Activ').length }
+    listaFiltrata,
+    loading,
+    cautare,
+    setCautare,
+    arataInactivi,
+    setArataInactivi,
+    salveaza,
+    schimbaStatus,
+    stats
   };
 }

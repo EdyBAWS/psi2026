@@ -1,8 +1,4 @@
 // src/modules/00catalog/piese/usePiesa.ts
-//
-// Hook ce centralizează toată logica de state pentru modulul Piese.
-// Aliniat la schema DB: Single Table cu discriminant tipPiesa (NOUA/SH),
-// câmpuri condiționale luniGarantie (PiesaNoua) și gradUzura (PiesaSH).
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -16,6 +12,7 @@ import {
   deletePiesa,
   fetchPiese,
   updatePiesa,
+  fetchIstoricPiesa,
 } from '../catalog.service';
 
 export type SortFieldPiesa = 'codPiesa' | 'denumire' | 'pretBaza' | 'stoc';
@@ -35,16 +32,26 @@ export function usePiesa() {
   const [arataFormular, setArataFormular] = useState(false);
   const [form, setForm] = useState<Partial<PiesaCatalogMock>>(FORM_INIT);
 
+  // Istoric piese
+  const [istoricCurent, setIstoricCurent] = useState<any[] | null>(null);
+  const [loadingIstoric, setLoadingIstoric] = useState(false);
+
   const [cautare, setCautare] = useState('');
   const [filtruTip, setFiltruTip] = useState<TipPiesaCatalogMock | 'TOATE'>('TOATE');
   const [filtruCategorie, setFiltruCategorie] = useState<CategoriePiesa | 'TOATE'>('TOATE');
   const [sortField, setSortField] = useState<SortFieldPiesa>('denumire');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
     fetchPiese()
       .then(setPiese)
+      .catch(() => toast.error("Eroare la încărcarea datelor din baza de date."))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const handleSort = (field: SortFieldPiesa) => {
@@ -70,38 +77,44 @@ export function usePiesa() {
       return sortDir === 'asc' ? cmp : -cmp;
     });
 
-  // ── Validare specifică schemei DB ─────────────────────────────────────────
-  // Câmpurile condiționale (luniGarantie / gradUzura) depind de tipPiesa.
   const handleSalvare = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.codPiesa || !form.denumire || !form.producator || form.pretBaza === undefined) {
-      toast.error('Completează câmpurile obligatorii: Cod, Denumire, Producător, Preț.');
-      return;
-    }
-    if (form.tip === 'NOUA' && !form.luniGarantie) {
-      toast.error('Piesele noi necesită perioada de garanție.');
-      return;
-    }
-    if (form.tip === 'SH' && !form.gradUzura) {
-      toast.error('Piesele SH necesită descrierea gradului de uzură.');
-      return;
-    }
-
     try {
       if (editId !== null) {
         const actualizata = await updatePiesa(editId, form);
-        setPiese((prev) =>
-          prev.map((p) => (p.idPiesa === editId ? actualizata : p)),
-        );
+        setPiese((prev) => prev.map((p) => (p.idPiesa === editId ? actualizata : p)));
         toast.success('Piesa a fost actualizată.');
       } else {
         const noua = await createPiesa(form as Omit<PiesaCatalogMock, 'idPiesa'>);
         setPiese((prev) => [noua, ...prev]);
-        toast.success('Piesa a fost adăugată în nomenclator.');
+        toast.success('Piesa a fost adăugată.');
       }
       handleInchideFormular();
-    } catch {
-      toast.error('A apărut o eroare. Încearcă din nou.');
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleVeziIstoric = async (id: number) => {
+    setLoadingIstoric(true);
+    try {
+      const data = await fetchIstoricPiesa(id);
+      setIstoricCurent(data);
+    } catch (err: any) {
+      toast.error("Nu s-a putut încărca istoricul.");
+    } finally {
+      setLoadingIstoric(false);
+    }
+  };
+
+  const handleSterge = async (id: number) => {
+    try {
+      await deletePiesa(id);
+      setPiese((prev) => prev.filter((p) => p.idPiesa !== id));
+      toast.success('Piesa a fost ștearsă.');
+    } catch (err: any) {
+      // Aici primim eroarea de la backend dacă piesa are istoric
+      toast.error(err.message);
     }
   };
 
@@ -109,16 +122,6 @@ export function usePiesa() {
     setEditId(piesa.idPiesa);
     setForm({ ...piesa });
     setArataFormular(true);
-  };
-
-  const handleSterge = async (id: number) => {
-    try {
-      await deletePiesa();
-      setPiese((prev) => prev.filter((p) => p.idPiesa !== id));
-      toast.success('Piesa a fost ștearsă din nomenclator.');
-    } catch {
-      toast.error('Ștergerea a eșuat.');
-    }
   };
 
   const handleInchideFormular = () => {
@@ -133,35 +136,16 @@ export function usePiesa() {
     setArataFormular(true);
   };
 
-  // Statistici derivate
   const valoareStoc = piese.reduce((acc, p) => acc + p.pretBaza * p.stoc, 0);
   const stocEpuizat = piese.filter((p) => p.stoc === 0).length;
   const stocCritic = piese.filter((p) => p.stoc > 0 && p.stoc < 5).length;
 
   return {
-    piese,
-    pieseFiltrate,
-    loading,
-    valoareStoc,
-    stocEpuizat,
-    stocCritic,
-    form,
-    setForm,
-    editId,
-    arataFormular,
-    cautare,
-    setCautare,
-    filtruTip,
-    setFiltruTip,
-    filtruCategorie,
-    setFiltruCategorie,
-    sortField,
-    sortDir,
-    handleSort,
-    handleSalvare,
-    handleEditeaza,
-    handleSterge,
-    handleDeschideAdaugare,
-    handleInchideFormular,
+    piese, pieseFiltrate, loading, valoareStoc, stocEpuizat, stocCritic,
+    form, setForm, editId, arataFormular, cautare, setCautare,
+    filtruTip, setFiltruTip, filtruCategorie, setFiltruCategorie,
+    sortField, sortDir, handleSort, handleSalvare, handleEditeaza,
+    handleSterge, handleDeschideAdaugare, handleInchideFormular,
+    istoricCurent, setIstoricCurent, loadingIstoric, handleVeziIstoric
   };
 }

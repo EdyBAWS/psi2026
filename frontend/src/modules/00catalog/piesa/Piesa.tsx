@@ -1,15 +1,8 @@
 // src/modules/00catalog/piese/Piesa.tsx
-//
-// Componentă de prezentare pură — toată logica se află în usePiesa.ts.
-// Aliniată la schema DB (Single Table cu discriminant tipPiesa).
-// Câmpurile condiționale luniGarantie / gradUzura se afișează doar
-// în funcție de tipul piesei selectat.
-
-import { Package, PenLine, Trash2, ArrowUpDown } from 'lucide-react';
+import { PenLine, Trash2, ArrowUpDown, History, X, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../../../componente/ui/Button';
 import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
-import { EmptyState } from '../../../componente/ui/EmptyState';
 import { Field } from '../../../componente/ui/Field';
 import { PageHeader } from '../../../componente/ui/PageHeader';
 import { SelectField } from '../../../componente/ui/SelectField';
@@ -45,7 +38,6 @@ function SortIndicator({
   );
 }
 
-// Badge stoc cu praguri vizuale (epuizat / critic / normal).
 function StocBadge({ stoc }: { stoc: number }) {
   if (stoc === 0)
     return (
@@ -92,14 +84,19 @@ export default function Piesa() {
     handleSterge,
     handleDeschideAdaugare,
     handleInchideFormular,
+    istoricCurent,
+    setIstoricCurent,
+    loadingIstoric,
+    handleVeziIstoric
   } = usePiesa();
 
   const [confirmSterge, setConfirmSterge] = useState<number | null>(null);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-slate-400">
-        Se încarcă nomenclatorul de piese...
+      <div className="flex flex-col items-center justify-center py-24 text-slate-400 gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+        <p>Se încarcă nomenclatorul din baza de date Neon...</p>
       </div>
     );
   }
@@ -110,7 +107,7 @@ export default function Piesa() {
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
         <PageHeader
           title="Nomenclator Produse și Stoc"
-          description="Gestionează inventarul de piese noi și SH, prețurile de bază și cantitățile disponibile."
+          description="Gestionează inventarul. Piesele utilizate în reparații nu pot fi șterse pentru a păstra istoricul."
           actions={
             <Button
               variant="primary"
@@ -180,7 +177,6 @@ export default function Piesa() {
             {editId !== null ? 'Editare Articol' : 'Adăugare Articol Nou'}
           </h4>
 
-          {/* Câmpuri comune (întotdeauna vizibile) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <Field
               label="Cod Piesă *"
@@ -204,7 +200,6 @@ export default function Piesa() {
               placeholder="ex: Bosch"
               required
             />
-
             <SelectField
               label="Categorie"
               value={form.categorie ?? 'Altele'}
@@ -217,230 +212,129 @@ export default function Piesa() {
               label="Preț Bază (RON) *"
               type="number"
               step="0.01"
-              min="0"
               value={form.pretBaza ?? ''}
-              onChange={(e) =>
-                setForm({ ...form, pretBaza: Number(e.target.value) })
-              }
-              placeholder="ex: 145.00"
+              onChange={(e) => setForm({ ...form, pretBaza: Number(e.target.value) })}
               required
             />
             <Field
-              label="Stoc Inițial (Buc)"
+              label="Stoc"
               type="number"
-              min="0"
               value={form.stoc ?? 0}
-              onChange={(e) =>
-                setForm({ ...form, stoc: Number(e.target.value) })
-              }
+              onChange={(e) => setForm({ ...form, stoc: Number(e.target.value) })}
             />
-
-            {/* Discriminant tipPiesa — aliniat cu Single Table din schema DB */}
             <SelectField
-              label="Tip Piesă (discriminant) *"
+              label="Tip Piesă *"
               value={form.tip ?? 'NOUA'}
-              onChange={(e) => {
-                const tip = e.target.value as TipPiesaCatalogMock;
-                // Curățăm câmpul care nu mai e relevant la schimbare de tip.
-                setForm({
-                  ...form,
-                  tip,
-                  luniGarantie: tip === 'NOUA' ? form.luniGarantie : undefined,
-                  gradUzura: tip === 'SH' ? form.gradUzura : undefined,
-                });
-              }}
-              options={[
-                { label: 'Nouă', value: 'NOUA' },
-                { label: 'Second Hand (SH)', value: 'SH' },
-              ]}
+              onChange={(e) => setForm({ ...form, tip: e.target.value as any })}
+              options={[{ label: 'Nouă', value: 'NOUA' }, { label: 'SH', value: 'SH' }]}
             />
           </div>
 
-          {/* Câmpuri condiționale — afișate în funcție de tipPiesa */}
           {form.tip === 'NOUA' && (
             <div className="mt-5 pt-5 border-t border-slate-100">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
-                Atribute specifice — Piesă Nouă
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <Field
-                  label="Garanție (Luni) *"
-                  type="number"
-                  min="1"
-                  value={form.luniGarantie ?? ''}
-                  onChange={(e) =>
-                    setForm({ ...form, luniGarantie: Number(e.target.value) })
-                  }
-                  placeholder="ex: 12"
-                  hint="Obligatoriu pentru piese noi (schema DB)"
-                  required
-                />
-              </div>
+              <Field
+                label="Garanție (Luni) *"
+                type="number"
+                value={form.luniGarantie ?? ''}
+                onChange={(e) => setForm({ ...form, luniGarantie: Number(e.target.value) })}
+                required
+              />
             </div>
           )}
+
           {form.tip === 'SH' && (
             <div className="mt-5 pt-5 border-t border-slate-100">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
-                Atribute specifice — Piesă Second Hand
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <Field
-                  label="Grad Uzură *"
-                  value={form.gradUzura ?? ''}
-                  onChange={(e) =>
-                    setForm({ ...form, gradUzura: e.target.value })
-                  }
-                  placeholder="ex: Ușor uzat, testat"
-                  hint="Obligatoriu pentru piese SH (schema DB)"
-                  wrapperClassName="md:col-span-2"
-                  required
-                />
-              </div>
+              <Field
+                label="Grad Uzură *"
+                value={form.gradUzura ?? ''}
+                onChange={(e) => setForm({ ...form, gradUzura: e.target.value })}
+                required
+              />
             </div>
           )}
 
           <div className="mt-6 flex justify-end gap-3">
-            <Button variant="outline" type="button" onClick={handleInchideFormular}>
-              Anulează
-            </Button>
-            <Button variant="primary" type="submit">
-              {editId !== null ? 'Salvează Modificările' : 'Adaugă Articolul'}
-            </Button>
+            <Button variant="outline" type="button" onClick={handleInchideFormular}>Anulează</Button>
+            <Button variant="primary" type="submit">{editId !== null ? 'Salvează' : 'Adaugă'}</Button>
           </div>
         </form>
       )}
 
       {/* ── TABEL ───────────────────────────────────────────────────────────── */}
-      {pieseFiltrate.length === 0 ? (
-        <EmptyState
-          icon={<Package className="h-5 w-5" />}
-          title="Nu au fost găsite piese"
-          description="Modifică filtrele sau adaugă o piesă nouă în nomenclator."
-          actionLabel="+ Adaugă Piesă"
-          onAction={handleDeschideAdaugare}
-        />
-      ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200">
-                <tr>
-                  <th
-                    className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors"
-                    onClick={() => handleSort('codPiesa')}
-                  >
-                    Cod / Categorie{' '}
-                    <SortIndicator field="codPiesa" activeField={sortField} dir={sortDir} />
-                  </th>
-                  <th
-                    className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors"
-                    onClick={() => handleSort('denumire')}
-                  >
-                    Denumire / Producător{' '}
-                    <SortIndicator field="denumire" activeField={sortField} dir={sortDir} />
-                  </th>
-                  <th className="px-6 py-4 text-center">Tip</th>
-                  <th
-                    className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors text-center"
-                    onClick={() => handleSort('stoc')}
-                  >
-                    Stoc{' '}
-                    <SortIndicator field="stoc" activeField={sortField} dir={sortDir} />
-                  </th>
-                  <th
-                    className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors text-right"
-                    onClick={() => handleSort('pretBaza')}
-                  >
-                    Preț Vânzare{' '}
-                    <SortIndicator field="pretBaza" activeField={sortField} dir={sortDir} />
-                  </th>
-                  <th className="px-6 py-4 text-center w-28">Acțiuni</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {pieseFiltrate.map((piesa) => (
-                  <tr
-                    key={piesa.idPiesa}
-                    className="hover:bg-slate-50/80 transition-colors group"
-                  >
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-slate-800 font-mono text-xs bg-slate-100 inline-block px-2 py-1 rounded">
-                        {piesa.codPiesa}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1.5 font-medium">
-                        {piesa.categorie}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-slate-800 text-[13px]">{piesa.denumire}</p>
-                      <p className="text-xs text-slate-500 mt-1">{piesa.producator}</p>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`px-2 py-1 rounded text-[10px] font-bold tracking-wider ${
-                          piesa.tip === 'NOUA'
-                            ? 'bg-indigo-50 text-indigo-700'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {piesa.tip === 'NOUA'
-                          ? `NOUĂ ${piesa.luniGarantie ? `(${piesa.luniGarantie}L)` : ''}`
-                          : 'SH'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <StocBadge stoc={piesa.stoc} />
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <p className="font-bold text-slate-800 text-base">
-                        {piesa.pretBaza.toFixed(2)}
-                      </p>
-                      <p className="text-[10px] font-semibold text-slate-400 uppercase">
-                        RON / buc
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditeaza(piesa)}
-                          title="Editează"
-                        >
-                          <PenLine className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setConfirmSterge(piesa.idPiesa)}
-                          title="Șterge"
-                          className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <table className="min-w-full text-left text-sm">
+          <thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-400 border-b">
+            <tr>
+              <th className="px-6 py-4" onClick={() => handleSort('codPiesa')}>Cod / Categorie <SortIndicator field="codPiesa" activeField={sortField} dir={sortDir} /></th>
+              <th className="px-6 py-4" onClick={() => handleSort('denumire')}>Denumire <SortIndicator field="denumire" activeField={sortField} dir={sortDir} /></th>
+              <th className="px-6 py-4 text-center">Stoc</th>
+              <th className="px-6 py-4 text-right" onClick={() => handleSort('pretBaza')}>Preț <SortIndicator field="pretBaza" activeField={sortField} dir={sortDir} /></th>
+              <th className="px-6 py-4 text-center w-40">Acțiuni</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {pieseFiltrate.map((piesa) => (
+              <tr key={piesa.idPiesa} className="hover:bg-slate-50 transition-colors group">
+                <td className="px-6 py-4">
+                  <p className="font-mono text-xs font-bold bg-slate-100 px-2 py-1 rounded inline-block">{piesa.codPiesa}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold">{piesa.categorie}</p>
+                </td>
+                <td className="px-6 py-4">
+                  <p className="font-bold text-slate-800">{piesa.denumire}</p>
+                  <p className="text-xs text-slate-500">{piesa.producator}</p>
+                </td>
+                <td className="px-6 py-4 text-center"><StocBadge stoc={piesa.stoc} /></td>
+                <td className="px-6 py-4 text-right font-bold text-indigo-700">{piesa.pretBaza.toFixed(2)} RON</td>
+                <td className="px-6 py-4">
+                  <div className="flex justify-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleVeziIstoric(piesa.idPiesa)} title="Vezi Consum">
+                      <History className={`h-4 w-4 ${istoricCurent && istoricCurent[0]?.idPiesa === piesa.idPiesa ? 'text-indigo-600' : ''}`} />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEditeaza(piesa)}><PenLine className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="sm" className="text-rose-500" onClick={() => setConfirmSterge(piesa.idPiesa)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── PANOU ISTORIC CONSUM ─────────────────────────────────────────── */}
+      {istoricCurent && (
+        <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-2xl animate-in slide-in-from-bottom-4">
+          <div className="flex justify-between items-center mb-4">
+            <h5 className="font-bold text-indigo-900 flex items-center gap-2">
+              <History className="h-5 w-5" /> Istoric Consum: {piese.find(p => p.idPiesa === istoricCurent[0]?.idPiesa)?.denumire}
+            </h5>
+            <Button variant="ghost" size="sm" onClick={() => setIstoricCurent(null)}><X className="h-4 w-4" /></Button>
           </div>
-          <div className="px-6 py-3 border-t border-slate-100 text-xs text-slate-400">
-            {pieseFiltrate.length} din {piese.length} piese afișate
-          </div>
+          {istoricCurent.length === 0 ? (
+            <p className="text-indigo-600 text-sm italic">Această piesă nu a fost utilizată încă în nicio reparație.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {istoricCurent.map((it: any) => (
+                <div key={it.id} className="bg-white p-3 rounded-xl border border-indigo-200 shadow-sm flex flex-col gap-1">
+                  <div className="flex justify-between text-xs font-bold text-indigo-500">
+                    <span>COMANDA #{it.idComanda}</span>
+                    <span>{new Date(it.dataComanda).toLocaleDateString('ro-RO')}</span>
+                  </div>
+                  <div className="text-sm text-slate-700">
+                    Cantitate: <span className="font-bold">{it.cantitate} buc</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400">Tehnician: {it.numeAngajat}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── CONFIRMARE ȘTERGERE ─────────────────────────────────────────────── */}
       <ConfirmDialog
         isOpen={confirmSterge !== null}
-        title="Ștergi piesa din nomenclator?"
-        description="Această acțiune este ireversibilă. Piesa va fi eliminată și nu va mai putea fi selectată pe comenzile noi."
-        confirmLabel="Da, șterge"
-        onConfirm={() => {
-          if (confirmSterge !== null) handleSterge(confirmSterge);
-          setConfirmSterge(null);
-        }}
+        title="Ștergi piesa definitiv?"
+        description="Atenție: Dacă piesa a fost deja facturată sau adăugată pe o comandă, sistemul va bloca ștergerea pentru a evita erori contabile."
+        onConfirm={() => { if (confirmSterge) handleSterge(confirmSterge); setConfirmSterge(null); }}
         onCancel={() => setConfirmSterge(null)}
       />
     </div>

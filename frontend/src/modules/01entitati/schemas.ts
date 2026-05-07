@@ -67,10 +67,22 @@ export const angajatSchema = z
   });
 
 export const asiguratorSchema = z.object({
-  status: z.enum(['Activ', 'Inactiv']),
-  denumire: z.string().trim().min(2, 'Denumirea este obligatorie.'),
-  CUI: z.string().trim().min(2, 'CUI este obligatoriu.'),
-  telefon: z.string().trim().min(6, mesajTelefon),
+  denumire: z.string().min(2, 'Denumirea este obligatorie'),
+  CUI: z.string().min(5, 'CUI incorect'),
+  telefon: z.string().optional().or(z.literal('')),
+  nrRegCom: z.string().optional().or(z.literal('')),
+  adresa: z.string().optional().or(z.literal('')),
+  emailDaune: z.string()
+    .optional()
+    .refine(val => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), { message: "Format email invalid" })
+    .or(z.literal('')),
+  IBAN: z.string().optional().or(z.literal('')),
+  
+  // AM MODIFICAT AICI: Fără detalii suplimentare, doar z.number()
+  termenPlataZile: z.number().min(0, 'Minim 0 zile'),
+  
+  // AM MODIFICAT AICI: Am șters .default('Activ') ca să se potrivească perfect tipurile
+  status: z.enum(['Activ', 'Inactiv'])
 });
 
 export type ClientFormValues = z.infer<typeof clientSchema>;

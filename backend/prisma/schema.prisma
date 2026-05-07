@@ -4,9 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
-
-// ─── ENUMERĂRI ────────────────────────────────────────────────────────
 
 enum StatusGeneral {
   Activ
@@ -29,67 +28,85 @@ enum TipPiesa {
   SH
 }
 
-// ─── ENTITĂȚI ─────────────────────────────────────────────────────────
+enum StatusFactura {
+  Emisa
+  Platita
+  Anulata
+}
 
 model Client {
   idClient    Int           @id @default(autoincrement())
   tipClient   TipClient
   status      StatusGeneral @default(Activ)
-  nume        String // Numele sau Denumirea companiei
-  prenume     String? // Doar pentru PF
+  nume        String
+  prenume     String?
   telefon     String
   email       String?
   adresa      String
   soldDebitor Float         @default(0)
-
-  // Date PF
-  CNP     String? @unique
-  serieCI String?
-
-  // Date PJ
-  CUI      String? @unique
-  IBAN     String?
-  nrRegCom String?
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  facturas  Factura[]
+  CNP         String?       @unique
+  serieCI     String?
+  CUI         String?       @unique
+  IBAN        String?
+  nrRegCom    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  facturas    Factura[]
+  vehicule    Vehicul[]
+  dosareDauna DosarDauna[]
 }
 
 model Angajat {
-  idAngajat  Int           @id @default(autoincrement())
-  status     StatusGeneral @default(Activ)
-  nume       String
-  prenume    String
-  CNP        String        @unique
-  telefon    String
-  email      String?
-  tipAngajat TipAngajat
-
-  // Specifice în funcție de rol
-  specializare  String? // Pentru Mecanici
-  costOrar      Float? // Pentru Mecanici
-  departament   String? // Pentru Manager
-  sporConducere Float? // Pentru Manager
-  nrBirou       String? // Pentru Recepționeri
-  tura          String? // Pentru Recepționeri
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  idAngajat     Int           @id @default(autoincrement())
+  status        StatusGeneral @default(Activ)
+  nume          String
+  prenume       String
+  CNP           String        @unique
+  telefon       String
+  email         String?
+  tipAngajat    TipAngajat
+  specializare  String?
+  costOrar      Float?
+  departament   String?
+  sporConducere Float?
+  nrBirou       String?
+  tura          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  comenzi       Comanda[]
 }
 
+// === MODELUL ACTUALIZAT ===
 model Asigurator {
-  idAsigurator Int           @id @default(autoincrement())
-  status       StatusGeneral @default(Activ)
-  denumire     String
-  CUI          String        @unique
-  telefon      String
+  idAsigurator    Int           @id @default(autoincrement())
+  status          StatusGeneral @default(Activ)
+  denumire        String
+  CUI             String        @unique
+  nrRegCom        String?       // Adăugat
+  adresa          String?       // Adăugat
+  telefon         String
+  emailDaune      String?       // Adăugat
+  IBAN            String?       // Adăugat
+  termenPlataZile Int           @default(30) // Adăugat (standard 30 zile)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  dosareDauna     DosarDauna[]
 }
 
-// ─── CATALOG ──────────────────────────────────────────────────────────
+model Vehicul {
+  idVehicul          Int           @id @default(autoincrement())
+  numarInmatriculare String        @unique
+  marca              String
+  model              String
+  vin                String?       @unique
+  status             StatusGeneral @default(Activ)
+  idClient           Int
+  client             Client        @relation(fields: [idClient], references: [idClient])
+  dosareDauna        DosarDauna[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
 
 model Piesa {
   idPiesa      Int      @id @default(autoincrement())
@@ -101,30 +118,50 @@ model Piesa {
   stoc         Int      @default(0)
   tip          TipPiesa
   luniGarantie Int?
-  gradUzura    String? // Pentru piesele SH
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  gradUzura    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Manopera {
-  idManopera  Int    @id @default(autoincrement())
-  codManopera String @unique
+  idManopera  Int      @id @default(autoincrement())
+  codManopera String   @unique
   denumire    String
   categorie   String
   durataStd   Float
   pretOra     Float?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-// ─── FACTURARE ────────────────────────────────────────────────────────
+model DosarDauna {
+  idDosar        Int           @id @default(autoincrement())
+  numarDosar     String        @unique
+  dataDeschidere DateTime      @default(now())
+  status         StatusGeneral @default(Activ)
+  idClient       Int
+  client         Client        @relation(fields: [idClient], references: [idClient])
+  idVehicul      Int
+  vehicul        Vehicul       @relation(fields: [idVehicul], references: [idVehicul])
+  idAsigurator   Int?
+  asigurator     Asigurator?   @relation(fields: [idAsigurator], references: [idAsigurator])
+  comenzi        Comanda[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
 
-enum StatusFactura {
-  Emisa
-  Platita
-  Anulata
+model Comanda {
+  idComanda       Int           @id @default(autoincrement())
+  numarComanda    String        @unique
+  dataPreconizata DateTime?
+  status          StatusGeneral @default(Activ)
+  idDosar         Int?
+  dosar           DosarDauna?   @relation(fields: [idDosar], references: [idDosar])
+  idAngajat       Int?
+  angajat         Angajat?      @relation(fields: [idAngajat], references: [idAngajat])
+  facturi         Factura[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Factura {
@@ -134,35 +171,27 @@ model Factura {
   dataEmiterii DateTime      @default(now())
   scadenta     DateTime
   status       StatusFactura @default(Emisa)
-
-  // Relație cu Clientul
-  idClient Int
-  client   Client @relation(fields: [idClient], references: [idClient])
-
-  // Relație cu liniile din factură
-  iteme FacturaItem[]
-
-  totalFaraTVA Float @default(0)
-  tva          Float @default(0)
-  totalGeneral Float @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  idClient     Int
+  client       Client        @relation(fields: [idClient], references: [idClient])
+  idComanda    Int?
+  comanda      Comanda?      @relation(fields: [idComanda], references: [idComanda])
+  iteme        FacturaItem[]
+  totalFaraTVA Float         @default(0)
+  tva          Float         @default(0)
+  totalGeneral Float         @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model FacturaItem {
-  idItem    Int     @id @default(autoincrement())
-  idFactura Int
-  factura   Factura @relation(fields: [idFactura], references: [idFactura])
-
-  descriere  String // Denumirea piesei sau a serviciului
-  cantitate  Int
-  pretUnitar Float
-  cotaTva    Float  @default(19) // Ex: 19%
-
-  // Opțional: legătură cu catalogul
-  idPiesa    Int?
-  idManopera Int?
-
-  createdAt DateTime @default(now())
+  idItem      Int      @id @default(autoincrement())
+  idFactura   Int
+  factura     Factura  @relation(fields: [idFactura], references: [idFactura])
+  descriere   String
+  cantitate   Int
+  pretUnitar  Float
+  cotaTva     Float    @default(19)
+  idPiesa     Int?
+  idManopera  Int?
+  createdAt   DateTime @default(now())
 }

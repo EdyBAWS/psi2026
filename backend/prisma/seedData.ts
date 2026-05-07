@@ -1,15 +1,20 @@
 import 'dotenv/config';
 import { PrismaClient, TipClient, StatusGeneral, TipAngajat, TipPiesa } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+// Folosim inițializarea clasică a Prisma
+const prisma = new PrismaClient();
 
 async function main() {
   console.log('Curățăm baza de date...');
-  // Ștergem tot pentru a nu avea duplicate la rulări multiple
+  
+  // Trebuie să ștergem și datele din tabelele noi adăugate anterior pentru a nu avea erori de Foreign Key
+  await prisma.facturaItem.deleteMany();
+  await prisma.factura.deleteMany();
+  await prisma.comanda.deleteMany();
+  await prisma.dosarDauna.deleteMany();
+  await prisma.vehicul.deleteMany();
+  
+  // Ștergem tabelele originale
   await prisma.piesa.deleteMany();
   await prisma.manopera.deleteMany();
   await prisma.client.deleteMany();
@@ -21,11 +26,11 @@ async function main() {
   // ─── ASIGURĂTORI ───
   await prisma.asigurator.createMany({
     data: [
-      { denumire: "Allianz-Țiriac Asigurări", CUI: "RO6120740", telefon: "021 208 22 22", status: StatusGeneral.Activ },
-      { denumire: "Groupama Asigurări", CUI: "RO6291812", telefon: "021 302 92 00", status: StatusGeneral.Activ },
-      { denumire: "Omniasig Vienna Insurance Group", CUI: "RO5587260", telefon: "021 405 74 20", status: StatusGeneral.Activ },
-      { denumire: "Asirom Vienna Insurance Group", CUI: "RO336290", telefon: "021 9146", status: StatusGeneral.Activ },
-      { denumire: "Generali România", CUI: "RO2884407", telefon: "021 312 36 35", status: StatusGeneral.Activ },
+      { denumire: "Allianz-Țiriac Asigurări", CUI: "RO6120740", nrRegCom: "J40/15882/1994", telefon: "021 208 22 22", emailDaune: "daune@allianztiriac.ro", IBAN: "RO12INGB0000000000011111", termenPlataZile: 15, adresa: "Str. Căderea Bastiliei 80-84, București", status: StatusGeneral.Activ },
+      { denumire: "Groupama Asigurări", CUI: "RO6291812", nrRegCom: "J40/10504/1994", telefon: "021 302 92 00", emailDaune: "avizari@groupama.ro", IBAN: "RO99BRDE0000000000022222", termenPlataZile: 30, adresa: "Str. Mihai Eminescu 45, București", status: StatusGeneral.Activ },
+      { denumire: "Omniasig Vienna Insurance Group", CUI: "RO5587260", nrRegCom: "J40/10454/2001", telefon: "021 405 74 20", emailDaune: "office@omniasig.ro", IBAN: "RO45BTRL0000000000033333", termenPlataZile: 45, adresa: "Aleea Alexandru 51, București", status: StatusGeneral.Activ },
+      { denumire: "Asirom Vienna Insurance Group", CUI: "RO336290", nrRegCom: "J40/314/1991", telefon: "021 9146", emailDaune: "avizare.daune@asirom.ro", IBAN: "RO88BCR00000000000004444", termenPlataZile: 30, adresa: "B-dul Carol I nr. 31-33, București", status: StatusGeneral.Activ },
+      { denumire: "Generali România", CUI: "RO2884407", nrRegCom: "J40/17484/2007", telefon: "021 312 36 35", emailDaune: "daune.ro@generali.com", IBAN: "RO22RZBR0000000000055555", termenPlataZile: 15, adresa: "Piața Charles de Gaulle 15, București", status: StatusGeneral.Activ },
     ]
   });
   console.log('✅ Asigurători inserați');
@@ -94,6 +99,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    // Terminăm procesul pool-ului de conexiuni
-    await pool.end();
   });

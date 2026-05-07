@@ -1,3 +1,4 @@
+// src/modules/02operational/pages/gestiune-comenzi/useGestiuneComenzi.ts
 import { useMemo, useState } from "react";
 import { usePageSessionState } from "../../../../lib/pageState";
 import {
@@ -38,7 +39,6 @@ export function useGestiuneComenzi({
   pozitii,
   vehicule,
 }: UseGestiuneComenziProps) {
-  // --- STARE FILTRĂRI ȘI SORTĂRI ---
   const [cautare, setCautare] = usePageSessionState("gestiune-cautare", "");
   const [filtruStatus, setFiltruStatus] = usePageSessionState<StatusComanda | "Toate">("gestiune-status", "Toate");
   const [filtruMecanic, setFiltruMecanic] = usePageSessionState<number | "toate">("gestiune-mecanic", "toate");
@@ -48,10 +48,8 @@ export function useGestiuneComenzi({
   const [sortField, setSortField] = usePageSessionState<GestiuneSortField>("gestiune-sortField", "data");
   const [sortDir, setSortDir] = usePageSessionState<GestiuneSortDir>("gestiune-sortDir", "desc");
 
-  // --- STARE SELECȚIE ---
   const [idComandaSelectata, setIdComandaSelectata] = useState<number | null>(null);
 
-  // --- ACȚIUNI ---
   const reseteazaFiltre = () => {
     setCautare("");
     setFiltruStatus("Toate");
@@ -69,38 +67,29 @@ export function useGestiuneComenzi({
     }
   };
 
-  // --- CALCULE ȘI DERIVĂRI (Memoizate) ---
-  const statistici = useMemo(
-    () => calculeazaStatisticiComenzi(comenzi),
-    [comenzi]
-  );
-
   const comenziFiltrate = useMemo(() => {
-    return filtreazaSiSorteazaComenzi(comenzi, vehicule, clienti, {
+    // ORDINE CORECTĂ: comenzi, clienti, vehicule
+    return filtreazaSiSorteazaComenzi(comenzi, clienti, vehicule, {
       cautare, filtruStatus, filtruMecanic, filtruPlata, doarIntarziate,
     }, sortField, sortDir);
-  }, [comenzi, vehicule, clienti, cautare, filtruStatus, filtruMecanic, filtruPlata, doarIntarziate, sortField, sortDir]);
+  }, [comenzi, clienti, vehicule, cautare, filtruStatus, filtruMecanic, filtruPlata, doarIntarziate, sortField, sortDir]);
 
   const liniiTabel = useMemo(() => {
-    return construiesteLiniiLista(comenziFiltrate, vehicule, clienti);
-  }, [comenziFiltrate, vehicule, clienti]);
+    // ORDINE CORECTĂ: comenziFiltrate, clienti, vehicule
+    return construiesteLiniiLista(comenziFiltrate, clienti, vehicule);
+  }, [comenziFiltrate, clienti, vehicule]);
 
   const detaliiSelectate = useMemo(() => {
+    // ORDINE CORECTĂ: id, comenzi, clienti, vehicule
     return rezolvaDetaliiComandaSelectata(
       idComandaSelectata,
-      comenzi, vehicule, clienti, mecanici, dosare, asiguratori, pozitii
+      comenzi, clienti, vehicule, mecanici, dosare, asiguratori, pozitii
     );
-  }, [idComandaSelectata, comenzi, vehicule, clienti, mecanici, dosare, asiguratori, pozitii]);
+  }, [idComandaSelectata, comenzi, clienti, vehicule, mecanici, dosare, asiguratori, pozitii]);
 
   return {
-    stare: {
-      cautare, filtruStatus, filtruMecanic, filtruPlata, doarIntarziate, sortField, sortDir, idComandaSelectata
-    },
-    setters: {
-      setCautare, setFiltruStatus, setFiltruMecanic, setFiltruPlata, setDoarIntarziate, setIdComandaSelectata, reseteazaFiltre, handleSchimbaSortare
-    },
-    date: {
-      statistici, comenziFiltrate, liniiTabel, detaliiSelectate
-    }
+    stare: { cautare, filtruStatus, filtruMecanic, filtruPlata, doarIntarziate, sortField, sortDir, idComandaSelectata },
+    setters: { setCautare, setFiltruStatus, setFiltruMecanic, setFiltruPlata, setDoarIntarziate, setIdComandaSelectata, reseteazaFiltre, handleSchimbaSortare },
+    date: { statistici: useMemo(() => calculeazaStatisticiComenzi(comenzi), [comenzi]), comenziFiltrate, liniiTabel, detaliiSelectate }
   };
 }

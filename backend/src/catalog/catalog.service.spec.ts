@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CatalogService } from './catalog.service';
+import { beforeEach, describe, it } from 'node:test';
 
 describe('CatalogService', () => {
   let service: CatalogService;
@@ -16,3 +17,13 @@ describe('CatalogService', () => {
     expect(service).toBeDefined();
   });
 });
+function expect(value: any) {
+  return {
+    toBeDefined: () => {
+      if (value === undefined) {
+        throw new Error('Expected value to be defined');
+      }
+    }
+  };
+}
+

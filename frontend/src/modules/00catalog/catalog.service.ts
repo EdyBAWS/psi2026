@@ -1,71 +1,72 @@
-// src/modules/00catalog/catalog.service.ts
-//
-// Acest fișier izolează toate operațiunile CRUD asupra datelor de catalog.
-// În prezent lucrează exclusiv cu state local (mock-uri), dar fiecare funcție
-// are semnătura finală care va fi păstrată când adăugăm backend-ul.
-// La integrarea API-ului, înlocuiești implementarea din interior, nu și apelurile.
+import { type ManoperaCatalogMock, type PiesaCatalogMock } from '../../mock/catalog';
 
-import {
-  manoperaCatalogMock,
-  pieseCatalogMock,
-  type ManoperaCatalogMock,
-  type PiesaCatalogMock,
-} from '../../mock/catalog';
+const API_URL = 'http://localhost:3000/catalog';
 
-// ─── Manoperă ─────────────────────────────────────────────────────────────────
+async function handleResponse(response: Response) {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Eroare server');
+  }
+  return response.status !== 204 ? response.json() : null;
+}
 
+// ─── Manoperă ─────────────────────────
 export async function fetchManopera(): Promise<ManoperaCatalogMock[]> {
-  // TODO: return await api.get('/catalog/manopera');
-  return Promise.resolve([...manoperaCatalogMock]);
+  const response = await fetch(`${API_URL}/manopera`);
+  return handleResponse(response);
 }
 
-export async function createManopera(
-  data: Omit<ManoperaCatalogMock, 'idManopera'>,
-): Promise<ManoperaCatalogMock> {
-  // TODO: return await api.post('/catalog/manopera', data);
-  return Promise.resolve({ ...data, idManopera: Date.now() });
+export async function createManopera(data: Omit<ManoperaCatalogMock, 'idManopera'>): Promise<ManoperaCatalogMock> {
+  const response = await fetch(`${API_URL}/manopera`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
 }
 
-export async function updateManopera(
-  id: number,
-  data: Partial<Omit<ManoperaCatalogMock, 'idManopera'>>,
-): Promise<ManoperaCatalogMock> {
-  // TODO: return await api.put(`/catalog/manopera/${id}`, data);
-  const existing = manoperaCatalogMock.find((m) => m.idManopera === id);
-  if (!existing) throw new Error(`Manopera cu id ${id} nu a fost găsită.`);
-  return Promise.resolve({ ...existing, ...data });
+export async function updateManopera(id: number, data: Partial<ManoperaCatalogMock>): Promise<ManoperaCatalogMock> {
+  const response = await fetch(`${API_URL}/manopera/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
 }
 
-export async function deleteManopera(): Promise<void> {
-  // TODO: return await api.delete(`/catalog/manopera/${id}`);
-  return Promise.resolve();
+export async function deleteManopera(id: number): Promise<void> {
+  await fetch(`${API_URL}/manopera/${id}`, { method: 'DELETE' });
 }
 
-// ─── Piese ────────────────────────────────────────────────────────────────────
-
+// ─── Piese ──────────────────────────
 export async function fetchPiese(): Promise<PiesaCatalogMock[]> {
-  // TODO: return await api.get('/catalog/piese');
-  return Promise.resolve([...pieseCatalogMock]);
+  const response = await fetch(`${API_URL}/piese`);
+  return handleResponse(response);
 }
 
-export async function createPiesa(
-  data: Omit<PiesaCatalogMock, 'idPiesa'>,
-): Promise<PiesaCatalogMock> {
-  // TODO: return await api.post('/catalog/piese', data);
-  return Promise.resolve({ ...data, idPiesa: Date.now() });
+export async function fetchIstoricPiesa(id: number) {
+  const response = await fetch(`${API_URL}/piese/${id}/istoric`);
+  return handleResponse(response);
 }
 
-export async function updatePiesa(
-  id: number,
-  data: Partial<Omit<PiesaCatalogMock, 'idPiesa'>>,
-): Promise<PiesaCatalogMock> {
-  // TODO: return await api.put(`/catalog/piese/${id}`, data);
-  const existing = pieseCatalogMock.find((p) => p.idPiesa === id);
-  if (!existing) throw new Error(`Piesa cu id ${id} nu a fost găsită.`);
-  return Promise.resolve({ ...existing, ...data });
+export async function createPiesa(data: Omit<PiesaCatalogMock, 'idPiesa'>): Promise<PiesaCatalogMock> {
+  const response = await fetch(`${API_URL}/piese`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
 }
 
-export async function deletePiesa(): Promise<void> {
-  // TODO: return await api.delete(`/catalog/piese/${id}`);
-  return Promise.resolve();
+export async function updatePiesa(id: number, data: Partial<PiesaCatalogMock>): Promise<PiesaCatalogMock> {
+  const response = await fetch(`${API_URL}/piese/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+}
+
+export async function deletePiesa(id: number): Promise<void> {
+  await fetch(`${API_URL}/piese/${id}`, { method: 'DELETE' });
 }

@@ -30,7 +30,10 @@ const formatSuma = (valoare: number) =>
     maximumFractionDigits: 2,
   }).format(valoare);
 
-const formatData = (valoare: Date) => valoare.toLocaleDateString("ro-RO");
+const formatData = (valoare: Date | string) => {
+  const dateObj = typeof valoare === 'string' ? new Date(valoare) : valoare;
+  return dateObj.toLocaleDateString("ro-RO");
+};
 
 export default function SelectorDosar({
   asiguratori,
@@ -157,7 +160,7 @@ export default function SelectorDosar({
               <option value="">Selectează dosar</option>
               {dosareVehicul.map((dosar) => (
                 <option key={dosar.idDosar} value={dosar.idDosar}>
-                  {dosar.nrDosar} · {dosar.statusAprobare}
+                  {dosar.numarDosar} · {dosar.statusAprobare}
                 </option>
               ))}
             </select>
@@ -170,14 +173,14 @@ export default function SelectorDosar({
               <dl className="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
                 <div>
                   <dt className="font-semibold text-slate-700">Număr dosar</dt>
-                  <dd className="mt-1">{dosarSelectat.nrDosar}</dd>
+                  <dd className="mt-1">{dosarSelectat.numarDosar}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">
                     Referință asigurator
                   </dt>
                   <dd className="mt-1">
-                    {dosarSelectat.numarReferintaAsigurator}
+                    {dosarSelectat.numarReferintaAsigurator || "-"}
                   </dd>
                 </div>
                 <div>
@@ -188,24 +191,24 @@ export default function SelectorDosar({
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">Tip poliță</dt>
-                  <dd className="mt-1">{dosarSelectat.tipPolita}</dd>
+                  <dd className="mt-1">{dosarSelectat.tipPolita || "-"}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">
                     Status aprobare
                   </dt>
-                  <dd className="mt-1">{dosarSelectat.statusAprobare}</dd>
+                  <dd className="mt-1">{dosarSelectat.statusAprobare || "-"}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">Inspector</dt>
-                  <dd className="mt-1">{dosarSelectat.inspectorDauna}</dd>
+                  <dd className="mt-1">{dosarSelectat.inspectorDauna || "-"}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">
                     Data constatării
                   </dt>
                   <dd className="mt-1">
-                    {formatData(dosarSelectat.dataConstatare)}
+                    {dosarSelectat.dataConstatare ? formatData(dosarSelectat.dataConstatare) : "-"}
                   </dd>
                 </div>
                 <div>
@@ -213,16 +216,18 @@ export default function SelectorDosar({
                     Sumă aprobată
                   </dt>
                   <dd className="mt-1">
-                    {formatSuma(dosarSelectat.sumaAprobata)}
+                    {dosarSelectat.sumaAprobata != null ? formatSuma(dosarSelectat.sumaAprobata) : "-"}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">Franciză</dt>
-                  <dd className="mt-1">{formatSuma(dosarSelectat.franciza)}</dd>
+                  <dd className="mt-1">
+                    {dosarSelectat.franciza != null ? formatSuma(dosarSelectat.franciza) : "-"}
+                  </dd>
                 </div>
                 <div className="md:col-span-2">
                   <dt className="font-semibold text-slate-700">Observații</dt>
-                  <dd className="mt-1">{dosarSelectat.observatiiDauna}</dd>
+                  <dd className="mt-1">{dosarSelectat.observatiiDauna || "-"}</dd>
                 </div>
               </dl>
             </div>

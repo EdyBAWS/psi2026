@@ -1,156 +1,101 @@
-// src/modules/02operational/operational.service.ts
-//
-// Service layer pentru modulul operațional — aceeași structură ca catalog.service.ts
-// și entitati.service.ts. Fiecare funcție are semnătura finală pentru API.
-// La integrarea Spring Boot, înlocuiești doar corpul funcțiilor, nu și apelurile
-// din hook-uri sau componente.
-//
-// Endpoint-uri Spring Boot anticipate:
-//   GET    /api/comenzi
-//   POST   /api/comenzi
-//   PUT    /api/comenzi/{id}
-//   GET    /api/comenzi/{id}/pozitii
-//   POST   /api/comenzi/{id}/pozitii
-//   GET    /api/dosare-dauna
-//   POST   /api/dosare-dauna
-//   GET    /api/vehicule
-//   GET    /api/mecanici
-//   GET    /api/clienti
-//   GET    /api/asiguratori
-//   GET    /api/catalog/piese
-//   GET    /api/catalog/kituri
-//   GET    /api/catalog/manopere
+import type { CatalogKit, CatalogManopera, CatalogPiesa, ComandaService, DosarDauna, Mecanic, PozitieComanda, Vehicul, Asigurator, Client } from "./types";
 
-import {
-  mockAsiguratori,
-  mockCatalogKituri,
-  mockCatalogManopera,
-  mockCatalogPiese,
-  mockClienti,
-  mockComenzi,
-  mockDosareDauna,
-  mockMecanici,
-  mockPozitii,
-  mockVehicule,
-} from "../../mock/operational";
-import type {
-  CatalogKit,
-  CatalogManopera,
-  CatalogPiesa,
-  ComandaService,
-  DosarDauna,
-  Mecanic,
-  PozitieComanda,
-  Vehicul,
-  Asigurator,
-  Client,
-} from "./types";
+const API_OP = 'http://localhost:3000/operational';
+const API_ENT = 'http://localhost:3000/entitati';
+const API_CAT = 'http://localhost:3000/catalog';
 
-// ─── Comenzi ──────────────────────────────────────────────────────────────────
+export const fetchComenzi = async (): Promise<ComandaService[]> => {
+  const response = await fetch(`${API_OP}/comenzi`);
+  if (!response.ok) throw new Error('Eroare la preluarea comenzilor');
+  const data = await response.json();
 
-export async function fetchComenzi(): Promise<ComandaService[]> {
-  // TODO: return await api.get('/api/comenzi');
-  return Promise.resolve([...mockComenzi]);
+  return data.map((c: any) => ({
+    ...c,
+    vehicul: c.dosar?.vehicul || null, 
+    client: c.dosar?.client || null,
+    idMecanic: c.idAngajat,
+    numeMecanic: c.angajat ? `${c.angajat.nume} ${c.angajat.prenume || ''}`.trim() : 'Nealocat'
+  }));
+};
+
+export async function createComanda(data: Partial<ComandaService>): Promise<ComandaService> {
+  const res = await fetch(`${API_OP}/comenzi`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      numarComanda: data.numarComanda,
+      idDosar: data.idDosar,
+      idAngajat: data.idMecanic,
+      dataPreconizata: data.termenPromis,
+      status: data.status || "In asteptare diagnoza"
+    }),
+  });
+  if (!res.ok) throw new Error('Eroare la crearea comenzii');
+  const c = await res.json();
+  return { ...c, idMecanic: c.idAngajat };
 }
 
-export async function createComanda(
-  data: Omit<ComandaService, "idComanda">,
-): Promise<ComandaService> {
-  // TODO: return await api.post('/api/comenzi', data);
-  const idNou = mockComenzi.reduce((max, c) => Math.max(max, c.idComanda), 0) + 1;
-  return Promise.resolve({ ...data, idComanda: idNou });
+export async function createDosarDauna(data: Partial<DosarDauna>): Promise<DosarDauna> {
+  const res = await fetch(`${API_OP}/dosare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Eroare la crearea dosarului');
+  return await res.json();
 }
-
-export async function updateComanda(
-  id: number,
-  data: Partial<Omit<ComandaService, "idComanda">>,
-): Promise<ComandaService> {
-  // TODO: return await api.put(`/api/comenzi/${id}`, data);
-  const existenta = mockComenzi.find((c) => c.idComanda === id);
-  if (!existenta) throw new Error(`Comanda cu id ${id} nu a fost găsită.`);
-  return Promise.resolve({ ...existenta, ...data });
-}
-
-// ─── Pozitii Comanda ───────────────────────────────────────────────────────────
-
-export async function fetchPozitiiComanda(
-  idComanda?: number,
-): Promise<PozitieComanda[]> {
-  // TODO: return idComanda
-  //   ? await api.get(`/api/comenzi/${idComanda}/pozitii`)
-  //   : await api.get('/api/pozitii');
-  const rezultat = idComanda
-    ? mockPozitii.filter((p) => p.idComanda === idComanda)
-    : [...mockPozitii];
-  return Promise.resolve(rezultat);
-}
-
-export async function createPozitiiComanda(
-  idComanda: number,
-  pozitii: Omit<PozitieComanda, "idPozitieCmd" | "idComanda">[],
-): Promise<PozitieComanda[]> {
-  // TODO: return await api.post(`/api/comenzi/${idComanda}/pozitii`, pozitii);
-  let nextId = mockPozitii.reduce((max, p) => Math.max(max, p.idPozitieCmd), 0) + 1;
-  return Promise.resolve(
-    pozitii.map((p) => ({
-      ...p,
-      idComanda,
-      idPozitieCmd: nextId++,
-    })),
-  );
-}
-
-// ─── Dosare Dauna ──────────────────────────────────────────────────────────────
 
 export async function fetchDosareDauna(): Promise<DosarDauna[]> {
-  // TODO: return await api.get('/api/dosare-dauna');
-  return Promise.resolve([...mockDosareDauna]);
+  const res = await fetch(`${API_OP}/dosare`);
+  return res.ok ? await res.json() : [];
 }
-
-export async function createDosarDauna(
-  data: Omit<DosarDauna, "idDosar">,
-): Promise<DosarDauna> {
-  // TODO: return await api.post('/api/dosare-dauna', data);
-  const idNou =
-    mockDosareDauna.reduce((max, d) => Math.max(max, d.idDosar), 0) + 1;
-  return Promise.resolve({ ...data, idDosar: idNou });
-}
-
-// ─── Entități de referință (read-only din perspectiva operaționalului) ─────────
 
 export async function fetchVehicule(): Promise<Vehicul[]> {
-  // TODO: return await api.get('/api/vehicule');
-  return Promise.resolve([...mockVehicule]);
+  const res = await fetch(`${API_OP}/vehicule`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.map((v: any) => ({
+    idVehicul: v.idVehicul,
+    idClient: v.idClient,
+    numarInmatriculare: v.numarInmatriculare || "",
+    marca: v.marca || "",
+    model: v.model || "",
+    an: v.an || new Date().getFullYear(),
+    vin: v.vin || ""                     
+  }));
 }
 
 export async function fetchMecanici(): Promise<Mecanic[]> {
-  // TODO: return await api.get('/api/mecanici');
-  return Promise.resolve([...mockMecanici]);
+  const res = await fetch(`${API_ENT}/angajati`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.filter((a: any) => a.tipAngajat === 'Mecanic' && a.status === 'Activ').map((a: any) => ({
+    idMecanic: a.idAngajat,
+    nume: `${a.nume} ${a.prenume || ''}`.trim(),
+    specialitate: a.specializare || 'Mecanic'
+  }));
 }
 
 export async function fetchClienti(): Promise<Client[]> {
-  // TODO: return await api.get('/api/clienti');
-  return Promise.resolve([...mockClienti]);
+  const res = await fetch(`${API_ENT}/clienti`);
+  return res.ok ? await res.json() : [];
 }
 
 export async function fetchAsiguratori(): Promise<Asigurator[]> {
-  // TODO: return await api.get('/api/asiguratori');
-  return Promise.resolve([...mockAsiguratori]);
+  const res = await fetch(`${API_ENT}/asiguratori`);
+  return res.ok ? await res.json() : [];
 }
-
-// ─── Catalog (read-only — scrisul se face din modulul 00catalog) ───────────────
 
 export async function fetchCatalogPiese(): Promise<CatalogPiesa[]> {
-  // TODO: return await api.get('/api/catalog/piese');
-  return Promise.resolve([...mockCatalogPiese]);
-}
-
-export async function fetchCatalogKituri(): Promise<CatalogKit[]> {
-  // TODO: return await api.get('/api/catalog/kituri');
-  return Promise.resolve([...mockCatalogKituri]);
+  const res = await fetch(`${API_CAT}/piese`);
+  return res.ok ? await res.json() : [];
 }
 
 export async function fetchCatalogManopere(): Promise<CatalogManopera[]> {
-  // TODO: return await api.get('/api/catalog/manopere');
-  return Promise.resolve([...mockCatalogManopera]);
+  const res = await fetch(`${API_CAT}/manopera`);
+  return res.ok ? await res.json() : [];
 }
+
+export async function fetchCatalogKituri(): Promise<CatalogKit[]> { return []; }
+export async function fetchPozitiiComanda(): Promise<PozitieComanda[]> { return []; }
+export async function createPozitiiComanda(_id: number, pozitii: any[]): Promise<any[]> { return pozitii; }

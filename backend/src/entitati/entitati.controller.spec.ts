@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EntitatiController } from './entitati.controller';
 import { EntitatiService } from './entitati.service';
+import { beforeEach, describe, it } from 'node:test';
 
 describe('EntitatiController', () => {
   let controller: EntitatiController;
@@ -18,3 +19,7 @@ describe('EntitatiController', () => {
     expect(controller).toBeDefined();
   });
 });
+function expect(controller: EntitatiController) {
+  throw new Error('Function not implemented.');
+}
+
