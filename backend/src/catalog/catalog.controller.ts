@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { CatalogService } from './catalog.service';
 import { Prisma } from '@prisma/client';
 
@@ -19,7 +28,10 @@ export class CatalogController {
   }
 
   @Patch('piese/:id')
-  updatePiesa(@Param('id', ParseIntPipe) id: number, @Body() data: Prisma.PiesaUpdateInput) {
+  updatePiesa(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Prisma.PiesaUpdateInput,
+  ) {
     return this.catalogService.updatePiesa(id, data);
   }
 
@@ -41,7 +53,10 @@ export class CatalogController {
   }
 
   @Patch('manopera/:id')
-  updateManopera(@Param('id', ParseIntPipe) id: number, @Body() data: Prisma.ManoperaUpdateInput) {
+  updateManopera(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Prisma.ManoperaUpdateInput,
+  ) {
     return this.catalogService.updateManopera(id, data);
   }
 

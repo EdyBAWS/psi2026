@@ -6,6 +6,6 @@ import { PrismaModule } from '../prisma/prisma.module'; // Verifică să fie cal
 @Module({
   imports: [PrismaModule],
   controllers: [OperationalController],
-  providers: [OperationalService]
+  providers: [OperationalService],
 })
 export class OperationalModule {}

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsEmail, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
 import { StatusGeneral } from '@prisma/client';
 
 export class CreateAsiguratorDto {
