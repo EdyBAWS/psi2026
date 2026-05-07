@@ -5,6 +5,11 @@ const commands = [
   ['frontend', ['run', 'dev', '--prefix', 'frontend', '--', '--host', '127.0.0.1']],
 ];
 
+console.log('Starting PSI dev servers...');
+console.log('Frontend: http://127.0.0.1:5173');
+console.log('Backend:  http://127.0.0.1:3000');
+console.log('Press Ctrl+C to stop both processes.\n');
+
 const children = commands.map(([name, args]) => {
   const child = spawn('npm', args, {
     stdio: 'inherit',
@@ -24,6 +29,14 @@ const children = commands.map(([name, args]) => {
 });
 
 let shuttingDown = false;
+
+setTimeout(() => {
+  if (!shuttingDown) {
+    console.log('\nDev servers should be available at:');
+    console.log('Frontend: http://127.0.0.1:5173');
+    console.log('Backend:  http://127.0.0.1:3000\n');
+  }
+}, 4000);
 
 function shutdown(code = 0) {
   shuttingDown = true;
