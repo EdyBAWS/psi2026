@@ -15,7 +15,7 @@ export const IncasariService = {
     return [...incasariMock];
   },
 
-  async salveazaIncasare(dateIncasare: any) {
+  async salveazaIncasare(_dateIncasare: any) {
     await delay(500);
     // Endpoint viitor: POST /api/incasari
     return { success: true, idIncasare: Date.now() };

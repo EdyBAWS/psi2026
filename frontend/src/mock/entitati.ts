@@ -145,7 +145,7 @@ export const asiguratoriEntitateMock: AsiguratorEntitate[] = [
 export const vehiculeEntitateMock: VehiculEntitate[] = [
   {
     idVehicul: 1,
-    nrInmatriculare: "IS 24 ABC",
+    numarInmatriculare: "IS 24 ABC",
     marca: "Volkswagen",
     model: "Passat B8",
     anFabricatie: 2019,
@@ -155,7 +155,7 @@ export const vehiculeEntitateMock: VehiculEntitate[] = [
   },
   {
     idVehicul: 2,
-    nrInmatriculare: "B 101 FLT",
+    numarInmatriculare: "B 101 FLT",
     marca: "Skoda",
     model: "Octavia",
     anFabricatie: 2021,
@@ -165,7 +165,7 @@ export const vehiculeEntitateMock: VehiculEntitate[] = [
   },
   {
     idVehicul: 3,
-    nrInmatriculare: "CJ 55 ANA",
+    numarInmatriculare: "CJ 55 ANA",
     marca: "BMW",
     model: "Seria 3 G20",
     anFabricatie: 2020,
@@ -175,7 +175,7 @@ export const vehiculeEntitateMock: VehiculEntitate[] = [
   },
   {
     idVehicul: 4,
-    nrInmatriculare: "NT 07 MAR",
+    numarInmatriculare: "NT 07 MAR",
     marca: "Dacia",
     model: "Duster",
     anFabricatie: 2018,
@@ -185,7 +185,7 @@ export const vehiculeEntitateMock: VehiculEntitate[] = [
   },
   {
     idVehicul: 5,
-    nrInmatriculare: "IS 99 XYZ",
+    numarInmatriculare: "IS 99 XYZ",
     marca: "Audi",
     model: "A6 C8",
     anFabricatie: 2022,

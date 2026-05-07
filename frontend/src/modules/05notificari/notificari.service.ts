@@ -11,7 +11,7 @@ export const NotificariService = {
   },
   
   // Opțional, în viitor, state-ul notificărilor citite se va salva în baza de date pe User
-  async syncStariNotificari(stari: any) {
+  async syncStariNotificari(_stari: any) {
     await delay(100);
     return { success: true };
   }

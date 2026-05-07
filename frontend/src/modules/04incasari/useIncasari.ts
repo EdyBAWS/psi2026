@@ -201,7 +201,7 @@ export function useIncasari() {
         : '';
       toast.success(`Încasarea pentru ${clientSelectat?.nume ?? 'client'} a fost salvată cu ${formatSuma(totalAlocat)} repartizați.${mesajRest}`);
       reseteazaFormular();
-    } catch (error) {
+    } catch {
       toast.error('Eroare la salvarea încasării.');
     }
   };

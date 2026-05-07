@@ -86,7 +86,6 @@ export default function Piesa() {
     handleInchideFormular,
     istoricCurent,
     setIstoricCurent,
-    loadingIstoric,
     handleVeziIstoric
   } = usePiesa();
 

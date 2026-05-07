@@ -100,7 +100,7 @@ export function usePiesa() {
     try {
       const data = await fetchIstoricPiesa(id);
       setIstoricCurent(data);
-    } catch (err: any) {
+    } catch {
       toast.error("Nu s-a putut încărca istoricul.");
     } finally {
       setLoadingIstoric(false);

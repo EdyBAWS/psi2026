@@ -22,7 +22,7 @@ export const FacturareService = {
     await delay(200);
     return obtineLiniiFacturaDinComandaMock(idComanda);
   },
-  async emiteFactura(idComanda: number, dateFactura: any) {
+  async emiteFactura(_idComanda: number, _dateFactura: any) {
     await delay(500);
     // Când va exista un backend: axios.post('/api/facturi', { idComanda, ...dateFactura })
     return { success: true, id: Math.random() };
@@ -43,7 +43,7 @@ export const FacturareService = {
     await delay(200);
     return obtineLiniiFacturaEmisaDinMock(idFactura);
   },
-  async salveazaAjustare(data: any) {
+  async salveazaAjustare(_data: any) {
     await delay(400);
     return { success: true };
   },
@@ -57,7 +57,7 @@ export const FacturareService = {
     await delay(300);
     return [...mockClienti];
   },
-  async emitePenalizare(data: any) {
+  async emitePenalizare(_data: any) {
     await delay(500);
     return { success: true };
   }

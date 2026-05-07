@@ -26,7 +26,7 @@ const clientiById = new Map(
 const vehiculeById = new Map(
   mockVehicule.map((vehicul) => [
     vehicul.idVehicul,
-    `${vehicul.marca} ${vehicul.model} (${vehicul.nrInmatriculare})`,
+    `${vehicul.marca} ${vehicul.model} (${vehicul.numarInmatriculare})`,
   ]),
 );
 
@@ -192,18 +192,18 @@ export function obtineComenziFacturabileDinMock(): ComandaFacturabilaMock[] {
   return mockComenzi
     .filter(
       (comanda) =>
-        statusuriFacturabile.has(comanda.status) &&
+        statusuriFacturabile.has(comanda.status ?? "") &&
         !comenziDejaFacturate.has(comanda.idComanda),
     )
     .map((comanda) => ({
       idComanda: comanda.idComanda,
-      nrComanda: comanda.nrComanda,
-      dataComanda: (comanda.dataFinalizare ?? comanda.dataDeschidere)
+      nrComanda: comanda.numarComanda,
+      dataComanda: (comanda.dataFinalizare ?? comanda.dataDeschidere ?? new Date())
         .toISOString()
         .split("T")[0],
       idVehicul: comanda.idVehicul,
-      status: comanda.status,
-      totalEstimat: comanda.totalEstimat,
+      status: comanda.status ?? "Gata de livrare",
+      totalEstimat: comanda.totalEstimat ?? 0,
       client: numeClientDinVehicul(comanda.idVehicul),
       vehicul:
         vehiculeById.get(comanda.idVehicul) ?? `Vehicul #${comanda.idVehicul}`,
@@ -238,12 +238,12 @@ export const facturiEmiseMock: FacturaMock[] = facturiEmiseSeed.map(
         dataEmitere: facturaSeed.dataEmitere,
         dataScadenta: facturaSeed.dataScadenta,
         client: clientiById.get(idClient) ?? `Client #${idClient}`,
-        totalInitial: comanda.totalEstimat,
+        totalInitial: comanda.totalEstimat ?? 0,
         restDePlata: facturaSeed.restDePlata,
         status:
           facturaSeed.restDePlata === 0
             ? "Achitata"
-            : facturaSeed.restDePlata < comanda.totalEstimat
+            : facturaSeed.restDePlata < (comanda.totalEstimat ?? 0)
               ? "Achitata partial"
               : "Emisa",
       } satisfies FacturaMock;

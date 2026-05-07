@@ -1,4 +1,4 @@
-import type { AngajatCore, AsiguratorCore, ClientCoreBase, TipClientOperational } from "../../types/domain";
+import type { ClientCoreBase, TipClientOperational } from "../../types/domain";
 
 export type TipClient = TipClientOperational;
 export type TipPlata = "Client Direct" | "Asigurare" | "Flota";
