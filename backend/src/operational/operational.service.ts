@@ -9,10 +9,15 @@ import {
   UpdateComandaDto,
 } from './dto/operational.dto';
 import { StatusGeneral } from '@prisma/client';
+import { TipNotificare } from '@prisma/client';
+import { NotificariService } from '../notificari/notificari.service';
 
 @Injectable()
 export class OperationalService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificariService: NotificariService,
+  ) {}
 
   // ===================== VEHICULE =====================
   async getVehicule() {
@@ -73,7 +78,7 @@ export class OperationalService {
   }
 
   async createComanda(data: CreateComandaDto) {
-    return this.prisma.comanda.create({
+    const comanda = await this.prisma.comanda.create({
       data: {
         ...data,
         dataPreconizata: data.dataPreconizata
@@ -81,10 +86,22 @@ export class OperationalService {
           : null,
       },
     });
+
+    await this.notificariService.create({
+      tip: TipNotificare.Info,
+      mesaj: `Comanda ${comanda.numarComanda} a fost deschisă în service.`,
+      paginaDestinatie: 'operational-comenzi',
+      sursaModul: 'Operațional',
+      textActiune: 'Deschide comenzi',
+      idComanda: comanda.idComanda,
+      metadata: { event: 'comanda-creata' },
+    });
+
+    return comanda;
   }
 
   async updateComanda(id: number, data: UpdateComandaDto) {
-    return this.prisma.comanda.update({
+    const comanda = await this.prisma.comanda.update({
       where: { idComanda: id },
       data: {
         ...data,
@@ -93,5 +110,20 @@ export class OperationalService {
           : undefined,
       },
     });
+
+    await this.notificariService.create({
+      tip:
+        data.status === StatusGeneral.Inactiv
+          ? TipNotificare.Avertizare
+          : TipNotificare.Info,
+      mesaj: `Comanda ${comanda.numarComanda} a fost actualizată.`,
+      paginaDestinatie: 'operational-comenzi',
+      sursaModul: 'Operațional',
+      textActiune: 'Deschide comenzi',
+      idComanda: comanda.idComanda,
+      metadata: { event: 'comanda-actualizata' },
+    });
+
+    return comanda;
   }
 }

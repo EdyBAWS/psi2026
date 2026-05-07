@@ -1,4 +1,5 @@
 import type { ClientFormValues, AngajatFormValues, AsiguratorFormValues } from './schemas';
+import { apiJson } from '../../lib/api';
 
 export type ClientEntity = ClientFormValues & { idClient: number };
 export type AngajatEntity = AngajatFormValues & { idAngajat: number };
@@ -17,17 +18,15 @@ export interface AsiguratorEntity {
   status: 'Activ' | 'Inactiv';
 }
 
-const API_URL = 'http://127.0.0.1:3000/entitati';
-const OPERATIONAL_API_URL = 'http://127.0.0.1:3000/operational';
+const API_URL = '/entitati';
+const OPERATIONAL_API_URL = '/operational';
 
 // ============================================================================
 // --- CLIENȚI (Conectat la Baza de Date) ---
 // ============================================================================
 export async function fetchClienti(): Promise<ClientEntity[]> {
   try {
-    const res = await fetch(`${API_URL}/clienti`);
-    if (!res.ok) throw new Error('Eroare backend la clienți');
-    return await res.json();
+    return await apiJson<ClientEntity[]>(`${API_URL}/clienti`);
   } catch (err) {
     console.error("Eroare la fetchClienti:", err);
     return []; // Protecție: returnăm listă goală ca să nu crape maparea
@@ -37,22 +36,17 @@ export async function fetchClienti(): Promise<ClientEntity[]> {
 export async function saveClient(data: ClientFormValues, id?: number): Promise<ClientEntity> {
   const method = id ? 'PATCH' : 'POST';
   const url = id ? `${API_URL}/clienti/${id}` : `${API_URL}/clienti`;
-  const res = await fetch(url, {
+  return await apiJson<ClientEntity>(url, {
     method,
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Eroare la salvarea clientului');
-  return await res.json();
 }
 
 export async function schimbaStatusClient(id: number, status: 'Activ' | 'Inactiv'): Promise<void> {
-  const res = await fetch(`${API_URL}/clienti/${id}/status`, {
+  await apiJson(`${API_URL}/clienti/${id}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
   });
-  if (!res.ok) throw new Error('Eroare la schimbarea statusului clientului');
 }
 
 // ============================================================================
@@ -60,9 +54,7 @@ export async function schimbaStatusClient(id: number, status: 'Activ' | 'Inactiv
 // ============================================================================
 export async function fetchAngajati(): Promise<AngajatEntity[]> {
   try {
-    const res = await fetch(`${API_URL}/angajati`);
-    if (!res.ok) throw new Error('Eroare backend la angajați');
-    return await res.json();
+    return await apiJson<AngajatEntity[]>(`${API_URL}/angajati`);
   } catch (err) {
     console.error("Eroare la fetchAngajati:", err);
     return [];
@@ -72,22 +64,17 @@ export async function fetchAngajati(): Promise<AngajatEntity[]> {
 export async function saveAngajat(data: AngajatFormValues, id?: number): Promise<AngajatEntity> {
   const method = id ? 'PATCH' : 'POST';
   const url = id ? `${API_URL}/angajati/${id}` : `${API_URL}/angajati`;
-  const res = await fetch(url, {
+  return await apiJson<AngajatEntity>(url, {
     method,
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Eroare la salvarea angajatului');
-  return await res.json();
 }
 
 export async function schimbaStatusAngajat(id: number, status: 'Activ' | 'Inactiv'): Promise<void> {
-  const res = await fetch(`${API_URL}/angajati/${id}/status`, {
+  await apiJson(`${API_URL}/angajati/${id}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
   });
-  if (!res.ok) throw new Error('Eroare la schimbarea statusului angajatului');
 }
 
 // ============================================================================
@@ -95,9 +82,7 @@ export async function schimbaStatusAngajat(id: number, status: 'Activ' | 'Inacti
 // ============================================================================
 export async function fetchAsiguratori(): Promise<AsiguratorEntity[]> {
   try {
-    const res = await fetch(`${API_URL}/asiguratori`);
-    if (!res.ok) throw new Error('Eroare backend la asigurători');
-    return await res.json();
+    return await apiJson<AsiguratorEntity[]>(`${API_URL}/asiguratori`);
   } catch (err) {
     console.error("Eroare la fetchAsiguratori:", err);
     return [];
@@ -107,22 +92,17 @@ export async function fetchAsiguratori(): Promise<AsiguratorEntity[]> {
 export async function saveAsigurator(data: AsiguratorFormValues, id?: number): Promise<AsiguratorEntity> {
   const method = id ? 'PATCH' : 'POST';
   const url = id ? `${API_URL}/asiguratori/${id}` : `${API_URL}/asiguratori`;
-  const res = await fetch(url, {
+  return await apiJson<AsiguratorEntity>(url, {
     method,
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Eroare la salvarea asigurătorului');
-  return await res.json();
 }
 
 export async function schimbaStatusAsigurator(id: number, status: 'Activ' | 'Inactiv'): Promise<void> {
-  const res = await fetch(`${API_URL}/asiguratori/${id}/status`, {
+  await apiJson(`${API_URL}/asiguratori/${id}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
   });
-  if (!res.ok) throw new Error('Eroare la schimbarea statusului asigurătorului');
 }
 
 // ============================================================================
@@ -149,9 +129,7 @@ export type VehiculFormValues = {
 
 export async function fetchVehicule(): Promise<VehiculEntity[]> {
   try {
-    const res = await fetch(`${OPERATIONAL_API_URL}/vehicule`);
-    if (!res.ok) throw new Error('Eroare backend la vehicule');
-    return await res.json();
+    return await apiJson<VehiculEntity[]>(`${OPERATIONAL_API_URL}/vehicule`);
   } catch (err) {
     console.error("Eroare la fetchVehicule:", err);
     return [];
@@ -161,20 +139,15 @@ export async function fetchVehicule(): Promise<VehiculEntity[]> {
 export async function saveVehicul(data: VehiculFormValues, id?: number): Promise<VehiculEntity> {
   const method = id ? 'PATCH' : 'POST';
   const url = id ? `${OPERATIONAL_API_URL}/vehicule/${id}` : `${OPERATIONAL_API_URL}/vehicule`;
-  const res = await fetch(url, {
+  return await apiJson<VehiculEntity>(url, {
     method,
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Eroare la salvarea vehiculului');
-  return await res.json();
 }
 
 export async function schimbaStatusVehicul(id: number, status: 'Activ' | 'Inactiv'): Promise<void> {
-  const res = await fetch(`${OPERATIONAL_API_URL}/vehicule/${id}/status`, {
+  await apiJson(`${OPERATIONAL_API_URL}/vehicule/${id}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
   });
-  if (!res.ok) throw new Error('Eroare la schimbarea statusului vehiculului');
 }

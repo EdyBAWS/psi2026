@@ -3,12 +3,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { usePageSessionState } from '../../../lib/pageState';
 import { FacturareService } from '../facturare.service';
+import { API_BASE_URL } from '../../../lib/api';
 import type { ComandaFacturabilaMock, LinieFacturaMock } from '../../../mock/types';
 
 export type FacturareSortField = 'data' | 'nrComanda' | 'valoare';
 export type FacturareSortDir = 'asc' | 'desc';
-
-const API_BASE = 'http://127.0.0.1:3000';
 
 interface BackendClient {
   idClient: number;
@@ -36,7 +35,7 @@ const scorPotrivireClient = (clientBackend: BackendClient, numeComanda: string) 
 };
 
 async function rezolvaIdClientPentruComanda(comanda: ComandaFacturabilaMock) {
-  const response = await fetch(`${API_BASE}/entitati/clienti`);
+  const response = await fetch(`${API_BASE_URL}/entitati/clienti`);
   if (!response.ok) throw new Error('Nu s-au putut încărca clienții pentru facturare.');
 
   const clienti = (await response.json()) as BackendClient[];
@@ -152,6 +151,7 @@ export function useFacturare() {
         numar: Number(numarFactura),
         serie: serieFactura,
         idClient,
+        idComanda: comandaSelectata.idComanda,
         scadenta: new Date(dataScadenta).toISOString(),
         iteme: liniiFactura.map((linie) => ({
           descriere: linie.denumire,
@@ -160,7 +160,7 @@ export function useFacturare() {
         }))
       };
 
-      const response = await fetch(`${API_BASE}/facturare`, {
+      const response = await fetch(`${API_BASE_URL}/facturare`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

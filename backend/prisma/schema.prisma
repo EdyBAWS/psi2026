@@ -34,6 +34,18 @@ enum StatusFactura {
   Anulata
 }
 
+enum ModalitateIncasare {
+  TransferBancar
+  POS
+  Cash
+}
+
+enum TipNotificare {
+  Info
+  Avertizare
+  Succes
+}
+
 model Client {
   idClient    Int           @id @default(autoincrement())
   tipClient   TipClient
@@ -52,6 +64,7 @@ model Client {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   facturas    Factura[]
+  incasari    Incasare[]
   vehicule    Vehicul[]
   dosareDauna DosarDauna[]
 }
@@ -82,16 +95,16 @@ model Asigurator {
   status          StatusGeneral @default(Activ)
   denumire        String
   CUI             String        @unique
-  nrRegCom        String?       // Adăugat
-  adresa          String?       // Adăugat
+  nrRegCom        String? // Adăugat
+  adresa          String? // Adăugat
   telefon         String
-  emailDaune      String?       // Adăugat
-  IBAN            String?       // Adăugat
+  emailDaune      String? // Adăugat
+  IBAN            String? // Adăugat
   termenPlataZile Int           @default(30) // Adăugat (standard 30 zile)
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  dosareDauna     DosarDauna[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  dosareDauna DosarDauna[]
 }
 
 model Vehicul {
@@ -160,38 +173,84 @@ model Comanda {
   idAngajat       Int?
   angajat         Angajat?      @relation(fields: [idAngajat], references: [idAngajat])
   facturi         Factura[]
+  notificari      Notificare[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
 
 model Factura {
-  idFactura    Int           @id @default(autoincrement())
-  serie        String        @default("SN")
-  numar        Int           @unique
-  dataEmiterii DateTime      @default(now())
+  idFactura    Int               @id @default(autoincrement())
+  serie        String            @default("SN")
+  numar        Int               @unique
+  dataEmiterii DateTime          @default(now())
   scadenta     DateTime
-  status       StatusFactura @default(Emisa)
+  status       StatusFactura     @default(Emisa)
   idClient     Int
-  client       Client        @relation(fields: [idClient], references: [idClient])
+  client       Client            @relation(fields: [idClient], references: [idClient])
   idComanda    Int?
-  comanda      Comanda?      @relation(fields: [idComanda], references: [idComanda])
+  comanda      Comanda?          @relation(fields: [idComanda], references: [idComanda])
   iteme        FacturaItem[]
-  totalFaraTVA Float         @default(0)
-  tva          Float         @default(0)
-  totalGeneral Float         @default(0)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  incasari     IncasareAlocare[]
+  notificari   Notificare[]
+  totalFaraTVA Float             @default(0)
+  tva          Float             @default(0)
+  totalGeneral Float             @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }
 
 model FacturaItem {
-  idItem      Int      @id @default(autoincrement())
+  idItem     Int      @id @default(autoincrement())
+  idFactura  Int
+  factura    Factura  @relation(fields: [idFactura], references: [idFactura])
+  descriere  String
+  cantitate  Float
+  pretUnitar Float
+  cotaTva    Float    @default(19)
+  idPiesa    Int?
+  idManopera Int?
+  createdAt  DateTime @default(now())
+}
+
+model Incasare {
+  idIncasare Int                @id @default(autoincrement())
+  idClient   Int
+  client     Client             @relation(fields: [idClient], references: [idClient])
+  data       DateTime           @default(now())
+  suma       Float
+  modalitate ModalitateIncasare
+  referinta  String?
+  alocari    IncasareAlocare[]
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model IncasareAlocare {
+  idAlocare   Int      @id @default(autoincrement())
+  idIncasare  Int
+  incasare    Incasare @relation(fields: [idIncasare], references: [idIncasare], onDelete: Cascade)
   idFactura   Int
   factura     Factura  @relation(fields: [idFactura], references: [idFactura])
-  descriere   String
-  cantitate   Int
-  pretUnitar  Float
-  cotaTva     Float    @default(19)
-  idPiesa     Int?
-  idManopera  Int?
+  sumaAlocata Float
   createdAt   DateTime @default(now())
+}
+
+model Notificare {
+  idNotificare     Int           @id @default(autoincrement())
+  tip              TipNotificare @default(Info)
+  mesaj            String
+  data             DateTime      @default(now())
+  paginaDestinatie String?
+  sursaModul       String?
+  textActiune      String?
+  citit            Boolean       @default(false)
+  arhivata         Boolean       @default(false)
+  stearsa          Boolean       @default(false)
+  idFactura        Int?
+  factura          Factura?      @relation(fields: [idFactura], references: [idFactura])
+  idComanda        Int?
+  comanda          Comanda?      @relation(fields: [idComanda], references: [idComanda])
+  metadata         Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }

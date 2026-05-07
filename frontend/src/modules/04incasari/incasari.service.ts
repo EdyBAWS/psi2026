@@ -1,23 +1,50 @@
 // src/modules/04incasari/incasari.service.ts
-import { facturiRestanteMock, incasariMock } from '../../mock/incasari';
+import { apiJson } from '../../lib/api';
 import type { FacturaMock } from '../../mock/types';
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const modalitateToBackend: Record<string, string> = {
+  'Transfer Bancar': 'TransferBancar',
+  POS: 'POS',
+  Cash: 'Cash',
+};
+
+const modalitateFromBackend: Record<string, string> = {
+  TransferBancar: 'Transfer Bancar',
+  POS: 'POS',
+  Cash: 'Cash',
+};
 
 export const IncasariService = {
   async fetchFacturiRestante(): Promise<FacturaMock[]> {
-    await delay(300);
-    return [...facturiRestanteMock];
+    return apiJson('/incasari/facturi-restante');
   },
   
   async fetchIncasariIstoric() {
-    await delay(200);
-    return [...incasariMock];
+    const incasari = await apiJson<any[]>('/incasari');
+
+    return incasari.map((incasare) => ({
+      idIncasare: incasare.idIncasare,
+      idFactura: incasare.alocari?.[0]?.idFactura ?? 0,
+      dataIncasare: incasare.data,
+      suma: incasare.suma,
+      modalitate: modalitateFromBackend[incasare.modalitate] ?? incasare.modalitate,
+    }));
   },
 
-  async salveazaIncasare(_dateIncasare: any) {
-    await delay(500);
-    // Endpoint viitor: POST /api/incasari
-    return { success: true, idIncasare: Date.now() };
+  async salveazaIncasare(dateIncasare: any) {
+    return apiJson('/incasari', {
+      method: 'POST',
+      body: JSON.stringify({
+        idClient: dateIncasare.idClient,
+        sumaIncasata: dateIncasare.sumaIncasata,
+        modalitate: modalitateToBackend[dateIncasare.metodaPlata] ?? dateIncasare.metodaPlata,
+        referinta: dateIncasare.referinta,
+        data: new Date(dateIncasare.data).toISOString(),
+        alocari: dateIncasare.alocari.map((factura: any) => ({
+          idFactura: factura.idFactura,
+          sumaAlocata: Number(factura.sumaAlocata),
+        })),
+      }),
+    });
   }
 };

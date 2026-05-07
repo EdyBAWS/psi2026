@@ -2,11 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { CreateFacturareDto } from './dto/create-facturare.dto';
 import { UpdateFacturareDto } from './dto/update-facturare.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, TipNotificare } from '@prisma/client';
+import { NotificariService } from '../notificari/notificari.service';
 
 @Injectable()
 export class FacturareService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificariService: NotificariService,
+  ) {}
 
   private calculeazaTotaluri(iteme: CreateFacturareDto['iteme']) {
     let totalFaraTVA = 0;
@@ -32,11 +36,12 @@ export class FacturareService {
 
     const totaluri = this.calculeazaTotaluri(dto.iteme);
 
-    return this.prisma.factura.create({
+    const factura = await this.prisma.factura.create({
       data: {
         numar: dto.numar,
         serie: dto.serie || 'SN',
         idClient: dto.idClient,
+        idComanda: dto.idComanda,
         scadenta: new Date(dto.scadenta),
         ...totaluri,
         iteme: {
@@ -54,6 +59,19 @@ export class FacturareService {
         client: true,
       },
     });
+
+    await this.notificariService.create({
+      tip: TipNotificare.Succes,
+      mesaj: `Factura ${factura.serie}-${factura.numar} a fost emisă pentru ${factura.client.nume}.`,
+      paginaDestinatie: 'facturare-istoric',
+      sursaModul: 'Facturare',
+      textActiune: 'Vezi istoricul',
+      idFactura: factura.idFactura,
+      idComanda: dto.idComanda,
+      metadata: { event: 'factura-creata' },
+    });
+
+    return factura;
   }
 
   async findAll() {
@@ -82,6 +100,9 @@ export class FacturareService {
     if (updateFacturareDto.idClient !== undefined) {
       data.client = { connect: { idClient: updateFacturareDto.idClient } };
     }
+    if (updateFacturareDto.idComanda !== undefined) {
+      data.comanda = { connect: { idComanda: updateFacturareDto.idComanda } };
+    }
     if (updateFacturareDto.scadenta !== undefined) {
       data.scadenta = new Date(updateFacturareDto.scadenta);
     }
@@ -103,11 +124,23 @@ export class FacturareService {
       };
     }
 
-    return this.prisma.factura.update({
+    const factura = await this.prisma.factura.update({
       where: { idFactura: id },
       data,
       include: { iteme: true, client: true },
     });
+
+    await this.notificariService.create({
+      tip: TipNotificare.Info,
+      mesaj: `Factura ${factura.serie}-${factura.numar} a fost actualizată.`,
+      paginaDestinatie: 'facturare-istoric',
+      sursaModul: 'Facturare',
+      textActiune: 'Vezi istoricul',
+      idFactura: factura.idFactura,
+      metadata: { event: 'factura-actualizata' },
+    });
+
+    return factura;
   }
 
   async remove(id: number) {

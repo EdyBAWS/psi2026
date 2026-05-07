@@ -12,11 +12,11 @@ import type {
   StatusComanda,
   Vehicul,
 } from "./types";
+import { API_BASE_URL } from "../../lib/api";
 
-const API_BASE = "http://127.0.0.1:3000";
-const API_OP = `${API_BASE}/operational`;
-const API_ENT = `${API_BASE}/entitati`;
-const API_CAT = `${API_BASE}/catalog`;
+const API_OP = `${API_BASE_URL}/operational`;
+const API_ENT = `${API_BASE_URL}/entitati`;
+const API_CAT = `${API_BASE_URL}/catalog`;
 const POZITII_STORAGE_KEY = "psi-operational-pozitii-comanda";
 
 type BackendStatus = "Activ" | "Inactiv";
