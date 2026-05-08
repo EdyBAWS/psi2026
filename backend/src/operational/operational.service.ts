@@ -8,21 +8,32 @@ import {
   CreateComandaDto,
   UpdateComandaDto,
 } from './dto/operational.dto';
-import { StatusGeneral } from '@prisma/client';
-import { TipNotificare } from '@prisma/client';
+import { StatusGeneral, StatusReparatie, TipNotificare } from '@prisma/client';
 import { NotificariService } from '../notificari/notificari.service';
 
 @Injectable()
 export class OperationalService {
   constructor(
-    private prisma: PrismaService,
-    private notificariService: NotificariService,
+    private readonly prisma: PrismaService,
+    private readonly notificariService: NotificariService,
   ) {}
 
   // ===================== VEHICULE =====================
   async getVehicule() {
     return this.prisma.vehicul.findMany({
-      include: { client: true },
+      include: { 
+        client: true,
+        comenzi: {
+          orderBy: { createdAt: 'desc' }
+        },
+        dosareDauna: {
+          include: {
+            comenzi: {
+              orderBy: { createdAt: 'desc' }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -63,27 +74,46 @@ export class OperationalService {
 
   // ===================== COMENZI =====================
   async getComenzi() {
-    return this.prisma.comanda.findMany({
+    const comenzi = await this.prisma.comanda.findMany({
       include: {
-        angajat: true,
+        client: true,
+        vehicul: true,
         dosar: {
-          include: {
-            vehicul: true,
-            client: true,
-          },
+          include: { client: true, vehicul: true },
         },
+        angajat: true,
+        pozitii: true,
       },
       orderBy: { createdAt: 'desc' },
+    });
+
+    return comenzi.map((c) => {
+      const totalEstimat = c.pozitii?.reduce((sum, pozitie) => {
+        return sum + (pozitie.cantitate * pozitie.pretUnitar);
+      }, 0) || 0;
+
+      const clientFinal = c.client || c.dosar?.client || null;
+      const vehiculFinal = c.vehicul || c.dosar?.vehicul || null;
+
+      return {
+        ...c,
+        client: clientFinal,
+        vehicul: vehiculFinal,
+        totalEstimat,
+      };
     });
   }
 
   async createComanda(data: CreateComandaDto) {
     const comanda = await this.prisma.comanda.create({
       data: {
-        ...data,
-        dataPreconizata: data.dataPreconizata
-          ? new Date(data.dataPreconizata)
-          : null,
+        numarComanda: data.numarComanda,
+        dataPreconizata: data.dataPreconizata ? new Date(data.dataPreconizata) : null,
+        idDosar: data.idDosar,
+        idClient: data.idClient,
+        idVehicul: data.idVehicul,
+        idAngajat: data.idAngajat,
+        status: data.status || StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
     });
 
@@ -104,16 +134,19 @@ export class OperationalService {
     const comanda = await this.prisma.comanda.update({
       where: { idComanda: id },
       data: {
-        ...data,
-        dataPreconizata: data.dataPreconizata
-          ? new Date(data.dataPreconizata)
-          : undefined,
+        numarComanda: data.numarComanda,
+        dataPreconizata: data.dataPreconizata ? new Date(data.dataPreconizata) : undefined,
+        idDosar: data.idDosar,
+        idClient: data.idClient,
+        idVehicul: data.idVehicul,
+        idAngajat: data.idAngajat,
+        status: data.status,
       },
     });
 
     await this.notificariService.create({
       tip:
-        data.status === StatusGeneral.Inactiv
+        data.status === StatusReparatie.ANULAT
           ? TipNotificare.Avertizare
           : TipNotificare.Info,
       mesaj: `Comanda ${comanda.numarComanda} a fost actualizată.`,

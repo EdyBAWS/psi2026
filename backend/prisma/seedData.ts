@@ -8,6 +8,7 @@ import {
   StatusFactura,
   ModalitateIncasare,
   TipNotificare,
+  StatusReparatie,
 } from '@prisma/client';
 
 // Folosim inițializarea clasică a Prisma
@@ -801,7 +802,7 @@ async function main() {
         idAngajat: getRequired(angajatByCnp, '1820101223344', 'angajat')
           .idAngajat,
         dataPreconizata: new Date('2026-05-13T15:00:00'),
-        status: StatusGeneral.Activ,
+        status: StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
       {
         numarComanda: 'CMD-2026-002',
@@ -809,7 +810,7 @@ async function main() {
         idAngajat: getRequired(angajatByCnp, '1840615223344', 'angajat')
           .idAngajat,
         dataPreconizata: new Date('2026-05-15T16:30:00'),
-        status: StatusGeneral.Activ,
+        status: StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
       {
         numarComanda: 'CMD-2026-003',
@@ -817,7 +818,7 @@ async function main() {
         idAngajat: getRequired(angajatByCnp, '2890305223344', 'angajat')
           .idAngajat,
         dataPreconizata: new Date('2026-05-14T12:00:00'),
-        status: StatusGeneral.Activ,
+        status: StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
       {
         numarComanda: 'CMD-2026-004',
@@ -825,7 +826,7 @@ async function main() {
         idAngajat: getRequired(angajatByCnp, '2890305223344', 'angajat')
           .idAngajat,
         dataPreconizata: new Date('2026-05-11T17:00:00'),
-        status: StatusGeneral.Activ,
+        status: StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
       {
         numarComanda: 'CMD-2026-005',
@@ -833,7 +834,7 @@ async function main() {
         idAngajat: getRequired(angajatByCnp, '1791215223344', 'angajat')
           .idAngajat,
         dataPreconizata: new Date('2026-05-16T17:00:00'),
-        status: StatusGeneral.Activ,
+        status: StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
       {
         numarComanda: 'CMD-2026-006',
@@ -841,7 +842,7 @@ async function main() {
         idAngajat: getRequired(angajatByCnp, '1820101223344', 'angajat')
           .idAngajat,
         dataPreconizata: new Date('2026-05-10T10:30:00'),
-        status: StatusGeneral.Inactiv,
+        status: StatusReparatie.ANULAT,
       },
       {
         numarComanda: 'CMD-2026-007',
@@ -849,7 +850,7 @@ async function main() {
         idAngajat: getRequired(angajatByCnp, '1770501223344', 'angajat')
           .idAngajat,
         dataPreconizata: new Date('2026-05-18T13:30:00'),
-        status: StatusGeneral.Activ,
+        status: StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
       {
         numarComanda: 'CMD-2026-008',
@@ -857,7 +858,7 @@ async function main() {
         idAngajat: getRequired(angajatByCnp, '1791215223344', 'angajat')
           .idAngajat,
         dataPreconizata: new Date('2026-05-19T09:30:00'),
-        status: StatusGeneral.Activ,
+        status: StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
     ],
   });

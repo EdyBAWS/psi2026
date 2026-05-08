@@ -120,7 +120,7 @@ function VehiculForm({ initialData, clienti, onClose, onSave }: VehiculFormProps
 // 3. COMPONENTA PENTRU DETALII
 // ============================================================================
 interface VehiculDetailProps {
-  vehicul: VehiculEntity;
+  vehicul: any; // Folosim any aici pentru a acoperi noile campuri adaugate in useVehicul
   client?: ClientEntity;
   onInchide: () => void;
   onEdit: () => void;
@@ -128,7 +128,7 @@ interface VehiculDetailProps {
 }
 
 function VehiculDetail({ vehicul, client, onInchide, onEdit, onDeleteRequest }: VehiculDetailProps) {
-  const istoricComenzi: any[] = []; // Urmează să fie populat din backend
+  const istoricComenzi: any[] = vehicul.istoricComenzi || [];
 
   const numeClient = client ? (client.tipClient === 'PJ' ? client.nume : `${client.nume} ${client.prenume || ""}`).trim() : "Client Necunoscut";
 
@@ -167,7 +167,23 @@ function VehiculDetail({ vehicul, client, onInchide, onEdit, onDeleteRequest }: 
 
         <ul className="divide-y divide-slate-100 p-5">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Istoric Comenzi ({istoricComenzi.length})</p>
-          {istoricComenzi.length === 0 && <p className="text-sm text-slate-500">Nicio reparație înregistrată încă.</p>}
+          {istoricComenzi.length === 0 ? (
+            <p className="text-sm text-slate-500">Nicio reparație înregistrată încă.</p>
+          ) : (
+            istoricComenzi.map((cmd) => (
+              <li key={cmd.idComanda} className="py-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-slate-800">{cmd.numarComanda}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {new Date(cmd.createdAt).toLocaleDateString('ro-RO')}
+                  </p>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 px-2 py-1 rounded-md">
+                  {cmd.status}
+                </span>
+              </li>
+            ))
+          )}
         </ul>
       </div>
 

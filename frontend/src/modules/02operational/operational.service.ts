@@ -19,35 +19,45 @@ const API_ENT = `${API_BASE_URL}/entitati`;
 const API_CAT = `${API_BASE_URL}/catalog`;
 const POZITII_STORAGE_KEY = "psi-operational-pozitii-comanda";
 
-type BackendStatus = "Activ" | "Inactiv";
+// Transformăm formatul de UI in format de Enum Prisma
+const mapStatusToPrisma = (status?: StatusComanda): string => {
+  if (!status) return "IN_ASTEPTARE_DIAGNOZA";
+  switch (status as string) {
+    case "In asteptare diagnoza": return "IN_ASTEPTARE_DIAGNOZA";
+    case "In Lucru": return "IN_LUCRU";
+    case "Asteapta piese": return "IN_ASTEPTARE_PIESE";
+    case "Gata de livrare": return "FINALIZAT";
+    case "Anulat": return "ANULAT";
+    default: return "IN_ASTEPTARE_DIAGNOZA";
+  }
+};
 
-// Backend-ul păstrează statusuri generale simple, iar UI-ul folosește statusuri
-// mai descriptive pentru fluxul de service. Aceste funcții sunt stratul de
-// traducere dintre cele două lumi.
-const statusBackendToUi = (status?: BackendStatus | null): StatusComanda =>
-  status === "Inactiv" ? "Anulat" : "In asteptare diagnoza";
-
-const statusUiToBackend = (status?: StatusComanda): BackendStatus =>
-  status === "Anulat" ? "Inactiv" : "Activ";
+// Transformăm din Enum Prisma înapoi în format de UI
+const mapStatusFromPrisma = (statusString?: string): StatusComanda => {
+  switch (statusString) {
+    case "IN_ASTEPTARE_DIAGNOZA": return "In asteptare diagnoza";
+    case "IN_LUCRU": return "In Lucru";
+    case "IN_ASTEPTARE_PIESE": return "Asteapta piese";
+    case "FINALIZAT": return "Gata de livrare";
+    case "ANULAT": return "Anulat";
+    case "Activ": return "In asteptare diagnoza"; 
+    case "Inactiv": return "Anulat";
+    default: return "In asteptare diagnoza";
+  }
+};
 
 async function parseApiError(response: Response, fallback: string) {
   const text = await response.text();
-
   if (!text) return fallback;
-
   try {
     const body = JSON.parse(text);
-    const message = Array.isArray(body.message)
-      ? body.message.join("; ")
-      : body.message;
+    const message = Array.isArray(body.message) ? body.message.join("; ") : body.message;
     return message ? `${fallback}: ${message}` : fallback;
   } catch {
     return `${fallback}: ${text}`;
   }
 }
 
-// Mapper-ele de mai jos normalizează răspunsurile API. Asta ține componentele
-// React decuplate de forma exactă în care Prisma/Nest întorc relațiile.
 const mapVehicul = (v: any): Vehicul => ({
   idVehicul: v.idVehicul,
   idClient: v.idClient,
@@ -82,17 +92,15 @@ const mapComanda = (c: any, fallback?: Partial<ComandaService>): ComandaService 
     numarComanda: c.numarComanda ?? fallback?.numarComanda ?? "",
     dataDeschidere: c.createdAt ? new Date(c.createdAt) : fallback?.dataDeschidere,
     dataFinalizare: c.dataFinalizare ? new Date(c.dataFinalizare) : fallback?.dataFinalizare ?? null,
-    status: statusBackendToUi(c.status),
-    totalEstimat: fallback?.totalEstimat ?? 0,
+    status: mapStatusFromPrisma(c.status),
+    totalEstimat: c.totalEstimat ?? fallback?.totalEstimat ?? 0,
     kilometrajPreluare: fallback?.kilometrajPreluare,
     nivelCombustibil: fallback?.nivelCombustibil,
     simptomeReclamate: fallback?.simptomeReclamate,
     observatiiPreluare: fallback?.observatiiPreluare,
     observatiiCaroserie: fallback?.observatiiCaroserie,
     accesoriiPredate: fallback?.accesoriiPredate,
-    termenPromis: c.dataPreconizata
-      ? new Date(c.dataPreconizata)
-      : fallback?.termenPromis,
+    termenPromis: c.dataPreconizata ? new Date(c.dataPreconizata) : fallback?.termenPromis,
     prioritate: fallback?.prioritate ?? "Normala",
     tipPlata: fallback?.tipPlata ?? (dosar?.idAsigurator ? "Asigurare" : "Client Direct"),
   };
@@ -100,17 +108,9 @@ const mapComanda = (c: any, fallback?: Partial<ComandaService>): ComandaService 
 
 const readPozitiiLocale = (): PozitieComanda[] => {
   if (typeof window === "undefined") return [];
-
-  try {
-    return JSON.parse(window.localStorage.getItem(POZITII_STORAGE_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(window.localStorage.getItem(POZITII_STORAGE_KEY) ?? "[]"); } catch { return []; }
 };
 
-// Schema backend actuală nu are încă tabel separat pentru pozițiile de comandă.
-// Le păstrăm local ca soluție intermediară, iar comanda și dosarul rămân
-// persistate real în PostgreSQL.
 const writePozitiiLocale = (pozitii: PozitieComanda[]) => {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(POZITII_STORAGE_KEY, JSON.stringify(pozitii));
@@ -120,7 +120,6 @@ export const fetchComenzi = async (): Promise<ComandaService[]> => {
   const response = await fetch(`${API_OP}/comenzi`);
   if (!response.ok) throw new Error(await parseApiError(response, "Eroare la preluarea comenzilor"));
   const data = await response.json();
-
   return data.map((comanda: any) => mapComanda(comanda));
 };
 
@@ -131,37 +130,33 @@ export async function createComanda(data: Partial<ComandaService>): Promise<Coma
     body: JSON.stringify({
       numarComanda: data.numarComanda,
       idDosar: data.idDosar ?? undefined,
+      idClient: (data as any).idClient ?? undefined,
+      idVehicul: (data as any).idVehicul ?? undefined,
       idAngajat: data.idMecanic ?? undefined,
       dataPreconizata: data.termenPromis ? new Date(data.termenPromis).toISOString() : undefined,
-      // DTO-ul Nest acceptă doar enum-ul Prisma StatusGeneral: Activ/Inactiv.
-      status: statusUiToBackend(data.status),
+      status: mapStatusToPrisma(data.status),
     }),
   });
-
   if (!res.ok) throw new Error(await parseApiError(res, "Eroare la crearea comenzii"));
-
   const comanda = await res.json();
   return mapComanda(comanda, data);
 }
 
-export async function updateComanda(
-  idComanda: number,
-  data: Partial<ComandaService>,
-): Promise<ComandaService> {
+export async function updateComanda(idComanda: number, data: Partial<ComandaService>): Promise<ComandaService> {
   const res = await fetch(`${API_OP}/comenzi/${idComanda}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       numarComanda: data.numarComanda,
       idDosar: data.idDosar ?? undefined,
+      idClient: (data as any).idClient ?? undefined,
+      idVehicul: (data as any).idVehicul ?? undefined,
       idAngajat: data.idMecanic ?? undefined,
       dataPreconizata: data.termenPromis ? new Date(data.termenPromis).toISOString() : undefined,
-      status: data.status ? statusUiToBackend(data.status) : undefined,
+      status: data.status ? mapStatusToPrisma(data.status) : undefined,
     }),
   });
-
   if (!res.ok) throw new Error(await parseApiError(res, "Eroare la actualizarea comenzii"));
-
   const comanda = await res.json();
   return mapComanda(comanda, data);
 }
@@ -178,7 +173,6 @@ export async function createDosarDauna(data: Partial<DosarDauna>): Promise<Dosar
       status: data.status ?? "Activ",
     }),
   });
-
   if (!res.ok) throw new Error(await parseApiError(res, "Eroare la crearea dosarului"));
   return mapDosar(await res.json());
 }
@@ -201,13 +195,11 @@ export async function fetchMecanici(): Promise<Mecanic[]> {
   const res = await fetch(`${API_ENT}/angajati`);
   if (!res.ok) return [];
   const data = await res.json();
-  return data
-    .filter((a: any) => a.tipAngajat === "Mecanic" && a.status === "Activ")
-    .map((a: any) => ({
-      idMecanic: a.idAngajat,
-      nume: `${a.nume} ${a.prenume || ""}`.trim(),
-      specialitate: a.specializare || "Mecanic",
-    }));
+  return data.filter((a: any) => a.tipAngajat === "Mecanic" && a.status === "Activ").map((a: any) => ({
+    idMecanic: a.idAngajat,
+    nume: `${a.nume} ${a.prenume || ""}`.trim(),
+    specialitate: a.specializare || "Mecanic",
+  }));
 }
 
 export async function fetchClienti(): Promise<Client[]> {
@@ -224,7 +216,6 @@ export async function fetchCatalogPiese(): Promise<CatalogPiesa[]> {
   const res = await fetch(`${API_CAT}/piese`);
   if (!res.ok) return [];
   const data = await res.json();
-
   return data.map((piesa: any) => ({
     idPiesa: piesa.idPiesa,
     codPiesa: piesa.codPiesa,
@@ -240,7 +231,6 @@ export async function fetchCatalogManopere(): Promise<CatalogManopera[]> {
   const res = await fetch(`${API_CAT}/manopera`);
   if (!res.ok) return [];
   const data = await res.json();
-
   return data.map((manopera: any) => ({
     idManopera: manopera.idManopera,
     codManopera: manopera.codManopera,
@@ -251,18 +241,11 @@ export async function fetchCatalogManopere(): Promise<CatalogManopera[]> {
   }));
 }
 
-export async function fetchCatalogKituri(): Promise<CatalogKit[]> {
-  return [];
-}
+export async function fetchCatalogKituri(): Promise<CatalogKit[]> { return []; }
 
-export async function fetchPozitiiComanda(): Promise<PozitieComanda[]> {
-  return readPozitiiLocale();
-}
+export async function fetchPozitiiComanda(): Promise<PozitieComanda[]> { return readPozitiiLocale(); }
 
-export async function createPozitiiComanda(
-  idComanda: number,
-  pozitii: PozitieComandaDraft[],
-): Promise<PozitieComanda[]> {
+export async function createPozitiiComanda(idComanda: number, pozitii: PozitieComandaDraft[]): Promise<PozitieComanda[]> {
   const existente = readPozitiiLocale();
   const stamp = Date.now();
   const pozitiiSalvate = pozitii.map((pozitie, index): PozitieComanda => ({

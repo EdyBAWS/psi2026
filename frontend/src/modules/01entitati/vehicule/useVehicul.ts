@@ -40,14 +40,23 @@ export function useVehicul() {
     }
   };
 
-  const vehiculeProcesate = useMemo(() => {
-    return vehicule.map((vehicul) => {
+const vehiculeProcesate = useMemo(() => {
+    return vehicule.map((vehicul: any) => {
       const client = vehicul.client || clienti.find(c => c.idClient === vehicul.idClient);
       const numeDetinator = client 
         ? (client.tipClient === 'PJ' ? client.nume : `${client.nume} ${client.prenume || ""}`).trim() 
         : "Necunoscut";
       
-      return { ...vehicul, clientObj: client, numeDetinator };
+      // Unificăm comenzile directe și pe cele din dosarele de daună
+      const comenziDirecte = vehicul.comenzi || [];
+      const comenziDinDosare = (vehicul.dosareDauna || []).flatMap((d: any) => d.comenzi || []);
+      
+      // Le punem la un loc și le sortăm descrescător (cele mai noi primele)
+      const istoricComenzi = [...comenziDirecte, ...comenziDinDosare].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      return { ...vehicul, clientObj: client, numeDetinator, istoricComenzi };
     });
   }, [vehicule, clienti]);
 
