@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { calculeazaRezumatPozitii } from "../../../calculations";
 import StatusBadge from "../../../shared-components/StatusBadge";
-import { statusuriFiltrare, type DetaliiComandaSelectata } from "../gestiuneComenzi.helpers";
-import { formatSuma } from "../gestiuneComenzi.helpers";
+import { type DetaliiComandaSelectata, formatSuma } from "../gestiuneComenzi.helpers";
 import type { ComandaService, Mecanic, PozitieComanda, StatusComanda } from "../../../types";
 
 interface GestiuneComenziDetailProps extends DetaliiComandaSelectata {
@@ -59,6 +58,8 @@ export default function GestiuneComenziDetail({
     }
   };
 
+  const isFacturat = comandaSelectata.status === "Facturat";
+
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
       <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
@@ -68,22 +69,32 @@ export default function GestiuneComenziDetail({
             <div className="mt-3"><StatusBadge status={comandaSelectata.status ?? "In asteptare diagnoza"} /></div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setEditareActiva((value) => !value)} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:border-indigo-300 hover:text-indigo-700">
-              {editareActiva ? "Renunță" : "Editează"}
-            </button>
+            {isFacturat ? (
+              <span className="flex items-center gap-1.5 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-rose-600">
+                🔒 Facturat
+              </span>
+            ) : (
+              <button onClick={() => setEditareActiva((value) => !value)} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:border-indigo-300 hover:text-indigo-700">
+                {editareActiva ? "Renunță" : "Editează"}
+              </button>
+            )}
             <button onClick={onInchide} className="text-slate-400 font-bold">×</button>
           </div>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
-        {editareActiva ? (
+        {editareActiva && !isFacturat ? (
           <div className="space-y-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
             <div>
               <label className="text-[10px] font-bold uppercase text-slate-500">Status</label>
               <select value={status} onChange={(event) => setStatus(event.target.value as StatusComanda)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium">
-                {statusuriFiltrare.filter((item) => item !== "Toate").map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
+                <option value="In asteptare diagnoza">În așteptare diagnoză</option>
+                <option value="Asteapta aprobare client">Așteaptă aprobare client</option>
+                <option value="In asteptare piese">În așteptare piese</option>
+                <option value="In lucru">În lucru</option>
+                <option value="Finalizat">Finalizat</option>
+                <option value="Facturat" disabled>Facturat</option>
+                <option value="Anulat">Anulat</option>
               </select>
             </div>
             <div>

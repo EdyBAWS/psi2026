@@ -295,7 +295,7 @@ export const istoricFacturareMock: TranzactieIstoricMock[] = [
     numarDocument: "F-SAG-2026-00124",
     client: facturiEmiseMock[0]?.client ?? "Client necunoscut",
     valoare: facturiEmiseMock[0]?.totalInitial ?? 0,
-    utilizator: "Edy (Admin)",
+    utilizator: "Admin",
     detalii: "Facturare comandă CMD-2026-005 după livrarea vehiculului.",
   },
   {
@@ -305,7 +305,7 @@ export const istoricFacturareMock: TranzactieIstoricMock[] = [
     numarDocument: "PEN-0045",
     client: facturiEmiseMock[1]?.client ?? "Client necunoscut",
     valoare: 126,
-    utilizator: "Edy (Admin)",
+    utilizator: "Admin",
     detalii: `Întârziere la factura ${facturiEmiseMock[1]?.numar ?? "F-SAG-2026-00118"} (1%/zi).`,
   },
   {
@@ -315,7 +315,7 @@ export const istoricFacturareMock: TranzactieIstoricMock[] = [
     numarDocument: facturiEmiseMock[0]?.numar ?? "F-SAG-2026-00124",
     client: facturiEmiseMock[0]?.client ?? "Client necunoscut",
     valoare: -150,
-    utilizator: "Edy (Admin)",
+    utilizator: "Admin",
     detalii: "Campanie de fidelizare pentru client corporate.",
   },
   {
@@ -335,7 +335,7 @@ export const istoricFacturareMock: TranzactieIstoricMock[] = [
     numarDocument: "F-SAG-2026-00126",
     client: facturiEmiseMock[2]?.client ?? "Client necunoscut",
     valoare: facturiEmiseMock[2]?.totalInitial ?? 0,
-    utilizator: "Edy (Admin)",
+    utilizator: "Admin",
     detalii:
       "Facturare comandă CMD-2026-006 pentru lucrare suspensie și bujii.",
   },

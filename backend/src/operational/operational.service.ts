@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateVehiculDto,
@@ -18,20 +18,14 @@ export class OperationalService {
     private readonly notificariService: NotificariService,
   ) {}
 
-  // ===================== VEHICULE =====================
+  // --- VEHICULE ---
   async getVehicule() {
     return this.prisma.vehicul.findMany({
       include: { 
         client: true,
-        comenzi: {
-          orderBy: { createdAt: 'desc' }
-        },
+        comenzi: { orderBy: { createdAt: 'desc' } },
         dosareDauna: {
-          include: {
-            comenzi: {
-              orderBy: { createdAt: 'desc' }
-            }
-          }
+          include: { comenzi: { orderBy: { createdAt: 'desc' } } }
         }
       },
       orderBy: { createdAt: 'desc' },
@@ -53,7 +47,7 @@ export class OperationalService {
     });
   }
 
-  // ===================== DOSARE DAUNĂ =====================
+  // --- DOSARE ---
   async getDosare() {
     return this.prisma.dosarDauna.findMany({
       include: { client: true, vehicul: true, asigurator: true },
@@ -66,21 +60,16 @@ export class OperationalService {
   }
 
   async updateDosar(id: number, data: UpdateDosarDaunaDto) {
-    return this.prisma.dosarDauna.update({
-      where: { idDosar: id },
-      data,
-    });
+    return this.prisma.dosarDauna.update({ where: { idDosar: id }, data });
   }
 
-  // ===================== COMENZI =====================
+  // --- COMENZI ---
   async getComenzi() {
     const comenzi = await this.prisma.comanda.findMany({
       include: {
         client: true,
         vehicul: true,
-        dosar: {
-          include: { client: true, vehicul: true },
-        },
+        dosar: { include: { client: true, vehicul: true } },
         angajat: true,
         pozitii: true,
       },
@@ -88,10 +77,7 @@ export class OperationalService {
     });
 
     return comenzi.map((c) => {
-      const totalEstimat = c.pozitii?.reduce((sum, pozitie) => {
-        return sum + (pozitie.cantitate * pozitie.pretUnitar);
-      }, 0) || 0;
-
+      const totalEstimat = c.pozitii?.reduce((sum, poz) => sum + (poz.cantitate * poz.pretUnitar), 0) || 0;
       const clientFinal = c.client || c.dosar?.client || null;
       const vehiculFinal = c.vehicul || c.dosar?.vehicul || null;
 
@@ -105,57 +91,39 @@ export class OperationalService {
   }
 
   async createComanda(data: CreateComandaDto) {
-    const comanda = await this.prisma.comanda.create({
+    return this.prisma.comanda.create({
       data: {
-        numarComanda: data.numarComanda,
+        ...data,
         dataPreconizata: data.dataPreconizata ? new Date(data.dataPreconizata) : null,
-        idDosar: data.idDosar,
-        idClient: data.idClient,
-        idVehicul: data.idVehicul,
-        idAngajat: data.idAngajat,
-        status: data.status || StatusReparatie.IN_ASTEPTARE_DIAGNOZA,
       },
     });
-
-    await this.notificariService.create({
-      tip: TipNotificare.Info,
-      mesaj: `Comanda ${comanda.numarComanda} a fost deschisă în service.`,
-      paginaDestinatie: 'operational-comenzi',
-      sursaModul: 'Operațional',
-      textActiune: 'Deschide comenzi',
-      idComanda: comanda.idComanda,
-      metadata: { event: 'comanda-creata' },
-    });
-
-    return comanda;
   }
 
   async updateComanda(id: number, data: UpdateComandaDto) {
+    // Verificăm dacă este deja facturată în baza de date
+    const comandaExistenta = await this.prisma.comanda.findUnique({ where: { idComanda: id } });
+    
+    if (comandaExistenta?.status === StatusReparatie.FACTURAT) {
+      throw new BadRequestException('Comanda este deja facturată și nu mai poate fi modificată.');
+    }
+
     const comanda = await this.prisma.comanda.update({
       where: { idComanda: id },
       data: {
-        numarComanda: data.numarComanda,
+        ...data,
         dataPreconizata: data.dataPreconizata ? new Date(data.dataPreconizata) : undefined,
-        idDosar: data.idDosar,
-        idClient: data.idClient,
-        idVehicul: data.idVehicul,
-        idAngajat: data.idAngajat,
-        status: data.status,
       },
     });
 
-    await this.notificariService.create({
-      tip:
-        data.status === StatusReparatie.ANULAT
-          ? TipNotificare.Avertizare
-          : TipNotificare.Info,
-      mesaj: `Comanda ${comanda.numarComanda} a fost actualizată.`,
-      paginaDestinatie: 'operational-comenzi',
-      sursaModul: 'Operațional',
-      textActiune: 'Deschide comenzi',
-      idComanda: comanda.idComanda,
-      metadata: { event: 'comanda-actualizata' },
-    });
+    if (data.status === StatusReparatie.ANULAT) {
+      await this.notificariService.create({
+        tip: TipNotificare.Avertizare,
+        mesaj: `Comanda ${comanda.numarComanda} a fost anulată.`,
+        paginaDestinatie: 'operational-comenzi',
+        sursaModul: 'Operațional',
+        idComanda: comanda.idComanda,
+      });
+    }
 
     return comanda;
   }

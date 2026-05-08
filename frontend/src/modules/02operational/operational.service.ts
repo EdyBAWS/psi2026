@@ -19,27 +19,30 @@ const API_ENT = `${API_BASE_URL}/entitati`;
 const API_CAT = `${API_BASE_URL}/catalog`;
 const POZITII_STORAGE_KEY = "psi-operational-pozitii-comanda";
 
-// Transformăm formatul de UI in format de Enum Prisma
 const mapStatusToPrisma = (status?: StatusComanda): string => {
   if (!status) return "IN_ASTEPTARE_DIAGNOZA";
   switch (status as string) {
     case "In asteptare diagnoza": return "IN_ASTEPTARE_DIAGNOZA";
-    case "In Lucru": return "IN_LUCRU";
-    case "Asteapta piese": return "IN_ASTEPTARE_PIESE";
-    case "Gata de livrare": return "FINALIZAT";
+    case "Asteapta aprobare client": return "ASTEAPTA_APROBARE_CLIENT";
+    case "In asteptare piese": return "IN_ASTEPTARE_PIESE";
+    case "In lucru": return "IN_LUCRU";
+    case "Finalizat": return "FINALIZAT";
+    case "Facturat": return "FACTURAT";
     case "Anulat": return "ANULAT";
     default: return "IN_ASTEPTARE_DIAGNOZA";
   }
 };
 
-// Transformăm din Enum Prisma înapoi în format de UI
 const mapStatusFromPrisma = (statusString?: string): StatusComanda => {
   switch (statusString) {
     case "IN_ASTEPTARE_DIAGNOZA": return "In asteptare diagnoza";
-    case "IN_LUCRU": return "In Lucru";
-    case "IN_ASTEPTARE_PIESE": return "Asteapta piese";
-    case "FINALIZAT": return "Gata de livrare";
+    case "ASTEAPTA_APROBARE_CLIENT": return "Asteapta aprobare client";
+    case "IN_ASTEPTARE_PIESE": return "In asteptare piese";
+    case "IN_LUCRU": return "In lucru";
+    case "FINALIZAT": return "Finalizat";
+    case "FACTURAT": return "Facturat";
     case "ANULAT": return "Anulat";
+    // Fallbacks
     case "Activ": return "In asteptare diagnoza"; 
     case "Inactiv": return "Anulat";
     default: return "In asteptare diagnoza";

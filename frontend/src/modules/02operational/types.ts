@@ -8,7 +8,9 @@ export type TipPolita = "RCA" | "CASCO";
 export type StatusDosar = "Deschis" | "In analiza" | "Aprobat partial" | "Aprobat" | "Respins";
 export type TipPozitie = "Piesa" | "Kit" | "Manopera";
 export type UnitateMasura = "buc" | "set" | "ore" | "kit";
-export type StatusComanda = "In asteptare diagnoza" | "Asteapta aprobare client" | "Asteapta piese" | "In Lucru" | "Gata de livrare" | "Livrat" | "Facturat" | "Anulat";
+
+// Cele 7 statusuri exacte și fixe:
+export type StatusComanda = "In asteptare diagnoza" | "Asteapta aprobare client" | "In asteptare piese" | "In lucru" | "Finalizat" | "Facturat" | "Anulat";
 
 export interface Client extends ClientCoreBase {
   nume: string;
