@@ -36,13 +36,13 @@ export function useIstoric() {
           
           if (factura.serie === 'PEN') {
             tipOp = 'Penalizare';
-            detalii = 'Penalizare pentru întârziere plată';
-          } else if (factura.tipOperatiune === 'storno') {
+            detalii = factura.iteme?.[0]?.descriere || 'Penalizare pentru întârziere plată';
+          } else if (factura.serie === 'STO') {
             tipOp = 'Storno';
-            detalii = factura.motiv || 'Factură stornată parțial/total';
-          } else if (factura.tipOperatiune === 'discount') {
+            detalii = factura.iteme?.[0]?.descriere || 'Factură stornată parțial/total';
+          } else if (factura.serie === 'DSC') {
             tipOp = 'Discount Extra';
-            detalii = factura.motiv || 'Discount comercial aplicat';
+            detalii = factura.iteme?.[0]?.descriere || 'Discount comercial aplicat';
           }
 
           return {
@@ -54,17 +54,12 @@ export function useIstoric() {
             // Aici este modificarea cheie: combinăm data și ora într-o singură variabilă
             dataOra: `${dataStr} - ${oraStr}`,
             detalii: detalii,
-            utilizator: 'Admin' // Poți înlocui cu userul conectat dacă ai un sistem de login
+            utilizator: 'Admin',
+            facturaRaw: factura
           };
         });
 
-        // Citim "notele" salvate manual în browser
-        const istoricBrowser = JSON.parse(localStorage.getItem('istoric_facturare_extra') || '[]');
-        
-        // Combinăm datele de la server cu cele din browser
-        const istoricComplet = [...istoricBrowser, ...dateFormatate];
-
-        setIstoric(istoricComplet);
+        setIstoric(dateFormatate);
       } catch (error) {
         console.error("Eroare la încărcarea istoricului real:", error);
         setIstoric([]); // Dacă pică serverul, arătăm o listă goală în loc să dăm crash aplicației

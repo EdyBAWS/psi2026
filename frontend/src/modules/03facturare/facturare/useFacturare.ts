@@ -64,6 +64,13 @@ export function useFacturare() {
     }
   }, [comandaSelectata]);
 
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/facturare/next-number`)
+      .then(res => res.text())
+      .then(text => setNumarFactura(text))
+      .catch(err => console.error("Eroare preluare numar factura urmator:", err));
+  }, []);
+
   const comenziFiltrate = useMemo(() => {
     const termen = cautare.trim().toLowerCase();
     return [...comenziGata]
@@ -128,7 +135,10 @@ export function useFacturare() {
 
       toast.success(`Factura ${serieFactura}-${numarFactura} a fost salvată!`);
       setComandaSelectata(null);
-      setNumarFactura('');
+      fetch(`${API_BASE_URL}/facturare/next-number`)
+        .then(res => res.text())
+        .then(text => setNumarFactura(text))
+        .catch(err => console.error(err));
       await incarcaComenzi();
     } catch (error) {
       console.error("Eroare la emiterea facturii:", error); // Rezolvare eroare ESLint
