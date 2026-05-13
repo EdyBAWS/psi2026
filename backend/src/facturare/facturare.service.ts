@@ -12,6 +12,15 @@ export class FacturareService {
     private notificariService: NotificariService,
   ) {}
 
+  async getNextNumber(): Promise<number> {
+    const max = await this.prisma.factura.aggregate({
+      _max: {
+        numar: true,
+      },
+    });
+    return (max._max.numar || 0) + 1;
+  }
+
   private calculeazaTotaluri(iteme: CreateFacturareDto['iteme']) {
     let totalFaraTVA = 0;
     let totalTVA = 0;

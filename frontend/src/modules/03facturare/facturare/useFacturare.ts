@@ -64,6 +64,13 @@ export function useFacturare() {
     }
   }, [comandaSelectata]);
 
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/facturare/next-number`)
+      .then(res => res.text())
+      .then(text => setNumarFactura(text))
+      .catch(err => console.error("Eroare preluare numar factura urmator:", err));
+  }, []);
+
   const comenziFiltrate = useMemo(() => {
     const termen = cautare.trim().toLowerCase();
     return [...comenziGata]
@@ -100,6 +107,7 @@ export function useFacturare() {
 
   const handleEmitereFactura = async () => {
     if (!comandaSelectata || !numarFactura) return toast.error('Completarea datelor este obligatorie.');
+    if (!comandaSelectata.idClient) return toast.error('Comanda selectată nu are un client valid asociat.');
 
     try {
       // 1. Emitem factura către API
@@ -109,6 +117,7 @@ export function useFacturare() {
         body: JSON.stringify({
           numar: Number(numarFactura),
           serie: serieFactura,
+          idClient: comandaSelectata.idClient,
           idComanda: comandaSelectata.idComanda,
           scadenta: new Date(dataScadenta).toISOString(),
           iteme: liniiFactura.map(l => ({ descriere: l.denumire, cantitate: l.cantitate, pretUnitar: l.pretUnitar }))
@@ -126,7 +135,10 @@ export function useFacturare() {
 
       toast.success(`Factura ${serieFactura}-${numarFactura} a fost salvată!`);
       setComandaSelectata(null);
-      setNumarFactura('');
+      fetch(`${API_BASE_URL}/facturare/next-number`)
+        .then(res => res.text())
+        .then(text => setNumarFactura(text))
+        .catch(err => console.error(err));
       await incarcaComenzi();
     } catch (error) {
       console.error("Eroare la emiterea facturii:", error); // Rezolvare eroare ESLint

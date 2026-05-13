@@ -11,6 +11,7 @@ export interface ComandaFacturabilaMock {
   totalEstimat: number;
   client: string;
   vehicul: string;
+  idClient?: number;
 }
 
 export interface LinieFacturaMock {

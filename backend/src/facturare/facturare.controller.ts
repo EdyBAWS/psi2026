@@ -25,6 +25,11 @@ export class FacturareController {
     return this.facturareService.findAll();
   }
 
+  @Get('next-number')
+  getNextNumber() {
+    return this.facturareService.getNextNumber();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.facturareService.findOne(+id);

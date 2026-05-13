@@ -6,6 +6,8 @@ import { API_BASE_URL } from '../../../lib/api';
 // Tipurile pe care UI-ul le așteaptă
 interface FacturaUI {
   idFactura: number;
+  idClient: number;
+  idComanda?: number;
   numar: string;
   client: string;
   restDePlata: number;
@@ -44,6 +46,8 @@ export function useOferta() {
         
         const mappedData = data.map((f: any) => ({
           idFactura: f.idFactura,
+          idClient: f.idClient,
+          idComanda: f.idComanda,
           numar: `${f.serie}-${f.numar}`,
           client: f.client?.nume || f.client?.numeFirma || `Client ID: ${f.idClient}`,
           restDePlata: f.totalGeneral // Presupunem că tot totalul e de plată momentan
@@ -153,19 +157,46 @@ export function useOferta() {
       toast.error('Motivul sau codul campaniei este obligatoriu.');
       return;
     }
+    if (tipOperatiune === 'discount' && tipDiscount === 'procent' && valoareDiscount > 100) {
+      toast.error('Discountul nu poate fi mai mare de 100%.');
+      return;
+    }
 
     try {
-      // Trimitem acțiunea curentă către backend printr-un PATCH request (Update)
-      // Chiar dacă backend-ul nu procesează încă storno, cererea de rețea va fi reală.
+      // Aducem numărul următor de factură
+      const resNumar = await fetch(`${API_BASE_URL}/facturare/next-number`);
+      const nextNumar = await resNumar.text();
+
+      const serieOperatiune = tipOperatiune === 'discount' ? 'DSC' : 'STO';
+      
+      let iteme = [];
+      if (tipOperatiune === 'discount') {
+        iteme = [{
+          descriere: `Discount: ${motivOperatiune} pt factura ${factura.numar}`,
+          cantitate: 1,
+          pretUnitar: -(calculeFinale?.sumaScazuta || 0)
+        }];
+      } else {
+        iteme = liniiFactura
+          .filter(l => liniiStorno.includes(l.idLinie))
+          .map(l => ({
+            descriere: `Storno: ${l.denumire} - Motiv: ${motivOperatiune}`,
+            cantitate: l.cantitate,
+            pretUnitar: -l.pretUnitar // STORNO este negativ
+          }));
+      }
+
       const payload = {
-        tipOperatiune,
-        valoareAjustare: calculeFinale?.sumaScazuta,
-        motiv: motivOperatiune,
-        liniiStorno: tipOperatiune === 'storno' ? liniiStorno : undefined
+        numar: Number(nextNumar),
+        serie: serieOperatiune,
+        idClient: factura.idClient,
+        idComanda: factura.idComanda,
+        scadenta: new Date().toISOString(),
+        iteme
       };
 
-      const res = await fetch(`${API_BASE_URL}/facturare/${factura.idFactura}`, {
-        method: 'PATCH',
+      const res = await fetch(`${API_BASE_URL}/facturare`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -173,25 +204,9 @@ export function useOferta() {
       });
 
       if (!res.ok) throw new Error('Eroare la salvarea pe server');
-      // --- INCEPUT HACK LOCAL STORAGE ---
-      const actiuneExtra = {
-        id: `local-${Date.now()}`, // ID fals pentru tabel
-        client: factura.client,
-        numarDocument: factura.numar,
-        tipOperatiune: tipOperatiune === 'discount' ? 'Discount Extra' : 'Storno',
-        valoare: -(calculeFinale?.sumaScazuta || 0), // O punem cu minus ca să se vadă roșu în tabel
-        dataOra: new Date().toLocaleDateString('ro-RO') + ' - ' + new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }),
-        detalii: motivOperatiune || 'Modificare aplicată',
-        utilizator: 'Admin'
-      };
-
-      // Citim istoricul vechi din browser, adăugăm noua acțiune și salvăm la loc
-      const istoricBrowser = JSON.parse(localStorage.getItem('istoric_facturare_extra') || '[]');
-      localStorage.setItem('istoric_facturare_extra', JSON.stringify([actiuneExtra, ...istoricBrowser]));
-      // --- SFARSIT HACK LOCAL STORAGE ---
 
       if (tipOperatiune === 'discount') {
-        toast.success(`Discount aplicat pe factura ${factura.numar}: -${calculeFinale?.sumaScazuta.toFixed(2)} RON.`);
+        toast.success(`Discount aplicat! A fost generată factura de reducere DSC-${nextNumar} pentru -${calculeFinale?.sumaScazuta.toFixed(2)} RON.`);
       } else {
         if (liniiStorno.length === 0) {
           toast.error('Selectează cel puțin o linie pentru a emite factura storno.');

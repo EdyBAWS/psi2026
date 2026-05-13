@@ -1,8 +1,10 @@
 // src/modules/03facturare/IstoricFacturare.tsx
-import { ArrowDownWideNarrow, FileText, TriangleAlert } from 'lucide-react';
+import { ArrowDownWideNarrow, FileText, TriangleAlert, Eye, Download, X } from 'lucide-react';
+import { useState } from 'react';
 import { EmptyState } from '../../../componente/ui/EmptyState';
 import { StatCard } from '../../../componente/ui/StatCard';
 import { useIstoric } from '../istoric/useIstoricFacturare';
+import { generareFacturaPDF } from '../utils/pdfGenerator';
 
 export default function IstoricFacturare() {
   const {
@@ -10,6 +12,8 @@ export default function IstoricFacturare() {
     searchTerm, setSearchTerm, filtruTip, setFiltruTip,
     totalFacturari, totalPenalizari
   } = useIstoric();
+
+  const [facturaSelectata, setFacturaSelectata] = useState<any>(null);
 
   const getBadgeColor = (tip: string) => {
     switch (tip) {
@@ -99,8 +103,7 @@ export default function IstoricFacturare() {
                 <th className="py-4 px-6">Document</th>
                 <th className="py-4 px-6">Client</th>
                 <th className="py-4 px-6 text-right">Valoare (RON)</th>
-                <th className="py-4 px-6">Detalii / Motiv</th>
-                <th className="py-4 px-6">Utilizator</th>
+                <th className="py-4 px-6 text-center">Acțiuni</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -117,12 +120,111 @@ export default function IstoricFacturare() {
                   <td className={`py-4 px-6 text-right font-bold ${trx.valoare < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                     {trx.valoare > 0 ? '+' : ''}{trx.valoare.toFixed(2)}
                   </td>
-                  <td className="py-4 px-6 text-slate-500 truncate max-w-xs">{trx.detalii}</td>
-                  <td className="py-4 px-6 text-slate-500">{trx.utilizator}</td>
+                  <td className="py-4 px-6 text-center">
+                    {trx.facturaRaw && (
+                      <button
+                        onClick={() => setFacturaSelectata(trx.facturaRaw)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-bold transition-colors"
+                      >
+                        <Eye className="w-4 h-4" /> Vezi
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Factura Modal */}
+      {facturaSelectata && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-600" />
+                Factura {facturaSelectata.serie}-{facturaSelectata.numar}
+              </h3>
+              <button 
+                onClick={() => setFacturaSelectata(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-2 gap-8 mb-8">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Detalii Emitere</p>
+                  <p className="text-sm text-slate-800"><strong>Data emiterii:</strong> {new Date(facturaSelectata.dataEmiterii).toLocaleDateString('ro-RO')}</p>
+                  <p className="text-sm text-slate-800"><strong>Data scadenței:</strong> {new Date(facturaSelectata.scadenta).toLocaleDateString('ro-RO')}</p>
+                  <p className="text-sm text-slate-800"><strong>Total General:</strong> {facturaSelectata.totalGeneral.toFixed(2)} RON</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Detalii Client</p>
+                  <p className="text-sm font-bold text-slate-800">{facturaSelectata.client?.nume || facturaSelectata.client?.numeFirma || 'Client Necunoscut'}</p>
+                  <p className="text-sm text-slate-600">CUI/CNP: {facturaSelectata.client?.CUI || facturaSelectata.client?.CNP || '-'}</p>
+                  <p className="text-sm text-slate-600">Telefon: {facturaSelectata.client?.telefon || '-'}</p>
+                  <p className="text-sm text-slate-600">Adresă: {facturaSelectata.client?.adresa || '-'}</p>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="py-3 px-4 font-semibold text-slate-700">Produs / Serviciu</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700 text-center">Cantitate</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700 text-right">Preț Unitar</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700 text-right">Valoare</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {(facturaSelectata.iteme || []).map((item: any) => (
+                      <tr key={item.idItem}>
+                        <td className="py-3 px-4 text-slate-800">{item.descriere}</td>
+                        <td className="py-3 px-4 text-slate-800 text-center">{item.cantitate}</td>
+                        <td className="py-3 px-4 text-slate-800 text-right">{item.pretUnitar.toFixed(2)} RON</td>
+                        <td className="py-3 px-4 text-slate-800 text-right font-medium">{(item.cantitate * item.pretUnitar).toFixed(2)} RON</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-slate-50 border-t border-slate-200">
+                    <tr>
+                      <td colSpan={3} className="py-3 px-4 text-right text-slate-500 font-medium">Subtotal (fără TVA):</td>
+                      <td className="py-3 px-4 text-right font-bold text-slate-800">{facturaSelectata.totalFaraTVA.toFixed(2)} RON</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={3} className="py-3 px-4 text-right text-slate-500 font-medium">TVA (19%):</td>
+                      <td className="py-3 px-4 text-right font-bold text-slate-800">{facturaSelectata.tva.toFixed(2)} RON</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={3} className="py-3 px-4 text-right font-bold text-slate-800">TOTAL DE PLATĂ:</td>
+                      <td className="py-3 px-4 text-right font-bold text-indigo-600">{facturaSelectata.totalGeneral.toFixed(2)} RON</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-slate-100 bg-white flex justify-end gap-3">
+              <button
+                onClick={() => setFacturaSelectata(null)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
+              >
+                Închide
+              </button>
+              <button
+                onClick={() => generareFacturaPDF(facturaSelectata)}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Descarcă PDF
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -28,6 +28,7 @@ export const FacturareService = {
         nrComanda: c.numarComanda,
         dataComanda: new Date(c.createdAt).toISOString().split('T')[0],
         client: c.client?.nume || 'Client Necunoscut',
+        idClient: c.client?.idClient || c.idClient,
         vehicul: c.vehicul?.numarInmatriculare || '-',
         totalEstimat: totalEstimatLocal > 0 ? totalEstimatLocal : (c.totalEstimat || 0),
       };
