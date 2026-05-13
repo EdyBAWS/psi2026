@@ -18,43 +18,6 @@ export async function seedFacturi(prisma: PrismaClient) {
   await prisma.factura.create({
     data: {
       serie: 'SAG',
-      numar: 2026001,
-      idClient: getRequired(clientByCnp, '1800101223344', 'CNP').idClient,
-      idComanda: getRequired(comandaByNumar, 'CMD-2026-001', 'comanda')
-        .idComanda,
-      scadenta: new Date('2026-05-22T00:00:00'),
-      status: StatusFactura.Emisa,
-      totalFaraTVA: 610,
-      tva: 115.9,
-      totalGeneral: 725.9,
-      iteme: {
-        create: [
-          {
-            descriere: 'Ulei motor 5W30',
-            cantitate: 4,
-            pretUnitar: 58,
-            cotaTva: 19,
-          },
-          {
-            descriere: 'Filtru ulei',
-            cantitate: 1,
-            pretUnitar: 95,
-            cotaTva: 19,
-          },
-          {
-            descriere: 'Schimb ulei și filtre',
-            cantitate: 1,
-            pretUnitar: 283,
-            cotaTva: 19,
-          },
-        ],
-      },
-    },
-  });
-
-  await prisma.factura.create({
-    data: {
-      serie: 'SAG',
       numar: 2026002,
       idClient: getRequired(clientByCui, 'RO44556677', 'CUI').idClient,
       idComanda: getRequired(comandaByNumar, 'CMD-2026-004', 'comanda')

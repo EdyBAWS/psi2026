@@ -44,12 +44,14 @@ export class FacturareService {
     }
 
     const totaluri = this.calculeazaTotaluri(dto.iteme);
+    const numar = await this.getNextNumber();
 
     const factura = await this.prisma.factura.create({
       data: {
-        numar: dto.numar,
+        numar, // Auto-generat pe backend
         serie: dto.serie || 'SN',
         idClient: dto.idClient,
+        idAsigurator: dto.idAsigurator ?? null,
         idComanda: dto.idComanda,
         scadenta: new Date(dto.scadenta),
         ...totaluri,
@@ -66,12 +68,18 @@ export class FacturareService {
       include: {
         iteme: true,
         client: true,
+        asigurator: true,
       },
     });
 
+    // Mesajul de notificare reflecta platitorul real
+    const platitor = factura.asigurator
+      ? `${factura.asigurator.denumire} (beneficiar: ${factura.client.nume})`
+      : factura.client.nume;
+
     await this.notificariService.create({
       tip: TipNotificare.Succes,
-      mesaj: `Factura ${factura.serie}-${factura.numar} a fost emisă pentru ${factura.client.nume}.`,
+      mesaj: `Factura ${factura.serie}-${factura.numar} a fost emisă pentru ${platitor}.`,
       paginaDestinatie: 'facturare-istoric',
       sursaModul: 'Facturare',
       textActiune: 'Vezi istoricul',
@@ -85,7 +93,7 @@ export class FacturareService {
 
   async findAll() {
     return this.prisma.factura.findMany({
-      include: { client: true, iteme: true },
+      include: { client: true, asigurator: true, iteme: true },
       orderBy: { idFactura: 'desc' },
     });
   }
@@ -93,7 +101,7 @@ export class FacturareService {
   async findOne(id: number) {
     return this.prisma.factura.findUnique({
       where: { idFactura: id },
-      include: { iteme: true, client: true },
+      include: { iteme: true, client: true, asigurator: true },
     });
   }
 

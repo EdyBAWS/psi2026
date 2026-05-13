@@ -64,9 +64,9 @@ export const calculeazaRezumatPozitii = (
 const statusuriActive: StatusComanda[] = [
   "In asteptare diagnoza",
   "Asteapta aprobare client",
-  "Asteapta piese",
-  "In Lucru",
-  "Gata de livrare",
+  "In asteptare piese",
+  "In lucru",
+  "Finalizat",
 ];
 
 export const comandaEsteActiva = (status: StatusComanda) =>

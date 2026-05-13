@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Car, Wrench, ShieldAlert } from "lucide-react";
+import { AlertCircle, CheckCircle2, Car, Wrench, ShieldAlert, Info } from "lucide-react";
 import { PageHeader } from "../../../../componente/ui/PageHeader";
 import { StatCard } from "../../../../componente/ui/StatCard";
 
@@ -39,6 +39,10 @@ export default function PreluareAutoHeader({ esteLucrareAsigurare, mesajeBlocare
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">
+        <div className="hidden lg:flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase bg-slate-50/50 px-2.5 py-1.5 rounded-xl border border-slate-100">
+          <Info className="h-3.5 w-3.5 text-indigo-400" />
+          <span>Selectați articole din catalog pentru a genera devizul</span>
+        </div>
         {esteLucrareAsigurare && <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 text-blue-700 text-[10px] font-bold uppercase">Dosar {stareDosarTipPolita}</div>}
         <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-700 text-[10px] font-bold uppercase">Deviz <span className="ml-1 text-sm font-black">{rezumatTotal || "0,00 RON"}</span></div>
         <div className="relative ml-2">

@@ -12,6 +12,7 @@ import { seedComenzi } from './comenzi';
 import { seedFacturi } from './facturi';
 import { seedIncasari } from './incasari';
 import { seedNotificari } from './notificari';
+import { seedKituri } from './kituri';
 
 const prisma = new PrismaClient();
 const args = process.argv.slice(2);
@@ -28,6 +29,7 @@ async function main() {
       await seedAngajati(prisma);
       await seedClienti(prisma);
       await seedPiese(prisma);
+      await seedKituri(prisma);
       await seedManopere(prisma);
       await seedVehicule(prisma);
       await seedDosareDauna(prisma);
@@ -52,8 +54,22 @@ async function main() {
         case 'piese':
           await seedPiese(prisma);
           break;
+        case 'kituri':
+          await seedKituri(prisma);
+          break;
         case 'manopere':
           await seedManopere(prisma);
+          break;
+        case 'referinta':
+          console.log('📚 Populăm datele de referință (fără date operaționale)...');
+          await cleanupDatabase(prisma);
+          await seedAsiguratori(prisma);
+          await seedAngajati(prisma);
+          await seedClienti(prisma);
+          await seedPiese(prisma);
+          await seedKituri(prisma);
+          await seedManopere(prisma);
+          await seedVehicule(prisma);
           break;
         case 'vehicule':
           await seedVehicule(prisma);

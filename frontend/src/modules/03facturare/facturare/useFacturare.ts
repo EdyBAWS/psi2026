@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePageSessionState } from '../../../lib/pageState';
 import { FacturareService } from '../facturare.service';
+import { recordConsumPiesa } from '../../00catalog/catalog.service';
 import { API_BASE_URL } from '../../../lib/api';
 import type { ComandaFacturabilaMock, LinieFacturaMock } from '../../../mock/types';
 
@@ -132,6 +133,38 @@ export function useFacturare() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'FACTURAT' })
       });
+
+      // 3. Actualizăm stocul și istoricul pentru piese și kit-uri
+      for (const item of liniiFactura) {
+        try {
+          if (item.tip === 'Piesa' && item.idPiesa) {
+            // A. Înregistrăm în istoricul local (pentru widget-ul din Catalog)
+            await recordConsumPiesa({
+              idPiesa: item.idPiesa,
+              idComanda: comandaSelectata.idComanda,
+              cantitate: item.cantitate,
+              dataComanda: new Date().toISOString(),
+              numeAngajat: "Sistem Facturare"
+            });
+
+            // B. Actualizăm stocul via PATCH (dacă backend-ul suportă update)
+            try {
+              const resPiesa = await fetch(`${API_BASE_URL}/catalog/piese/${item.idPiesa}`);
+              if (resPiesa.ok) {
+                const piesaData = await resPiesa.json();
+                await fetch(`${API_BASE_URL}/catalog/piese/${item.idPiesa}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ stoc: Math.max(0, (piesaData.stoc || 0) - item.cantitate) })
+                });
+              }
+            } catch (e) { console.error("Eroare update stoc piesa:", e); }
+          }
+          // Puteți adăuga logică similară pentru kit-uri dacă aveți acces la componentele lor aici
+        } catch (err) {
+          console.error(`Eroare actualizare stoc pentru ${item.tip} ${item.idLinie}:`, err);
+        }
+      }
 
       toast.success(`Factura ${serieFactura}-${numarFactura} a fost salvată!`);
       setComandaSelectata(null);

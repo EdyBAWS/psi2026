@@ -1,19 +1,64 @@
 @import "tailwindcss";
 
-/* Personalizare elegantă pentru scrollbar în toată aplicația */
+/* Fluid behaviors & Global Animations */
+@layer base {
+  * {
+    @apply transition-colors duration-200;
+  }
+
+  button, a {
+    @apply transition-all duration-200 active:scale-[0.98] cursor-pointer;
+  }
+
+  /* Smooth Page Transitions */
+  .page-transition-enter {
+    animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Global Overlay for Modals - Viewport Filling */
+.global-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 100000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  backdrop-filter: blur(16px) !important;
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Personalizare elegantă pentru scrollbar */
 ::-webkit-scrollbar {
-  width: 8px; /* Mai subțire */
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent; /* Fără fundal gri urât */
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1; /* slate-300 - un gri foarte pal */
-  border-radius: 10px; /* Colțuri rotunjite */
+  background-color: #e2e8f0; /* slate-200 */
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8; /* slate-400 - se închide puțin la hover */
+  background-color: #cbd5e1; /* slate-300 */
 }

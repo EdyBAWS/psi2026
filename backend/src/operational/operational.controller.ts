@@ -55,6 +55,11 @@ export class OperationalController {
     return this.operationalService.getDosare();
   }
 
+  @Get('dosare/next-number')
+  getNextDosarNumber() {
+    return this.operationalService.getNextNumarDosar();
+  }
+
   @Post('dosare')
   createDosar(@Body() data: CreateDosarDaunaDto) {
     return this.operationalService.createDosar(data);
@@ -72,6 +77,11 @@ export class OperationalController {
   @Get('comenzi')
   getComenzi() {
     return this.operationalService.getComenzi();
+  }
+
+  @Get('comenzi/next-number')
+  getNextNumber() {
+    return this.operationalService.getNextNumarComanda();
   }
 
   @Post('comenzi')

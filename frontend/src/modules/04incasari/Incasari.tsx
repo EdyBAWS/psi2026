@@ -11,7 +11,8 @@ export default function Incasari() {
   const {
     loading, facturiRestanteBD, istoricIncasariBD,
     searchClient, showDropdown, setShowDropdown,
-    idClientSelectat, sumaIncasata, setSumaIncasata, modalitate, setModalitate,
+    idClientSelectat, idEntitateSelectata,
+    sumaIncasata, setSumaIncasata, modalitate, setModalitate,
     dataIncasare, setDataIncasare, referinta, setReferinta,
     clientiFiltrati, facturiRestante, totalDatorieClient, totalAlocat,
     sumaNum, baniRamasi, areEroareSume, isReferintaObligatorie, referintaLipsa, facturiAlocate,
@@ -100,19 +101,26 @@ export default function Incasari() {
                 <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
                   {clientiFiltrati.length > 0 ? (
                     <ul className="py-1">
-                      {clientiFiltrati.map((client) => (
+                      {clientiFiltrati.map((platitor) => (
                         <li
-                          key={client.idClient}
-                          onClick={() => handleSelectClient(client)}
+                          key={`${platitor.tipEntitate}-${platitor.idEntitate}`}
+                          onClick={() => handleSelectClient(platitor)}
                           className="cursor-pointer px-4 py-2 text-[13px] hover:bg-slate-50"
                         >
-                          <div className="font-bold text-slate-800">{client.nume}</div>
-                          <div className="text-xs text-slate-500">{client.identificatorFiscal}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-800">{platitor.nume}</span>
+                            {platitor.tipEntitate === 'asigurator' && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-blue-100 text-blue-700">
+                                🛡️ Asigurator
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-500">{platitor.identificatorFiscal}</div>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <div className="px-4 py-3 text-center text-[13px] text-slate-500">Niciun client găsit.</div>
+                    <div className="px-4 py-3 text-center text-[13px] text-slate-500">Niciun platitor găsit.</div>
                   )}
                 </div>
               ) : null}
@@ -120,7 +128,7 @@ export default function Incasari() {
           </div>
 
           {/* Bloc 2: Facturi */}
-          {idClientSelectat !== null ? (
+          {idEntitateSelectata !== null ? (
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                <div className="mb-4 border-b border-slate-100 pb-3 flex items-center justify-between">
                 <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -204,8 +212,8 @@ export default function Incasari() {
             </div>
           ) : (
              <EmptyState
-              title="Niciun client selectat"
-              description="Alege un client din listă pentru a continua repartizarea sumelor."
+              title="Niciun platitor selectat"
+              description="Alege clientul sau asiguratorul din listă pentru a continua repartizarea sumelor."
             />
           )}
         </div>
@@ -308,7 +316,7 @@ export default function Incasari() {
                 variant="primary"
                 type="submit"
                 className="w-full justify-center"
-                disabled={idClientSelectat === null || sumaNum <= 0 || areEroareSume || referintaLipsa}
+                disabled={idEntitateSelectata === null || sumaNum <= 0 || areEroareSume || referintaLipsa}
               >
                 {idClientSelectat === null
                   ? 'Alege clientul'

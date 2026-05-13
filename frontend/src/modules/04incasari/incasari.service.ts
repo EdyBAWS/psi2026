@@ -29,7 +29,11 @@ export const IncasariService = {
       suma: incasare.suma,
       modalitate: modalitateFromBackend[incasare.modalitate] ?? incasare.modalitate,
       referinta: incasare.referinta,
-      client: incasare.client?.nume || 'Client Necunoscut',
+      // Platitorul: asiguratorul daca exista, altfel clientul beneficiar
+      client: incasare.asigurator?.denumire ?? incasare.client?.nume ?? 'Necunoscut',
+      tipPlatitor: incasare.asigurator ? 'asigurator' : 'client',
+      numeAsigurator: incasare.asigurator?.denumire ?? null,
+      numeBeneficiar: incasare.client?.nume ?? null,
       alocari: incasare.alocari?.map((a: any) => ({
         idFactura: a.idFactura,
         numar: a.factura?.numar,
@@ -43,7 +47,11 @@ export const IncasariService = {
     return apiJson('/incasari', {
       method: 'POST',
       body: JSON.stringify({
-        idClient: dateIncasare.idClient,
+        // Daca platitorul este asigurator, trimitem idAsigurator (nu idClient)
+        ...(dateIncasare.idAsigurator
+          ? { idAsigurator: dateIncasare.idAsigurator }
+          : { idClient: dateIncasare.idClient }
+        ),
         sumaIncasata: dateIncasare.sumaIncasata,
         modalitate: modalitateToBackend[dateIncasare.metodaPlata] ?? dateIncasare.metodaPlata,
         referinta: dateIncasare.referinta,

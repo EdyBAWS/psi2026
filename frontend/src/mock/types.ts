@@ -16,7 +16,9 @@ export interface ComandaFacturabilaMock {
 
 export interface LinieFacturaMock {
   idLinie: number;
-  tip: "Piesă" | "Kit" | "Manoperă";
+  idPiesa?: number;
+  idKit?: number;
+  tip?: "Piesa" | "Kit" | "Manopera";
   denumire: string;
   cantitate: number;
   pretUnitar: number;
@@ -27,10 +29,14 @@ export interface FacturaMock {
   idClient: number;
   idComanda: number | null;
   idVehicul: number | null;
+  // Campuri pentru plata prin asigurator (Varianta A)
+  idAsigurator?: number | null;
+  numeAsigurator?: string | null;
+  tipPlata?: 'client' | 'asigurator';
   numar: string;
   dataEmitere: string;
   dataScadenta: string;
-  client: string;
+  client: string;  // intotdeauna beneficiarul (proprietarul masinii)
   totalInitial: number;
   restDePlata: number;
   status: "Emisa" | "Achitata partial" | "Achitata";

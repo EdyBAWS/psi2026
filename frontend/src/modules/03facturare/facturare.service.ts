@@ -45,6 +45,9 @@ export const FacturareService = {
         if (filtered.length > 0) {
           return filtered.map((p: any) => ({
             idLinie: p.idPozitieCmd || p.id || Math.random(),
+            idPiesa: p.idPiesa,
+            idKit: p.idKit,
+            tip: p.tipPozitie,
             denumire: p.descriere || p.nume || p.codArticol || 'Articol',
             cantitate: Number(p.cantitate) || 0,
             pretUnitar: Number(p.pretVanzare || p.pretUnitar || p.pret || 0)

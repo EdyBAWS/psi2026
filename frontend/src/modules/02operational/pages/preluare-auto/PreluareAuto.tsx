@@ -13,7 +13,7 @@ import type { Asigurator, CatalogKit, CatalogManopera, CatalogPiesa, Client, Com
 export interface SalvarePreluarePayload { comanda: Omit<ComandaService, "idComanda">; dosarNou: Omit<DosarDauna, "idDosar"> | null; pozitiiNoi: PozitieComandaDraft[]; }
 
 interface PreluareAutoProps {
-  asiguratori: Asigurator[]; clienti: Client[]; comenzi: ComandaService[]; dosare: DosarDauna[]; mecanici: Mecanic[];
+  asiguratori: Asigurator[]; clienti: Client[]; comenzi: ComandaService[]; dosare: DosarDauna[]; mecanici: Mecanic[]; angajati: any[];
   vehicule: Vehicul[]; catalogPiese: CatalogPiesa[]; catalogManopere: CatalogManopera[]; catalogKituri: CatalogKit[];
   pozitii: PozitieComanda[]; 
   onSalveazaPreluare: (payload: SalvarePreluarePayload) => Promise<void>;
@@ -31,7 +31,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
   }, [stare.idVehiculSelectat]);
 
   const handleSalveaza = async () => {
-    if (!derivate.validare.poateSalva || !derivate.vehiculSelectat || !derivate.clientSelectat || !stare.idMecanicSelectat || salvareInCurs) return;
+    if (!derivate.validare.poateSalva || !derivate.vehiculSelectat || !derivate.clientSelectat || stare.idMecaniciSelectati.length === 0 || salvareInCurs) return;
 
     // Pentru lucrări fără asigurare creăm tot un dosar tehnic. Backend-ul
     // folosește dosarul ca punct de legătură între comandă, client și vehicul.
@@ -40,7 +40,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
     const comanda: Omit<ComandaService, "idComanda"> = {
       numarComanda: derivate.preview.numarComandaPreview, 
       idVehicul: derivate.vehiculSelectat.idVehicul, 
-      idMecanic: stare.idMecanicSelectat,
+      idMecanici: stare.idMecaniciSelectati,
       idDosar: stare.idDosarSelectat,
       status: "In asteptare diagnoza", 
       simptomeReclamate: stare.detaliiPreluare.simptomeReclamate, 
@@ -61,6 +61,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
       idClient: derivate.clientSelectat.idClient,
       idVehicul: derivate.vehiculSelectat.idVehicul,
       idAsigurator: stare.esteLucrareAsigurare ? stare.stareDosar.idAsigurator : null,
+      idInspector: stare.esteLucrareAsigurare ? stare.stareDosar.idInspector : null,
       status: "Activ",
       dataDeschidere: new Date(),
     } : null;
@@ -107,6 +108,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
               vehicul={derivate.vehiculSelectat} 
               asiguratori={props.asiguratori} 
               dosare={props.dosare} 
+              angajati={props.angajati}
               nrDosarPreview={derivate.preview.numarDosarPreview} 
               value={stare.stareDosar} 
               onChange={setters.setStareDosar} 
@@ -116,8 +118,8 @@ export default function PreluareAuto(props: PreluareAutoProps) {
           <FormComanda 
             vehicul={derivate.vehiculSelectat} 
             mecanici={props.mecanici} 
-            idMecanicSelectat={stare.idMecanicSelectat} 
-            onMecanicChange={setters.setIdMecanicSelectat} 
+            idMecaniciSelectati={stare.idMecaniciSelectati} 
+            onMecaniciChange={setters.setIdMecaniciSelectati} 
             nrComandaPreview={derivate.preview.numarComandaPreview} 
             detaliiPreluare={stare.detaliiPreluare}
             onDetaliiChange={(mod) => setters.setDetaliiPreluare(p => ({...p, ...mod}))} 

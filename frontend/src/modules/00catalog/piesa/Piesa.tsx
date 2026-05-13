@@ -1,5 +1,5 @@
 // src/modules/00catalog/piese/Piesa.tsx
-import { PenLine, Trash2, ArrowUpDown, History, X, Loader2 } from 'lucide-react';
+import { PenLine, Trash2, ArrowUpDown, History, X, Loader2, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../../../componente/ui/Button';
 import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
@@ -304,33 +304,60 @@ export default function Piesa() {
         </table>
       </div>
 
-      {/* ── PANOU ISTORIC CONSUM ─────────────────────────────────────────── */}
+      {/* ── MODAL ISTORIC CONSUM ─────────────────────────────────────────── */}
       {istoricCurent && (
-        <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-2xl animate-in slide-in-from-bottom-4">
-          <div className="flex justify-between items-center mb-4">
-            <h5 className="font-bold text-indigo-900 flex items-center gap-2">
-              <History className="h-5 w-5" /> Istoric Consum: {piese.find(p => p.idPiesa === istoricCurent[0]?.idPiesa)?.denumire}
-            </h5>
-            <Button variant="ghost" size="sm" onClick={() => setIstoricCurent(null)}><X className="h-4 w-4" /></Button>
-          </div>
-          {istoricCurent.length === 0 ? (
-            <p className="text-indigo-600 text-sm italic">Această piesă nu a fost utilizată încă în nicio reparație.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {istoricCurent.map((it: any) => (
-                <div key={it.id} className="bg-white p-3 rounded-xl border border-indigo-200 shadow-sm flex flex-col gap-1">
-                  <div className="flex justify-between text-xs font-bold text-indigo-500">
-                    <span>COMANDA #{it.idComanda}</span>
-                    <span>{new Date(it.dataComanda).toLocaleDateString('ro-RO')}</span>
-                  </div>
-                  <div className="text-sm text-slate-700">
-                    Cantitate: <span className="font-bold">{it.cantitate} buc</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400">Tehnician: {it.numeAngajat}</div>
+        <div className="global-overlay animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-indigo-600 px-8 py-6 text-white flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <History className="h-6 w-6" />
+                <div>
+                  <h5 className="text-lg font-black tracking-tight uppercase">Istoric Consum Articol</h5>
+                  <p className="text-xs text-indigo-100 font-bold opacity-80">{piese.find(p => p.idPiesa === (istoricCurent[0]?.idPiesa || istoricCurent[0]?.catalogId))?.denumire || "Articol"}</p>
                 </div>
-              ))}
+              </div>
+              <button 
+                onClick={() => setIstoricCurent(null)} 
+                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-          )}
+            
+            <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-50">
+              {istoricCurent.length === 0 ? (
+                <div className="py-20 text-center space-y-4">
+                  <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                    <History className="h-8 w-8" />
+                  </div>
+                  <p className="text-slate-500 font-bold text-sm">Această piesă nu a fost utilizată încă în nicio reparație.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {istoricCurent.map((it: any) => (
+                    <div key={it.id} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group hover:border-indigo-200 transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                          <ClipboardList className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-black text-indigo-600 uppercase tracking-wider">Comanda #{it.idComanda}</p>
+                          <p className="text-sm font-bold text-slate-700 mt-0.5">{it.numeAngajat || "Tehnician Alocat"}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black text-slate-900">{it.cantitate} buc</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{new Date(it.dataComanda).toLocaleDateString('ro-RO')}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="bg-white px-8 py-6 border-t border-slate-100 flex justify-end">
+              <Button variant="primary" onClick={() => setIstoricCurent(null)} className="px-8 rounded-xl">Închide</Button>
+            </div>
+          </div>
         </div>
       )}
 

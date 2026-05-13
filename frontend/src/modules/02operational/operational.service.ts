@@ -86,12 +86,20 @@ const mapComanda = (c: any, fallback?: Partial<ComandaService>): ComandaService 
   const dosar = c.dosar ?? null;
   const idVehicul = c.idVehicul ?? dosar?.idVehicul ?? dosar?.vehicul?.idVehicul ?? fallback?.idVehicul ?? 0;
   const idMecanic = c.idMecanic ?? c.idAngajat ?? fallback?.idMecanic ?? null;
+  const idMecanici = c.mecanici?.map((m: any) => m.idAngajat) ?? fallback?.idMecanici ?? [];
+  const mecanici = c.mecanici?.map((m: any) => ({
+    idMecanic: m.idAngajat,
+    nume: `${m.nume} ${m.prenume || ""}`.trim(),
+    specialitate: m.specializare || "Mecanic",
+  })) ?? fallback?.mecanici ?? [];
 
   return {
     idComanda: c.idComanda,
     idVehicul,
     idDosar: c.idDosar ?? fallback?.idDosar ?? null,
     idMecanic,
+    idMecanici,
+    mecanici,
     numarComanda: c.numarComanda ?? fallback?.numarComanda ?? "",
     dataDeschidere: c.createdAt ? new Date(c.createdAt) : fallback?.dataDeschidere,
     dataFinalizare: c.dataFinalizare ? new Date(c.dataFinalizare) : fallback?.dataFinalizare ?? null,
@@ -136,6 +144,7 @@ export async function createComanda(data: Partial<ComandaService>): Promise<Coma
       idClient: (data as any).idClient ?? undefined,
       idVehicul: (data as any).idVehicul ?? undefined,
       idAngajat: data.idMecanic ?? undefined,
+      idMecanici: data.idMecanici ?? undefined,
       dataPreconizata: data.termenPromis ? new Date(data.termenPromis).toISOString() : undefined,
       status: mapStatusToPrisma(data.status),
     }),
@@ -155,6 +164,7 @@ export async function updateComanda(idComanda: number, data: Partial<ComandaServ
       idClient: (data as any).idClient ?? undefined,
       idVehicul: (data as any).idVehicul ?? undefined,
       idAngajat: data.idMecanic ?? undefined,
+      idMecanici: data.idMecanici ?? undefined,
       dataPreconizata: data.termenPromis ? new Date(data.termenPromis).toISOString() : undefined,
       status: data.status ? mapStatusToPrisma(data.status) : undefined,
     }),
@@ -173,6 +183,7 @@ export async function createDosarDauna(data: Partial<DosarDauna>): Promise<Dosar
       idClient: data.idClient,
       idVehicul: data.idVehicul,
       idAsigurator: data.idAsigurator ?? undefined,
+      idInspector: (data as any).idInspector ?? undefined,
       status: data.status ?? "Activ",
     }),
   });
@@ -194,10 +205,13 @@ export async function fetchVehicule(): Promise<Vehicul[]> {
   return data.map((vehicul: any) => mapVehicul(vehicul));
 }
 
-export async function fetchMecanici(): Promise<Mecanic[]> {
+export async function fetchAngajati(): Promise<any[]> {
   const res = await fetch(`${API_ENT}/angajati`);
-  if (!res.ok) return [];
-  const data = await res.json();
+  return res.ok ? await res.json() : [];
+}
+
+export async function fetchMecanici(): Promise<Mecanic[]> {
+  const data = await fetchAngajati();
   return data.filter((a: any) => a.tipAngajat === "Mecanic" && a.status === "Activ").map((a: any) => ({
     idMecanic: a.idAngajat,
     nume: `${a.nume} ${a.prenume || ""}`.trim(),
@@ -285,4 +299,31 @@ export async function createPozitiiComanda(idComanda: number, pozitii: PozitieCo
 
   writePozitiiLocale([...existente, ...pozitiiSalvate]);
   return pozitiiSalvate;
+}
+
+export async function updatePozitiiComanda(idComanda: number, pozitiiDraft: PozitieComandaDraft[]): Promise<PozitieComanda[]> {
+  const toateExistente = readPozitiiLocale();
+  const faraComandaCurenta = toateExistente.filter(p => p.idComanda !== idComanda);
+  
+  const stamp = Date.now();
+  const noiPozitii = pozitiiDraft.map((p, index): PozitieComanda => ({
+    idPozitieCmd: stamp + index,
+    idComanda,
+    idPiesa: p.tipPozitie === "Piesa" ? p.catalogId : null,
+    idKit: p.tipPozitie === "Kit" ? p.catalogId : null,
+    idManopera: p.tipPozitie === "Manopera" ? p.catalogId : null,
+    tipPozitie: p.tipPozitie,
+    codArticol: p.codArticol,
+    descriere: p.descriere,
+    unitateMasura: p.unitateMasura,
+    cantitate: p.cantitate,
+    pretVanzare: p.pretVanzare,
+    discountProcent: p.discountProcent,
+    cotaTVA: p.cotaTVA,
+    disponibilitateStoc: p.disponibilitateStoc,
+    observatiiPozitie: p.observatiiPozitie,
+  }));
+
+  writePozitiiLocale([...faraComandaCurenta, ...noiPozitii]);
+  return noiPozitii;
 }

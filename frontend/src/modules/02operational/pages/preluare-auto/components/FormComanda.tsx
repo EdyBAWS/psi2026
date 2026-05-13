@@ -28,7 +28,7 @@ interface FormComandaProps {
   catalogManopere: CatalogManopera[];
   catalogPiese: CatalogPiesa[];
   detaliiPreluare: DetaliiPreluareForm;
-  idMecanicSelectat: number | null;
+  idMecaniciSelectati: number[];
   mecanici: Mecanic[];
   nrComandaPreview: string;
   pozitii: PozitieComandaDraft[];
@@ -37,7 +37,7 @@ interface FormComandaProps {
   tvaEstimat: number;
   vehicul: Vehicul;
   onDetaliiChange: (modificari: Partial<DetaliiPreluareForm>) => void;
-  onMecanicChange: (idMecanic: number | null) => void;
+  onMecaniciChange: (ids: number[]) => void;
   onPozitiiChange: (pozitii: PozitieComandaDraft[]) => void;
 }
 
@@ -55,7 +55,7 @@ export default function FormComanda({
   catalogManopere,
   catalogPiese,
   detaliiPreluare,
-  idMecanicSelectat,
+  idMecaniciSelectati,
   mecanici,
   nrComandaPreview,
   pozitii,
@@ -64,7 +64,7 @@ export default function FormComanda({
   tvaEstimat,
   vehicul,
   onDetaliiChange,
-  onMecanicChange,
+  onMecaniciChange,
   onPozitiiChange,
 }: FormComandaProps) {
   const claseCamp = (areEroare: boolean) =>
@@ -73,6 +73,16 @@ export default function FormComanda({
         ? "border-rose-300 bg-rose-50/40 ring-2 ring-inset ring-rose-500/70 focus:border-rose-400 focus:ring-rose-500"
         : "border-slate-200 bg-slate-50 focus:border-indigo-300 focus:ring-indigo-500"
     }`;
+
+  const toggleMecanic = (id: number) => {
+    if (idMecaniciSelectati.includes(id)) {
+      onMecaniciChange(idMecaniciSelectati.filter((m) => m !== id));
+    } else {
+      onMecaniciChange([...idMecaniciSelectati, id]);
+    }
+  };
+
+  const mecaniciSelectati = mecanici.filter((m) => idMecaniciSelectati.includes(m.idMecanic));
 
   return (
     // JSX-ul de mai jos descrie interfața componentei.
@@ -126,29 +136,39 @@ export default function FormComanda({
         {/* Această grilă grupează toate datele de recepție ale comenzii.
             Fiecare input trimite doar modificarea locală înapoi către părinte. */}
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div>
+          <div className="md:col-span-2 xl:col-span-1">
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Mecanic responsabil<span className="text-rose-500 ml-1">*</span>
+              Mecanici responsabili<span className="text-rose-500 ml-1">*</span>
             </label>
-            <select
-              // `?? ''` înseamnă:
-              // dacă valoarea din stânga este `null` sau `undefined`, folosim stringul gol.
-              value={idMecanicSelectat ?? ""}
-              onChange={(event) =>
-                // `event.target.value` este valoarea curentă aleasă de utilizator în select.
-                onMecanicChange(
-                  event.target.value === "" ? null : Number(event.target.value),
-                )
-              }
-              className={claseCamp(campuriCuEroare.mecanic)}
-            >
-              <option value="">Selectează mecanic</option>
-              {mecanici.map((mecanic) => (
-                <option key={mecanic.idMecanic} value={mecanic.idMecanic}>
-                  {mecanic.nume} · {mecanic.specialitate}
-                </option>
+            <div className={`min-h-[50px] flex flex-wrap gap-2 p-2 rounded-xl border ${campuriCuEroare.mecanic ? 'border-rose-300 bg-rose-50/40 ring-2 ring-rose-500/70' : 'border-slate-200 bg-slate-50'}`}>
+              {mecaniciSelectati.map((m) => (
+                <span key={m.idMecanic} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200">
+                  {m.nume}
+                  <button type="button" onClick={() => toggleMecanic(m.idMecanic)} className="hover:text-indigo-900">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
+                </span>
               ))}
-            </select>
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) toggleMecanic(Number(e.target.value));
+                }}
+                className="bg-transparent text-xs font-semibold text-slate-500 focus:outline-none cursor-pointer min-w-[80px] flex-1"
+              >
+                <option value="">+ Adaugă</option>
+                {mecanici.filter(m => !idMecaniciSelectati.includes(m.idMecanic)).map((mecanic) => (
+                  <option key={mecanic.idMecanic} value={mecanic.idMecanic}>
+                    {mecanic.nume} ({mecanic.specialitate})
+                  </option>
+                ))}
+              </select>
+            </div>
+            {idMecaniciSelectati.length > 0 && (
+               <p className="mt-1.5 text-[10px] text-slate-400 font-medium italic">
+                 {idMecaniciSelectati.length === 1 ? 'Un mecanic asignat' : `${idMecaniciSelectati.length} mecanici asignați echipei`}
+               </p>
+            )}
           </div>
 
           <div>
@@ -357,6 +377,7 @@ export default function FormComanda({
           catalogPiese={catalogPiese}
           pozitii={pozitii}
           onChange={onPozitiiChange}
+          areEroare={campuriCuEroare.pozitii}
         />
       </div>
     </div>

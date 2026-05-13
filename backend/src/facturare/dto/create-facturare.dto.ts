@@ -35,8 +35,14 @@ export class CreateFacturareDto {
   @IsString()
   serie?: string;
 
+  // idClient = beneficiarul (proprietarul masinii) - intotdeauna prezent
   @IsNumber()
   idClient: number;
+
+  // idAsigurator = platitorul (doar pentru dosare RCA/CASCO - Varianta A)
+  @IsOptional()
+  @IsNumber()
+  idAsigurator?: number;
 
   @IsOptional()
   @IsNumber()

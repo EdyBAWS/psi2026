@@ -103,6 +103,26 @@ export async function seedAngajati(prisma: PrismaClient) {
         tura: 'Intermediară',
         status: StatusGeneral.Activ,
       },
+      {
+        nume: 'Vasile',
+        prenume: 'Gheorghe',
+        CNP: '1800101229988',
+        telefon: '0721 100 301',
+        email: 'gheorghe.vasile@serviceautog.ro',
+        tipAngajat: TipAngajat.Inspector,
+        specializare: 'Constatare daune RCA/CASCO',
+        status: StatusGeneral.Activ,
+      },
+      {
+        nume: 'Enache',
+        prenume: 'Simona',
+        CNP: '2850515229988',
+        telefon: '0721 100 302',
+        email: 'simona.enache@serviceautog.ro',
+        tipAngajat: TipAngajat.Inspector,
+        specializare: 'Evaluare tehnică și daune',
+        status: StatusGeneral.Activ,
+      },
     ],
   });
   console.log('✅ Angajați inserați.');

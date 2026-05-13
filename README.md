@@ -8,17 +8,39 @@ Aplicație full-stack pentru administrarea unui service auto. Acoperă recepție
 
 | Strat | Tehnologie | Rol |
 |-------|-----------|-----|
-| Frontend UI | React 19 + TypeScript | Componente reactive, hook-uri de stare |
+| Frontend UI | React 19 + TypeScript | Componente reactive, hook-uri de stare, React Portals pentru modale |
 | Build & Dev Server | Vite 8 | HMR, bundle optimizat pentru producție |
 | Stilizare | Tailwind CSS v4 | Clase utilitare direct în JSX |
+| Animații | CSS Keyframes + Transitions | Animații fluide "slide-up", staggered list entries, feedback tactil |
 | Formulare | react-hook-form + zod | Validare declarativă, fără rerender excesiv |
 | Iconițe | lucide-react | Set consistent SVG icons |
 | Notificări UI | sonner | Toast-uri non-blocante |
 | Backend | NestJS (Node.js) | Module, Controllere, Servicii, DTO-uri |
 | ORM | Prisma Client | Acces type-safe la PostgreSQL |
 | Bază de date | PostgreSQL (Neon cloud) | Stocare relațională persistentă |
-| Validare API | class-validator + ValidationPipe | Respingere payload-uri incorecte |
-| Testare | Jest | Teste unitare și de integrare backend |
+
+---
+
+## Noutăți și Modernizare UI/UX (Mai 2026)
+
+Recent, aplicația a trecut printr-un proces major de **modernizare estetică și funcțională**, trecând de la o interfață utilitară la o experiență **Premium & Fluidă**:
+
+### 💎 Design System & Fluiditate
+- **Experiență Premium**: Am implementat un sistem de modale centralizate cu `backdrop-blur-md` și animații de intrare `slide-up` elegante.
+- **Micro-interacțiuni**: Toate elementele interactive (butoane, link-uri) beneficiază acum de feedback tactil prin `active:scale-[0.98]` și tranziții de culoare ultra-rapide.
+- **Animații Staggered**: Rândurile din tabele (piese, manoperă) apar secvențial, oferind o senzație de fluiditate la încărcarea datelor.
+- **React Portals**: Toate ferestrele de tip overlay (Gestiune Comenzi, Istoric Consum) sunt randate prin Portals pentru a asigura un blur perfect pe tot viewport-ul, fără conflicte de stacking context.
+
+### 🛠️ Gestiune Avansată Operativă
+- **Centralized Command Center**: Editarea comenzilor de reparație se face acum într-un modal "Side-by-Side" care separă clar datele vehiculului/clientului de devizul propriu-zis.
+- **CRUD Deviz Real-time**: Adăugarea, modificarea cantităților și ștergerea articolelor se reflectă instantaneu în totalul general, cu calcul automat de TVA și subtotal.
+
+### 📦 Monitorizare Activă Stoc & Istoric
+- **Active Stock Alerts**: În ecranele de selecție (Recepție/Editare), stocul este monitorizat activ, afișând badge-uri colorate (În stoc / Lipsă stoc) pentru fiecare articol.
+- **Consum Automat**: La emiterea unei facturi, sistemul **scade automat stocul** pentru toate piesele din comandă și, în cazul kit-urilor, pentru fiecare piesă componentă a acestora.
+- **Istoric Consum Articol**: Un widget dedicat în Nomenclator permite vizualizarea instantanee a tuturor comenzilor în care a fost utilizată o anumită piesă, facilitând trasabilitatea.
+
+---
 
 ---
 

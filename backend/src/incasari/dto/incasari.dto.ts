@@ -21,8 +21,15 @@ export class AlocareIncasareDto {
 }
 
 export class CreateIncasareDto {
+  // Beneficiarul (proprietarul masinii) - optional pentru incasari de la asigurator
+  @IsOptional()
   @IsNumber()
-  idClient: number;
+  idClient?: number;
+
+  // Platitorul asigurator (Varianta A - plata directa de la asigurator)
+  @IsOptional()
+  @IsNumber()
+  idAsigurator?: number;
 
   @IsNumber()
   @Min(0.01)

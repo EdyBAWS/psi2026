@@ -70,9 +70,11 @@ export default function App() {
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
       <Sidebar setPagina={setPaginaCurenta} paginaCurenta={paginaCurenta} />
-      <main className="flex-1 overflow-auto p-8">
-        <div className="max-w-400 mx-auto">
-          {randeazaPagina()}
+      <main className="flex-1 overflow-auto">
+        <div className="p-8 max-w-400 mx-auto">
+          <div key={paginaCurenta} className="page-transition-enter">
+            {randeazaPagina()}
+          </div>
         </div>
       </main>
     </div>

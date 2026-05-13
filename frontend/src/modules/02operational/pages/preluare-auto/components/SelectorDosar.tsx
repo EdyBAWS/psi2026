@@ -12,6 +12,7 @@ interface SelectorDosarProps {
   nrDosarPreview: string;
   value: StareDosarAsigurare;
   vehicul: Vehicul | null;
+  angajati: { idAngajat: number; nume: string; prenume: string; tipAngajat: string; specializare?: string }[];
   onChange: (value: StareDosarAsigurare) => void;
 }
 
@@ -41,8 +42,11 @@ export default function SelectorDosar({
   nrDosarPreview,
   value,
   vehicul,
+  angajati,
   onChange,
 }: SelectorDosarProps) {
+  const inspectori = angajati.filter((a) => a.tipAngajat === "Inspector");
+
   // Fără vehicul selectat nu putem ști ce dosare sunt relevante,
   // deci afișăm doar un mesaj de ghidare.
   if (!vehicul) {
@@ -201,7 +205,9 @@ export default function SelectorDosar({
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">Inspector</dt>
-                  <dd className="mt-1">{dosarSelectat.inspectorDauna || "-"}</dd>
+                  <dd className="mt-1">
+                    {dosarSelectat.inspectorDauna || (dosarSelectat as any).inspector?.nume || "-"}
+                  </dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-slate-700">
@@ -352,18 +358,26 @@ export default function SelectorDosar({
             <label className="mb-2 block text-sm font-semibold text-slate-700">
               Inspector daună
             </label>
-            <input
-              type="text"
-              value={value.inspectorDauna}
-              onChange={(event) =>
+            <select
+              value={value.idInspector ?? ""}
+              onChange={(event) => {
+                const id = event.target.value === "" ? null : Number(event.target.value);
+                const inspector = inspectori.find(i => i.idAngajat === id);
                 onChange({
                   ...value,
-                  inspectorDauna: event.target.value,
-                })
-              }
-              placeholder="Ex: Radu Enache"
+                  idInspector: id,
+                  inspectorDauna: inspector ? `${inspector.nume} ${inspector.prenume}` : ""
+                });
+              }}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
+            >
+              <option value="">Selectează inspector</option>
+              {inspectori.map((insp) => (
+                <option key={insp.idAngajat} value={insp.idAngajat}>
+                  {insp.nume} {insp.prenume} · {insp.specializare}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

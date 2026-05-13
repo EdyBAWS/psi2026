@@ -34,6 +34,7 @@ export class IncasariService {
       },
       include: {
         client: true,
+        asigurator: true,
         incasari: true,
       },
       orderBy: { scadenta: 'asc' },
@@ -48,6 +49,10 @@ export class IncasariService {
           idClient: factura.idClient,
           idComanda: factura.idComanda,
           idVehicul: null,
+          // Daca factura are asigurator, el este platitorul; altfel clientul
+          idAsigurator: factura.idAsigurator ?? null,
+          numeAsigurator: factura.asigurator?.denumire ?? null,
+          tipPlata: factura.idAsigurator ? 'asigurator' : 'client',
           numar: `${factura.serie}-${factura.numar}`,
           dataEmitere: factura.dataEmiterii.toISOString(),
           dataScadenta: factura.scadenta.toISOString(),
@@ -64,6 +69,7 @@ export class IncasariService {
     return this.prisma.incasare.findMany({
       include: {
         client: true,
+        asigurator: true,
         alocari: {
           include: { factura: true },
         },
@@ -105,10 +111,20 @@ export class IncasariService {
       );
 
       if (!factura) continue;
-      if (factura.idClient !== dto.idClient) {
-        throw new BadRequestException(
-          'Factura nu aparține clientului selectat.',
-        );
+
+      // Validare platitor corect
+      if (dto.idAsigurator) {
+        if (factura.idAsigurator !== dto.idAsigurator) {
+          throw new BadRequestException(
+            `Factura nu aparține asiguratorului selectat.`,
+          );
+        }
+      } else if (dto.idClient) {
+        if (factura.idClient !== dto.idClient || factura.idAsigurator) {
+          throw new BadRequestException(
+            'Factura nu aparține clientului selectat.',
+          );
+        }
       }
 
       const restDePlata = this.calculeazaRestFactura(factura);
@@ -121,7 +137,8 @@ export class IncasariService {
 
     const incasare = await this.prisma.incasare.create({
       data: {
-        idClient: dto.idClient,
+        idClient: dto.idClient ?? null,
+        idAsigurator: dto.idAsigurator ?? null,
         data: new Date(dto.data),
         suma: dto.sumaIncasata,
         modalitate: dto.modalitate,
@@ -135,6 +152,7 @@ export class IncasariService {
       },
       include: {
         client: true,
+        asigurator: true,
         alocari: { include: { factura: true } },
       },
     });
@@ -158,9 +176,13 @@ export class IncasariService {
       }),
     );
 
+    const numePlatitor = incasare.asigurator
+      ? incasare.asigurator.denumire
+      : incasare.client?.nume ?? 'client necunoscut';
+
     await this.notificariService.create({
       tip: TipNotificare.Succes,
-      mesaj: `Încasare de ${dto.sumaIncasata.toFixed(2)} RON înregistrată pentru ${incasare.client.nume}.`,
+      mesaj: `Încasare de ${dto.sumaIncasata.toFixed(2)} RON înregistrată de la ${numePlatitor}.`,
       paginaDestinatie: 'istoric-incasari',
       sursaModul: 'Încasări',
       textActiune: 'Deschide Încasări',
