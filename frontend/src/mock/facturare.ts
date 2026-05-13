@@ -205,6 +205,7 @@ export function obtineComenziFacturabileDinMock(): ComandaFacturabilaMock[] {
       status: comanda.status ?? "Gata de livrare",
       totalEstimat: comanda.totalEstimat ?? 0,
       client: numeClientDinVehicul(comanda.idVehicul),
+      idClient: vehiculLaClient.get(comanda.idVehicul),
       vehicul:
         vehiculeById.get(comanda.idVehicul) ?? `Vehicul #${comanda.idVehicul}`,
     }));

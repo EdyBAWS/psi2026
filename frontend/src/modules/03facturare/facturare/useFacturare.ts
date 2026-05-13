@@ -100,6 +100,7 @@ export function useFacturare() {
 
   const handleEmitereFactura = async () => {
     if (!comandaSelectata || !numarFactura) return toast.error('Completarea datelor este obligatorie.');
+    if (!comandaSelectata.idClient) return toast.error('Comanda selectată nu are un client valid asociat.');
 
     try {
       // 1. Emitem factura către API
@@ -109,6 +110,7 @@ export function useFacturare() {
         body: JSON.stringify({
           numar: Number(numarFactura),
           serie: serieFactura,
+          idClient: comandaSelectata.idClient,
           idComanda: comandaSelectata.idComanda,
           scadenta: new Date(dataScadenta).toISOString(),
           iteme: liniiFactura.map(l => ({ descriere: l.denumire, cantitate: l.cantitate, pretUnitar: l.pretUnitar }))
