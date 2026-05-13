@@ -50,7 +50,14 @@ export function useVehicul() {
       const comenziDirecte = vehicul.comenzi || [];
       const comenziDinDosare = (vehicul.dosareDauna || []).flatMap((d: any) => d.comenzi || []);
       
-      const istoricComenzi = [...comenziDirecte, ...comenziDinDosare].sort(
+      // Combinăm toate comenzile
+      const toateComenzile = [...comenziDirecte, ...comenziDinDosare];
+      
+      // Eliminăm duplicatele folosind Map (pe baza idComanda)
+      const istoricUnic = Array.from(new Map(toateComenzile.map(cmd => [cmd.idComanda, cmd])).values());
+
+      // Sortăm descrescător după dată
+      const istoricComenzi = istoricUnic.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePageSessionState } from '../../../lib/pageState';
 import { FacturareService } from '../facturare.service';
@@ -23,19 +23,38 @@ export function useFacturare() {
   const [sortField, setSortField] = usePageSessionState<FacturareSortField>('facturare-sort-field', 'data');
   const [sortDir, setSortDir] = usePageSessionState<FacturareSortDir>('facturare-sort-dir', 'desc');
 
-  const incarcaComenzi = async () => {
+  const incarcaComenzi = useCallback(async () => {
     setLoading(true);
     try {
       const data = await FacturareService.fetchComenziFacturabile();
       setComenziGata(data);
-    } catch (e) {
+
+      // --- LOGICA DE REDIRECȚIONARE ȘI DESCHIDERE AUTOMATĂ ---
+      // Verificăm dacă avem o comandă trimisă din alt modul (ex: Vehicule)
+      const idSalvat = sessionStorage.getItem('facturare-idComandaSelectata');
+      if (idSalvat) {
+        // Rezolvare eroare TS7006: specificăm explicit tipul (c: ComandaFacturabilaMock)
+        const comandaDeDeschis = data.find((c: ComandaFacturabilaMock) => c.idComanda.toString() === idSalvat);
+        if (comandaDeDeschis) {
+          setComandaSelectata(comandaDeDeschis);
+        } else {
+          toast.error("Comanda selectată nu a fost găsită sau nu este finalizată.");
+        }
+        // Curățăm storage-ul pentru a nu bloca aplicația pe această comandă la viitoarele refresh-uri
+        sessionStorage.removeItem('facturare-idComandaSelectata');
+      }
+
+    } catch (error) {
+      console.error("Eroare încărcare comenzi facturabile:", error); // Rezolvare eroare ESLint
       toast.error('Eroare la încărcarea datelor.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { incarcaComenzi(); }, []);
+  useEffect(() => { 
+    incarcaComenzi(); 
+  }, [incarcaComenzi]);
 
   useEffect(() => {
     if (comandaSelectata) {
@@ -96,7 +115,7 @@ export function useFacturare() {
         })
       });
 
-      if (!resFactura.ok) throw new Error();
+      if (!resFactura.ok) throw new Error("Eroare HTTP " + resFactura.status);
 
       // 2. Actualizăm statusul comenzii la "FACTURAT" în baza de date
       await fetch(`${API_BASE_URL}/operational/comenzi/${comandaSelectata.idComanda}`, {
@@ -109,7 +128,8 @@ export function useFacturare() {
       setComandaSelectata(null);
       setNumarFactura('');
       await incarcaComenzi();
-    } catch (e) {
+    } catch (error) {
+      console.error("Eroare la emiterea facturii:", error); // Rezolvare eroare ESLint
       toast.error('Eroare la salvarea facturii.');
     }
   };

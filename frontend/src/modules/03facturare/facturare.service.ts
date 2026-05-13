@@ -1,49 +1,65 @@
 import { API_BASE_URL } from '../../lib/api';
 
+const POZITII_STORAGE_KEY = "psi-operational-pozitii-comanda";
+
 export const FacturareService = {
-  // --- FACTURARE COMENZI (LEGAT LA BAZA DE DATE REALĂ) ---
   async fetchComenziFacturabile() {
     const res = await fetch(`${API_BASE_URL}/operational/comenzi`);
-    if (!res.ok) throw new Error('Nu am putut prelua comenzile de la server.');
+    if (!res.ok) throw new Error('Eroare API');
     
     const comenzi = await res.json();
+    let pozitiiLocale: any[] = [];
     
-    // Filtrăm doar comenzile care au statusul exact "FINALIZAT"
-    return comenzi
-      .filter((c: any) => c.status === 'FINALIZAT')
-      .map((c: any) => ({
+    try {
+      const raw = window.localStorage.getItem(POZITII_STORAGE_KEY);
+      pozitiiLocale = raw ? JSON.parse(raw) : [];
+    } catch (err) { console.error(err); }
+    
+    return comenzi.filter((c: any) => c.status === 'FINALIZAT').map((c: any) => {
+      // Cautam pozitiile folosind == pentru a ignora string vs number
+      const pozitiiComanda = pozitiiLocale.filter(p => p.idComanda == c.idComanda);
+      // Incercam mai multe nume de proprietati comune (pretVanzare, pret, pretUnitar)
+      const totalEstimatLocal = pozitiiComanda.reduce((sum, p) => 
+        sum + (Number(p.cantitate || 0) * Number(p.pretVanzare || p.pretUnitar || p.pret || 0)), 0
+      );
+
+      return {
         idComanda: c.idComanda,
         nrComanda: c.numarComanda,
         dataComanda: new Date(c.createdAt).toISOString().split('T')[0],
         client: c.client?.nume || 'Client Necunoscut',
         vehicul: c.vehicul?.numarInmatriculare || '-',
-        totalEstimat: c.totalEstimat || 0,
-      }));
+        totalEstimat: totalEstimatLocal > 0 ? totalEstimatLocal : (c.totalEstimat || 0),
+      };
+    });
   },
 
   async fetchLiniiFactura(idComanda: number) {
-    const res = await fetch(`${API_BASE_URL}/operational/comenzi`);
-    if (!res.ok) return [];
-    
-    const comenzi = await res.json();
-    const comanda = comenzi.find((c: any) => c.idComanda === idComanda);
-    
-    if (!comanda || !comanda.pozitii) return [];
-    
-    return comanda.pozitii.map((p: any) => ({
-      idLinie: p.idPozitie,
-      denumire: p.tipArticol === 'PIESA' ? `Piesă #${p.idArticol}` : `Manoperă #${p.idArticol}`,
-      cantitate: p.cantitate,
-      pretUnitar: p.pretUnitar
-    }));
+    try {
+      const raw = window.localStorage.getItem(POZITII_STORAGE_KEY);
+      if (raw) {
+        const pozitiiLocale = JSON.parse(raw);
+        const filtered = pozitiiLocale.filter((p: any) => p.idComanda == idComanda);
+        
+        if (filtered.length > 0) {
+          return filtered.map((p: any) => ({
+            idLinie: p.idPozitieCmd || p.id || Math.random(),
+            denumire: p.descriere || p.nume || p.codArticol || 'Articol',
+            cantitate: Number(p.cantitate) || 0,
+            pretUnitar: Number(p.pretVanzare || p.pretUnitar || p.pret || 0)
+          }));
+        }
+      }
+    } catch (err) { console.error(err); }
+
+    return []; // Sau fetch de pe backend daca e cazul
   },
 
-  // --- ISTORIC ȘI ALTE FUNCȚII (Păstrate sau adaptate la API) ---
   async fetchIstoric() {
     const res = await fetch(`${API_BASE_URL}/facturare`);
     return res.ok ? await res.json() : [];
   },
-
+  
   async fetchFacturiEmise() {
     const res = await fetch(`${API_BASE_URL}/facturare`);
     return res.ok ? await res.json() : [];
