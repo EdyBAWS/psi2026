@@ -14,7 +14,7 @@ import type {
   TranzactieIstoricMock,
 } from "./types";
 
-const statusuriFacturabile = new Set(["Gata de livrare", "Livrat"]);
+const statusuriFacturabile = new Set(["Finalizat", "Facturat"]);
 
 const clientiById = new Map(
   mockClienti.map((client) => [
@@ -202,7 +202,7 @@ export function obtineComenziFacturabileDinMock(): ComandaFacturabilaMock[] {
         .toISOString()
         .split("T")[0],
       idVehicul: comanda.idVehicul,
-      status: comanda.status ?? "Gata de livrare",
+      status: comanda.status ?? "Finalizat",
       totalEstimat: comanda.totalEstimat ?? 0,
       client: numeClientDinVehicul(comanda.idVehicul),
       idClient: vehiculLaClient.get(comanda.idVehicul),

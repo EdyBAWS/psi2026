@@ -9,7 +9,7 @@ export const formatData = (v?: Date | string | null) => v ? new Date(v).toLocale
 export const urmatorulId = <T>(items: T[], selector: (item: T) => number) => items.length === 0 ? 1 : Math.max(...items.map(selector)) + 1;
 export const genereazaNumarDocument = (prefix: string, id: number) => `${prefix}-${new Date().getFullYear()}-${String(id).padStart(3, "0")}`;
 
-export const statusuriFiltrare: Array<StatusComanda | "Toate"> = ["Toate", "In asteptare diagnoza", "Asteapta aprobare client", "Asteapta piese", "In Lucru", "Gata de livrare", "Livrat", "Facturat", "Anulat"];
+export const statusuriFiltrare: Array<StatusComanda | "Toate"> = ["Toate", "In asteptare diagnoza", "Asteapta aprobare client", "In asteptare piese", "In lucru", "Finalizat", "Facturat", "Anulat"];
 export function descriereSortare(camp: string, dir: "asc" | "desc") { return `Sortat după ${camp}, ${dir === "asc" ? "crescător" : "descrescător"}`; }
 
 export function calculeazaPreviewDocumente(comenzi: ComandaService[], dosare: DosarDauna[]) {

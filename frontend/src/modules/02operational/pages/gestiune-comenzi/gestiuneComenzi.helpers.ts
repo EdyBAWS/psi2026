@@ -53,10 +53,9 @@ export const statusuriFiltrare: Array<StatusComanda | "Toate"> = [
   "Toate",
   "In asteptare diagnoza",
   "Asteapta aprobare client",
-  "Asteapta piese",
-  "In Lucru",
-  "Gata de livrare",
-  "Livrat",
+  "In asteptare piese",
+  "In lucru",
+  "Finalizat",
   "Facturat",
   "Anulat",
 ];

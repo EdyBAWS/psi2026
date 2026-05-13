@@ -5,7 +5,7 @@ import { mockComenzi, mockDosareDauna } from "./operational";
 import type { NotificareMock } from "./types";
 
 const comandaGataDeFacturare = mockComenzi.find(
-  (comanda) => comanda.status === "Gata de livrare",
+  (comanda) => comanda.status === "Finalizat",
 );
 const facturaRestantaVeche = facturiRestanteMock.find(
   (factura) => factura.dataScadenta < "2026-03-26",
@@ -29,7 +29,7 @@ export const notificariMock: NotificareMock[] = [
     data: "2026-03-25",
     ora: "14:10",
     mesaj: comandaGataDeFacturare
-      ? `Comanda ${comandaGataDeFacturare.numarComanda} este gata de livrare și poate intra în fluxul de facturare.`
+      ? `Comanda ${comandaGataDeFacturare.numarComanda} este finalizată și poate intra în fluxul de facturare.`
       : "Există comenzi finalizate care pot fi pregătite pentru facturare.",
     paginaDestinatie: "facturare-comenzi",
     sursaModul: "Facturare",

@@ -29,7 +29,7 @@ export function usePreluareAuto(props: {
 
   const comandaActivaExistenta = useMemo(() => {
     if (!vehiculSelectat) return null;
-    return props.comenzi.find((c) => c.idVehicul === vehiculSelectat.idVehicul && (c.status !== "Facturat" && c.status !== "Anulat" && c.status !== "Livrat")) ?? null;
+    return props.comenzi.find((c) => c.idVehicul === vehiculSelectat.idVehicul && (c.status !== "Facturat" && c.status !== "Anulat")) ?? null;
   }, [vehiculSelectat, props.comenzi]);
 
   const validare = useMemo(() => valideazaPreluare({
