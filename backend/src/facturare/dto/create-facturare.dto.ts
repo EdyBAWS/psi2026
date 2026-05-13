@@ -38,6 +38,10 @@ export class CreateFacturareDto {
   @IsNumber()
   idClient: number;
 
+  @IsOptional()
+  @IsNumber()
+  idComanda?: number;
+
   @IsDateString()
   scadenta: Date;
 

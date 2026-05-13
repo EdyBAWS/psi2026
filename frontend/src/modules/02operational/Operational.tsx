@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { fetchAsiguratori, fetchCatalogKituri, fetchCatalogManopere, fetchCatalogPiese, fetchClienti, fetchComenzi, fetchDosareDauna, fetchMecanici, fetchPozitiiComanda, fetchVehicule, createComanda, createDosarDauna, createPozitiiComanda } from "./operational.service";
+import { fetchAsiguratori, fetchCatalogKituri, fetchCatalogManopere, fetchCatalogPiese, fetchClienti, fetchComenzi, fetchDosareDauna, fetchMecanici, fetchPozitiiComanda, fetchVehicule, createComanda, createDosarDauna, createPozitiiComanda, updateComanda } from "./operational.service";
 import GestiuneComenzi from "./pages/gestiune-comenzi/GestiuneComenzi";
 import PreluareAuto, { type SalvarePreluarePayload } from "./pages/preluare-auto/PreluareAuto";
 import type { Asigurator, CatalogKit, CatalogManopera, CatalogPiesa, Client, ComandaService, DosarDauna, Mecanic, PozitieComanda, Vehicul } from "./types";
@@ -52,20 +52,54 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
 
   const handleSalveazaPreluare = async ({ comanda, dosarNou, pozitiiNoi }: SalvarePreluarePayload) => {
     try {
-      const comandaSalvata = await createComanda(comanda);
+      let idDosarComanda = comanda.idDosar;
+
+      // În modelul Prisma, comanda nu are legătură directă cu vehiculul.
+      // Relația corectă este Comanda -> DosarDauna -> Vehicul, deci creăm
+      // dosarul tehnic/de daună înainte de comandă când utilizatorul nu a ales
+      // deja un dosar existent.
       if (dosarNou) {
         const dosarSalvat = await createDosarDauna(dosarNou);
+        idDosarComanda = dosarSalvat.idDosar;
         setDosare((prev) => [...prev, dosarSalvat]);
       }
+
+      if (!idDosarComanda) {
+        throw new Error("Comanda trebuie legată de un dosar tehnic sau de daună.");
+      }
+
+      const comandaSalvata = await createComanda({ ...comanda, idDosar: idDosarComanda });
       const pozitiiSalvate = await createPozitiiComanda(comandaSalvata.idComanda, pozitiiNoi);
-      
-      setComenzi((prev) => [...prev, comandaSalvata]);
+
+      // Reîncărcăm comenzile din backend ca lista să includă relațiile Prisma
+      // expandate: dosar, vehicul, client și mecanic.
+      const comenziActualizate = await fetchComenzi();
+      setComenzi(comenziActualizate);
       setPozitii((prev) => [...prev, ...pozitiiSalvate]);
 
       toast.success(`Comanda ${comandaSalvata.numarComanda} a fost deschisă cu succes.`);
       onNavigate("operational-comenzi");
-    } catch {
-      toast.error("Comanda nu a putut fi salvată.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Comanda nu a putut fi salvată.");
+      throw error;
+    }
+  };
+
+  const handleActualizeazaComanda = async (idComanda: number, modificari: Partial<ComandaService>) => {
+    try {
+      const comandaCurenta = comenzi.find((comanda) => comanda.idComanda === idComanda);
+
+      if (!comandaCurenta) {
+        throw new Error("Comanda selectată nu mai există în listă.");
+      }
+
+      await updateComanda(idComanda, { ...comandaCurenta, ...modificari });
+      const comenziActualizate = await fetchComenzi();
+      setComenzi(comenziActualizate);
+      toast.success(`Comanda ${comandaCurenta.numarComanda} a fost actualizată.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Comanda nu a putut fi actualizată.");
+      throw error;
     }
   };
 
@@ -84,7 +118,7 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
           onSalveazaPreluare={handleSalveazaPreluare}
         />
       ) : (
-        <GestiuneComenzi clienti={clienti} comenzi={comenzi} dosare={dosare} asiguratori={asiguratori} mecanici={mecanici} pozitii={pozitii} vehicule={vehicule} />
+        <GestiuneComenzi clienti={clienti} comenzi={comenzi} dosare={dosare} asiguratori={asiguratori} mecanici={mecanici} pozitii={pozitii} vehicule={vehicule} onActualizeazaComanda={handleActualizeazaComanda} />
       )}
     </section>
   );

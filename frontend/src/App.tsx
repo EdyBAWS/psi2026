@@ -11,14 +11,14 @@ import Manopera from "./modules/00catalog/manopera/Manopera";
 import { Client } from './modules/01entitati/client/Client';
 import { Angajat } from './modules/01entitati/angajat/Angajat';
 import { Asigurator } from './modules/01entitati/asigurator/Asigurator';
-// IMPORTUL NOU PENTRU VEHICULE
 import Vehicul from './modules/01entitati/vehicule/Vehicul'; 
 import Notificare from "./modules/05notificari/Notificari";
 
 import IstoricFacturare from "./modules/03facturare/istoric/IstoricFacturare";
 
 export default function App() {
-  const [paginaCurenta, setPaginaCurenta] = useState<string>("facturare-comenzi");
+  // Pornim cu dashboard pentru a fi landing page
+  const [paginaCurenta, setPaginaCurenta] = useState<string>("dashboard");
 
   const randeazaPagina = () => {
     switch (paginaCurenta) {
@@ -28,15 +28,12 @@ export default function App() {
         return <Angajat />;
       case "entitati-asiguratori":
         return <Asigurator />;
-      // RUTA NOUĂ PENTRU VEHICULE - Aceasta face legătura cu Sidebar-ul!
-      case "entitati-vehicule": 
-        return <Vehicul />;
-
+      case "entitati-vehicule":
+        return <Vehicul onNavigate={setPaginaCurenta} />;
       case "operational-receptie":
         return <Operational onNavigate={setPaginaCurenta} view="preluare-auto" />;
       case "operational-comenzi":
         return <Operational onNavigate={setPaginaCurenta} view="gestiune-comenzi" />;
-
       case "facturare-comenzi":
         return <Facturare />;
       case "facturare-penalizari":
@@ -45,7 +42,6 @@ export default function App() {
         return <Oferta />;
       case "facturare-istoric":
         return <IstoricFacturare />;
-
       case "incasari":
         return <Incasari />;
       case "catalog-piese":
@@ -57,24 +53,21 @@ export default function App() {
 
       default:
         return (
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center h-96">
-            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">
-              Dashboard
-            </h2>
-            <p className="mt-3 text-slate-500 text-lg">
-              Selectează un modul din meniul lateral pentru a începe lucrul.
-            </p>
+          <div className="bg-white p-12 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center h-125 max-w-4xl mx-auto mt-10">
+            <h2 className="text-4xl font-black text-slate-800 tracking-tight">Dashboard</h2>
+            <p className="mt-4 text-slate-500 text-xl font-medium">Selectează un modul din meniul lateral pentru a începe.</p>
           </div>
         );
     }
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
       <Sidebar setPagina={setPaginaCurenta} paginaCurenta={paginaCurenta} />
-
-      <main className="flex-1 p-10 overflow-y-scroll">
-        <div className="max-w-6xl mx-auto">{randeazaPagina()}</div>
+      <main className="flex-1 overflow-auto p-8">
+        <div className="max-w-400 mx-auto">
+          {randeazaPagina()}
+        </div>
       </main>
     </div>
   );

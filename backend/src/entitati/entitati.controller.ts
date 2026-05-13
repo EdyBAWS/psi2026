@@ -8,7 +8,17 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { EntitatiService } from './entitati.service';
-import { Prisma, StatusGeneral } from '@prisma/client';
+import { StatusGeneral } from '@prisma/client';
+import {
+  CreateAngajatDto,
+  CreateAsiguratorDto,
+  CreateClientDto,
+} from './dto/create-entitati.dto';
+import {
+  UpdateAngajatDto,
+  UpdateAsiguratorDto,
+  UpdateClientDto,
+} from './dto/update-entitati.dto';
 
 @Controller('entitati')
 export class EntitatiController {
@@ -22,14 +32,14 @@ export class EntitatiController {
   }
 
   @Post('clienti')
-  createClient(@Body() data: Prisma.ClientCreateInput) {
+  createClient(@Body() data: CreateClientDto) {
     return this.entitatiService.saveClient(data);
   }
 
   @Patch('clienti/:id')
   updateClient(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: Prisma.ClientUpdateInput,
+    @Body() data: UpdateClientDto,
   ) {
     return this.entitatiService.updateClient(id, data);
   }
@@ -50,14 +60,14 @@ export class EntitatiController {
   }
 
   @Post('angajati')
-  createAngajat(@Body() data: Prisma.AngajatCreateInput) {
+  createAngajat(@Body() data: CreateAngajatDto) {
     return this.entitatiService.saveAngajat(data);
   }
 
   @Patch('angajati/:id')
   updateAngajat(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: Prisma.AngajatUpdateInput,
+    @Body() data: UpdateAngajatDto,
   ) {
     return this.entitatiService.updateAngajat(id, data);
   }
@@ -78,14 +88,14 @@ export class EntitatiController {
   }
 
   @Post('asiguratori')
-  createAsigurator(@Body() data: Prisma.AsiguratorCreateInput) {
+  createAsigurator(@Body() data: CreateAsiguratorDto) {
     return this.entitatiService.saveAsigurator(data);
   }
 
   @Patch('asiguratori/:id')
   updateAsigurator(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: Prisma.AsiguratorUpdateInput,
+    @Body() data: UpdateAsiguratorDto,
   ) {
     return this.entitatiService.updateAsigurator(id, data);
   }

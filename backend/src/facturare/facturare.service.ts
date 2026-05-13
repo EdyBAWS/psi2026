@@ -2,35 +2,48 @@ import { Injectable } from '@nestjs/common';
 import { CreateFacturareDto } from './dto/create-facturare.dto';
 import { UpdateFacturareDto } from './dto/update-facturare.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma, TipNotificare } from '@prisma/client';
+import { NotificariService } from '../notificari/notificari.service';
 
 @Injectable()
 export class FacturareService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificariService: NotificariService,
+  ) {}
 
-  async create(dto: CreateFacturareDto) {
-    if (!dto.iteme || !Array.isArray(dto.iteme)) {
-      throw new Error('Factura trebuie să conțină cel puțin un item!');
-    }
+  private calculeazaTotaluri(iteme: CreateFacturareDto['iteme']) {
     let totalFaraTVA = 0;
     let totalTVA = 0;
 
-    dto.iteme.forEach((item) => {
+    iteme.forEach((item) => {
       const subtotal = item.cantitate * item.pretUnitar;
       totalFaraTVA += subtotal;
       totalTVA += subtotal * 0.19;
     });
 
-    const totalGeneral = totalFaraTVA + totalTVA;
+    return {
+      totalFaraTVA,
+      tva: totalTVA,
+      totalGeneral: totalFaraTVA + totalTVA,
+    };
+  }
 
-    return this.prisma.factura.create({
+  async create(dto: CreateFacturareDto) {
+    if (!dto.iteme || !Array.isArray(dto.iteme) || dto.iteme.length === 0) {
+      throw new Error('Factura trebuie să conțină cel puțin un item!');
+    }
+
+    const totaluri = this.calculeazaTotaluri(dto.iteme);
+
+    const factura = await this.prisma.factura.create({
       data: {
         numar: dto.numar,
         serie: dto.serie || 'SN',
         idClient: dto.idClient,
+        idComanda: dto.idComanda,
         scadenta: new Date(dto.scadenta),
-        totalFaraTVA,
-        tva: totalTVA,
-        totalGeneral,
+        ...totaluri,
         iteme: {
           create: dto.iteme.map((item) => ({
             descriere: item.descriere,
@@ -46,11 +59,25 @@ export class FacturareService {
         client: true,
       },
     });
+
+    await this.notificariService.create({
+      tip: TipNotificare.Succes,
+      mesaj: `Factura ${factura.serie}-${factura.numar} a fost emisă pentru ${factura.client.nume}.`,
+      paginaDestinatie: 'facturare-istoric',
+      sursaModul: 'Facturare',
+      textActiune: 'Vezi istoricul',
+      idFactura: factura.idFactura,
+      idComanda: dto.idComanda,
+      metadata: { event: 'factura-creata' },
+    });
+
+    return factura;
   }
 
   async findAll() {
     return this.prisma.factura.findMany({
-      include: { client: true },
+      include: { client: true, iteme: true },
+      orderBy: { idFactura: 'desc' },
     });
   }
 
@@ -61,12 +88,68 @@ export class FacturareService {
     });
   }
 
-  update(id: number, updateFacturareDto: UpdateFacturareDto) {
-    void updateFacturareDto;
-    return `Această acțiune modifică factura cu ID-ul #${id}`;
+  async update(id: number, updateFacturareDto: UpdateFacturareDto) {
+    const data: Prisma.FacturaUpdateInput = {};
+
+    if (updateFacturareDto.numar !== undefined) {
+      data.numar = updateFacturareDto.numar;
+    }
+    if (updateFacturareDto.serie !== undefined) {
+      data.serie = updateFacturareDto.serie;
+    }
+    if (updateFacturareDto.idClient !== undefined) {
+      data.client = { connect: { idClient: updateFacturareDto.idClient } };
+    }
+    if (updateFacturareDto.idComanda !== undefined) {
+      data.comanda = { connect: { idComanda: updateFacturareDto.idComanda } };
+    }
+    if (updateFacturareDto.scadenta !== undefined) {
+      data.scadenta = new Date(updateFacturareDto.scadenta);
+    }
+    if (updateFacturareDto.iteme !== undefined) {
+      const totaluri = this.calculeazaTotaluri(updateFacturareDto.iteme);
+
+      data.totalFaraTVA = totaluri.totalFaraTVA;
+      data.tva = totaluri.tva;
+      data.totalGeneral = totaluri.totalGeneral;
+      data.iteme = {
+        deleteMany: {},
+        create: updateFacturareDto.iteme.map((item) => ({
+          descriere: item.descriere,
+          cantitate: item.cantitate,
+          pretUnitar: item.pretUnitar,
+          idPiesa: item.idPiesa,
+          idManopera: item.idManopera,
+        })),
+      };
+    }
+
+    const factura = await this.prisma.factura.update({
+      where: { idFactura: id },
+      data,
+      include: { iteme: true, client: true },
+    });
+
+    await this.notificariService.create({
+      tip: TipNotificare.Info,
+      mesaj: `Factura ${factura.serie}-${factura.numar} a fost actualizată.`,
+      paginaDestinatie: 'facturare-istoric',
+      sursaModul: 'Facturare',
+      textActiune: 'Vezi istoricul',
+      idFactura: factura.idFactura,
+      metadata: { event: 'factura-actualizata' },
+    });
+
+    return factura;
   }
 
-  remove(id: number) {
-    return `Această acțiune șterge factura cu ID-ul #${id}`;
+  async remove(id: number) {
+    await this.prisma.facturaItem.deleteMany({
+      where: { idFactura: id },
+    });
+
+    return this.prisma.factura.delete({
+      where: { idFactura: id },
+    });
   }
 }

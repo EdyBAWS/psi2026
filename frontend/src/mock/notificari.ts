@@ -29,7 +29,7 @@ export const notificariMock: NotificareMock[] = [
     data: "2026-03-25",
     ora: "14:10",
     mesaj: comandaGataDeFacturare
-      ? `Comanda ${comandaGataDeFacturare.nrComanda} este gata de livrare și poate intra în fluxul de facturare.`
+      ? `Comanda ${comandaGataDeFacturare.numarComanda} este gata de livrare și poate intra în fluxul de facturare.`
       : "Există comenzi finalizate care pot fi pregătite pentru facturare.",
     paginaDestinatie: "facturare-comenzi",
     sursaModul: "Facturare",
@@ -40,7 +40,7 @@ export const notificariMock: NotificareMock[] = [
     id: 3,
     data: "2026-03-24",
     ora: "11:20",
-    mesaj: `A fost actualizat dosarul de daună ${mockDosareDauna[3]?.nrDosar ?? "DAUNA-2026-004"} pentru vehiculul de flotă aflat în analiză.`,
+    mesaj: `A fost actualizat dosarul de daună ${mockDosareDauna[3]?.numarDosar ?? "DAUNA-2026-004"} pentru vehiculul de flotă aflat în analiză.`,
     paginaDestinatie: "operational-comenzi",
     sursaModul: "Operațional",
     textActiune: "Deschide Gestiune Comenzi",

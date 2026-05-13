@@ -5,7 +5,7 @@ import {
   IsEnum,
   IsDateString,
 } from 'class-validator';
-import { StatusGeneral } from '@prisma/client';
+import { StatusGeneral, StatusReparatie } from '@prisma/client';
 import { PartialType } from '@nestjs/mapped-types';
 
 // --- VEHICULE ---
@@ -34,7 +34,9 @@ export class CreateComandaDto {
   @IsString() numarComanda: string;
   @IsOptional() @IsDateString() dataPreconizata?: string;
   @IsOptional() @IsNumber() idDosar?: number;
+  @IsOptional() @IsNumber() idClient?: number;
+  @IsOptional() @IsNumber() idVehicul?: number;
   @IsOptional() @IsNumber() idAngajat?: number;
-  @IsOptional() @IsEnum(StatusGeneral) status?: StatusGeneral;
+  @IsOptional() @IsEnum(StatusReparatie) status?: StatusReparatie;
 }
 export class UpdateComandaDto extends PartialType(CreateComandaDto) {}

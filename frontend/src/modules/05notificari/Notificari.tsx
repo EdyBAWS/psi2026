@@ -44,7 +44,7 @@ export default function Notificare({ onNavigate }: NotificareProps) {
           title="Centru Notificări"
           description={
             necititeCount > 0
-              ? `Ai ${necititeCount} notificări noi generate din fluxurile demo comune.`
+              ? `Ai ${necititeCount} notificări noi generate din fluxurile reale ale aplicației.`
               : 'Toate notificările active au fost deja verificate.'
           }
           actions={

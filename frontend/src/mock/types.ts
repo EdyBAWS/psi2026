@@ -52,6 +52,9 @@ export interface NotificareMock {
   sursaModul?: string;
   textActiune?: string;
   tip: "Info" | "Avertizare" | "Succes";
+  citit?: boolean;
+  arhivata?: boolean;
+  stearsa?: boolean;
 }
 
 export interface TranzactieIstoricMock {

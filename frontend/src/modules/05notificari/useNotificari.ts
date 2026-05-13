@@ -21,13 +21,11 @@ export interface ConfirmState {
   id?: number;
 }
 
-const STORAGE_KEY = 'notificari-ui-v3';
-
 export function stareInitiala(notificare: NotificareMock): NotificareStareUI {
   return {
-    arhivata: false,
-    citit: notificare.tip === 'Succes',
-    stearsa: false,
+    arhivata: notificare.arhivata ?? false,
+    citit: notificare.citit ?? notificare.tip === 'Succes',
+    stearsa: notificare.stearsa ?? false,
   };
 }
 
@@ -38,28 +36,24 @@ export function useNotificari(onNavigate?: (pagina: string) => void) {
   const [filtru, setFiltru] = usePageSessionState<FiltruNotificari>('notificari-filtru', 'Toate');
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
 
-  const [stariUI, setStariUI] = useState<NotificareMapareUI>(() => {
-    if (typeof window === 'undefined') return {};
-    const salvate = window.localStorage.getItem(STORAGE_KEY);
-    if (!salvate) return {};
-    try {
-      return JSON.parse(salvate) as NotificareMapareUI;
-    } catch {
-      return {};
-    }
-  });
+  const [stariUI, setStariUI] = useState<NotificareMapareUI>({});
 
   useEffect(() => {
     NotificariService.fetchNotificari().then((data) => {
       setNotificariBD(data);
       setLoading(false);
+    }).catch(() => {
+      toast.error('Nu s-au putut încărca notificările din backend.');
+      setLoading(false);
     });
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stariUI));
-    // Sincronizare fake cu backendul
-    NotificariService.syncStariNotificari(stariUI);
+    if (Object.keys(stariUI).length === 0) return;
+
+    NotificariService.syncStariNotificari(stariUI).catch(() => {
+      toast.error('Starea notificărilor nu a putut fi sincronizată cu backend-ul.');
+    });
   }, [stariUI]);
 
   const notificari = useMemo(() => {

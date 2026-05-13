@@ -45,7 +45,7 @@ export default function Incasari() {
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
         <PageHeader
           title="Înregistrare Încasare"
-          description="Operează plățile clienților și stinge facturile restante din setul comun de mock-uri."
+          description="Operează plățile clienților și stinge facturile restante salvate în backend."
         />
         <div className="flex flex-wrap gap-4 mt-2">
           <StatCard
@@ -60,7 +60,7 @@ export default function Incasari() {
             icon={<Wallet className="h-4 w-4" />}
           />
           <StatCard
-            label="Încasări demo"
+            label="Încasări"
             value={istoricIncasariBD.length}
             tone="success"
             icon={<BanknoteArrowDown className="h-4 w-4" />}
@@ -198,7 +198,7 @@ export default function Incasari() {
               ) : (
                 <EmptyState
                   title="Clientul este la zi"
-                  description="Clientul selectat nu are facturi restante în setul comun de demo."
+                  description="Clientul selectat nu are facturi restante în backend."
                 />
               )}
             </div>

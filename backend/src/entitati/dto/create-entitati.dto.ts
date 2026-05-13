@@ -1,5 +1,107 @@
-import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
-import { StatusGeneral } from '@prisma/client';
+import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { StatusGeneral, TipAngajat, TipClient } from '@prisma/client';
+
+export class CreateClientDto {
+  @IsEnum(TipClient)
+  tipClient: TipClient;
+
+  @IsOptional()
+  @IsEnum(StatusGeneral)
+  status?: StatusGeneral;
+
+  @IsString()
+  nume: string;
+
+  @IsOptional()
+  @IsString()
+  prenume?: string;
+
+  @IsString()
+  telefon: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsString()
+  adresa: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  soldDebitor?: number;
+
+  @IsOptional()
+  @IsString()
+  CNP?: string;
+
+  @IsOptional()
+  @IsString()
+  serieCI?: string;
+
+  @IsOptional()
+  @IsString()
+  CUI?: string;
+
+  @IsOptional()
+  @IsString()
+  IBAN?: string;
+
+  @IsOptional()
+  @IsString()
+  nrRegCom?: string;
+}
+
+export class CreateAngajatDto {
+  @IsOptional()
+  @IsEnum(StatusGeneral)
+  status?: StatusGeneral;
+
+  @IsString()
+  nume: string;
+
+  @IsString()
+  prenume: string;
+
+  @IsString()
+  CNP: string;
+
+  @IsString()
+  telefon: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsEnum(TipAngajat)
+  tipAngajat: TipAngajat;
+
+  @IsOptional()
+  @IsString()
+  specializare?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costOrar?: number;
+
+  @IsOptional()
+  @IsString()
+  departament?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  sporConducere?: number;
+
+  @IsOptional()
+  @IsString()
+  nrBirou?: string;
+
+  @IsOptional()
+  @IsString()
+  tura?: string;
+}
 
 export class CreateAsiguratorDto {
   @IsString()
@@ -8,9 +110,8 @@ export class CreateAsiguratorDto {
   @IsString()
   CUI: string;
 
-  @IsOptional()
   @IsString()
-  telefon?: string;
+  telefon: string;
 
   @IsOptional()
   @IsString()
@@ -21,7 +122,7 @@ export class CreateAsiguratorDto {
   adresa?: string;
 
   @IsOptional()
-  @IsString() // Folosim IsString in loc de IsEmail pt ca poate fi gol
+  @IsString()
   emailDaune?: string;
 
   @IsOptional()
@@ -30,6 +131,7 @@ export class CreateAsiguratorDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   termenPlataZile?: number;
 
   @IsOptional()

@@ -83,7 +83,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
   return (
     <div className="w-72 bg-slate-900 flex flex-col shadow-2xl z-10 border-r border-slate-800 h-screen">
       <div className="p-8 border-b border-slate-800/60 shrink-0">
-        <h1 className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-cyan-300">
+        <h1 className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-white-400 to-gray-300">
           Service Auto G
         </h1>
         <p className="text-slate-400 text-xs mt-1 font-medium tracking-wider uppercase">Sistem Creanțe</p>
@@ -167,7 +167,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       <div className="p-6 text-sm text-slate-500 border-t border-slate-800/60 shrink-0 flex items-center">
         <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-slate-300 mr-3 font-bold">ED</div>
         <div>
-          <p className="text-slate-300 font-medium">Edy</p>
+          <p className="text-slate-300 font-medium">G</p>
           <p className="text-xs">Administrator</p>
         </div>
       </div>

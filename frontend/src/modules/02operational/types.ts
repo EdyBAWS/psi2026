@@ -1,4 +1,4 @@
-import type { AngajatCore, AsiguratorCore, ClientCoreBase, TipClientOperational } from "../../types/domain";
+import type { ClientCoreBase, TipClientOperational } from "../../types/domain";
 
 export type TipClient = TipClientOperational;
 export type TipPlata = "Client Direct" | "Asigurare" | "Flota";
@@ -8,7 +8,9 @@ export type TipPolita = "RCA" | "CASCO";
 export type StatusDosar = "Deschis" | "In analiza" | "Aprobat partial" | "Aprobat" | "Respins";
 export type TipPozitie = "Piesa" | "Kit" | "Manopera";
 export type UnitateMasura = "buc" | "set" | "ore" | "kit";
-export type StatusComanda = "In asteptare diagnoza" | "Asteapta aprobare client" | "Asteapta piese" | "In Lucru" | "Gata de livrare" | "Livrat" | "Facturat" | "Anulat";
+
+// Cele 7 statusuri exacte și fixe:
+export type StatusComanda = "In asteptare diagnoza" | "Asteapta aprobare client" | "In asteptare piese" | "In lucru" | "Finalizat" | "Facturat" | "Anulat";
 
 export interface Client extends ClientCoreBase {
   nume: string;
@@ -30,8 +32,9 @@ export interface DosarDauna {
   idDosar: number;
   idClient: number;
   idVehicul: number;
-  idAsigurator: number;
+  idAsigurator?: number | null;
   numarDosar: string;
+  status?: "Activ" | "Inactiv";
   numarReferintaAsigurator?: string;
   tipPolita?: TipPolita;
   dataDeschidere?: Date;
@@ -47,7 +50,7 @@ export interface ComandaService {
   idComanda: number;
   idVehicul: number;
   idDosar: number | null;
-  idMecanic: number;
+  idMecanic: number | null;
   numarComanda: string;
   dataDeschidere?: Date;
   dataFinalizare?: Date | null;

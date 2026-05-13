@@ -86,7 +86,6 @@ export default function Piesa() {
     handleInchideFormular,
     istoricCurent,
     setIstoricCurent,
-    loadingIstoric,
     handleVeziIstoric
   } = usePiesa();
 
@@ -96,7 +95,7 @@ export default function Piesa() {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400 gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-        <p>Se încarcă nomenclatorul din baza de date Neon...</p>
+        <p>Se încarcă nomenclatorul...</p>
       </div>
     );
   }

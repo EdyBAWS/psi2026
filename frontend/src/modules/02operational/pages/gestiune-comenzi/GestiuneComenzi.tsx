@@ -6,8 +6,20 @@ import GestiuneComenziDetail from "./components/GestiuneComenziDetail";
 import GestiuneComenziFilters from "./components/GestiuneComenziFilters";
 import GestiuneComenziTable from "./components/GestiuneComenziTable";
 import { useGestiuneComenzi } from "./useGestiuneComenzi";
+import type { Asigurator, Client, ComandaService, DosarDauna, Mecanic, PozitieComanda, Vehicul } from "../../types";
 
-export default function GestiuneComenzi(props: any) {
+interface GestiuneComenziProps {
+  asiguratori: Asigurator[];
+  clienti: Client[];
+  comenzi: ComandaService[];
+  dosare: DosarDauna[];
+  mecanici: Mecanic[];
+  pozitii: PozitieComanda[];
+  vehicule: Vehicul[];
+  onActualizeazaComanda: (idComanda: number, modificari: Partial<ComandaService>) => Promise<void>;
+}
+
+export default function GestiuneComenzi(props: GestiuneComenziProps) {
   const { stare, setters, date } = useGestiuneComenzi(props);
 
   return (
@@ -55,7 +67,12 @@ export default function GestiuneComenzi(props: any) {
 
         {stare.idComandaSelectata !== null && date.detaliiSelectate.comandaSelectata ? (
           <div className="w-full shrink-0 xl:sticky xl:top-6 xl:w-[420px]">
-            <GestiuneComenziDetail {...date.detaliiSelectate} onInchide={() => setters.setIdComandaSelectata(null)} />
+            <GestiuneComenziDetail
+              {...date.detaliiSelectate}
+              mecanici={props.mecanici}
+              onActualizeazaComanda={props.onActualizeazaComanda}
+              onInchide={() => setters.setIdComandaSelectata(null)}
+            />
           </div>
         ) : null}
       </div>

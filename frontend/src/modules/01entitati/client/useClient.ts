@@ -35,7 +35,7 @@ export function useClient() {
 
   const listaFiltrata = useMemo(() => {
     // 1. Filtrarea Datelor
-    let filtered = lista.filter(c => {
+    const filtered = lista.filter(c => {
       if (!arataInactivi && c.status === 'Inactiv') return false;
       const matchText = `${c.nume} ${c.prenume || ''} ${c.CUI || ''} ${c.CNP || ''}`.toLowerCase();
       return matchText.includes(cautare.toLowerCase());

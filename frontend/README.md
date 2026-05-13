@@ -2,7 +2,7 @@
 
 Acest folder conține frontend-ul aplicației `Service Auto G`, construit cu `React + TypeScript + Vite + Tailwind CSS`.
 
-Frontend-ul este în stadiul actual o aplicație `frontend-only`, orientată spre demo și onboarding tehnic. Nu există backend real, nu există API integrat și nu există sincronizare live completă între toate modulele. Totuși, structura actuală este suficient de matură încât să servească drept bază clară pentru dezvoltare incrementală.
+Frontend-ul face parte acum dintr-un proiect full-stack. Backend-ul NestJS este în `backend/` și expune API-uri reale pentru catalog, entități, operațional și facturare. Unele zone de frontend încă păstrează date demo/mock sau stare locală pentru onboarding și dezvoltare incrementală, deci integrarea live nu este complet uniformă în toate modulele.
 
 Aplicația este organizată pe module funcționale și rulează ca un SPA administrativ cu navigație bazată pe stare locală, nu pe router.
 
@@ -26,10 +26,17 @@ Observații importante:
 - `react-router-dom` este instalat, dar nu este folosit în implementarea actuală
 - aplicația nu are store global de stare (`Redux`, `Zustand`, `Context` de business etc.)
 - navigația și majoritatea datelor sunt încă gestionate local, la nivel de modul sau componentă
+- backend-ul local rulează pe `http://127.0.0.1:3000`
 
 ## Cum rulezi și verifici proiectul
 
-Din directorul `frontend/`:
+Din root-ul repo-ului, pentru full-stack:
+
+```bash
+npm run dev
+```
+
+Din directorul `frontend/`, doar pentru frontend:
 
 ```bash
 npm install
@@ -57,6 +64,7 @@ npm run build
 Observație:
 
 - `vite build` poate afișa un warning despre chunk-uri mari; în starea actuală a proiectului acesta este cunoscut și nu blochează build-ul
+- în starea actuală, `npm run build` trece; dacă reapare o eroare de tipuri, verifică mai întâi alinierea dintre câmpurile frontend și cele din `backend/prisma/schema.prisma`
 
 ## Structură importantă
 
@@ -267,6 +275,9 @@ Fișiere importante:
 Caracteristici importante:
 
 - container local cu stare comună pentru comenzi, dosare și poziții
+- `operational.service.ts` este stratul de integrare cu backend-ul NestJS
+- comenzile sunt persistate prin backend, iar legătura cu vehiculul se face prin dosar
+- pozițiile de comandă sunt păstrate local până când există model backend dedicat pentru ele
 - helperi puri pentru filtrare, sortare și calcule
 - subcomponente separate pentru header, context, detalii și tabel
 - comentarii beginner-friendly extinse
@@ -296,7 +307,7 @@ Starea actuală:
 - consumă mock-uri comune din `src/mock/incasari.ts`
 - este coerent cu facturarea la nivel de facturi demo
 - folosește toast-uri
-- nu are backend și nu sincronizează live cu restul aplicației
+- nu este încă integrat complet live cu backend-ul și cu restul aplicației
 
 ### `src/modules/05notificari`
 
@@ -327,7 +338,7 @@ Ce NU înseamnă:
 
 - nu există o sursă globală live unică
 - nu există store global
-- nu există backend care să persiste datele
+- backend-ul există, dar nu toate acțiunile din frontend sunt conectate încă la persistența live
 - nu toate acțiunile dintr-un modul se propagă automat în celelalte în runtime
 
 Pe scurt:
@@ -413,7 +424,7 @@ Prin `sessionStorage`:
 
 Aceste limitări trebuie considerate reale, nu doar temporare:
 
-- nu există backend/API real
+- backend-ul/API-ul există, dar integrarea frontend live nu este uniformă în toate modulele
 - nu există React Router activ
 - majoritatea modulelor folosesc încă state local
 - nu există store global

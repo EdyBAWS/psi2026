@@ -1,303 +1,287 @@
+// src/modules/01entitati/vehicule/Vehicul.tsx
 import { useState } from "react";
-import { Car, Search, ClipboardList, ArrowUpDown, Plus, Edit2, Trash2 } from "lucide-react";
+import { Car, Search, ClipboardList, ArrowUpDown, Edit2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "../../../componente/ui/PageHeader";
 import { StatCard } from "../../../componente/ui/StatCard";
 import { EmptyState } from "../../../componente/ui/EmptyState";
 import { Button } from "../../../componente/ui/Button";
-import { Field } from "../../../componente/ui/Field";
-import { SelectField } from "../../../componente/ui/SelectField";
 import { ConfirmDialog } from "../../../componente/ui/ConfirmDialog";
+import { Card, CardContent } from "../../../componente/ui/Card";
+import { VehiculForm } from "./VehiculForm";
 
-import type { VehiculEntity, VehiculFormValues, ClientEntity } from "../entitati.service";
+import type { ClientEntity } from "../entitati.service";
 import { useVehicul, type SortField } from "./useVehicul";
 
 // ============================================================================
-// 1. COMPONENTE REUTILIZABILE EXTRASE DIN RENDER
-// ============================================================================
-
-interface ThSortableProps {
-  label: string;
-  field: SortField;
-  currentSortField: SortField;
-  onSort: (field: SortField) => void;
-}
-
-function ThSortable({ label, field, currentSortField, onSort }: ThSortableProps) {
-  return (
-    <th 
-      className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors group select-none" 
-      onClick={() => onSort(field)}
-    >
-      <div className="flex items-center gap-2">
-        {label}
-        <ArrowUpDown className={`h-3 w-3 ${currentSortField === field ? 'text-indigo-500' : 'text-slate-300 group-hover:text-slate-400'}`} />
-      </div>
-    </th>
-  );
-}
-
-// ============================================================================
-// 2. COMPONENTA PENTRU FORMULAR
-// ============================================================================
-interface VehiculFormProps {
-  initialData?: VehiculEntity | null;
-  clienti: ClientEntity[];
-  onClose: () => void;
-  onSave: (data: VehiculFormValues, id?: number) => Promise<void>;
-}
-
-function VehiculForm({ initialData, clienti, onClose, onSave }: VehiculFormProps) {
-  const [formData, setFormData] = useState<VehiculFormValues>({
-    numarInmatriculare: initialData?.numarInmatriculare || "",
-    marca: initialData?.marca || "",
-    model: initialData?.model || "",
-    vin: initialData?.vin || "",
-    idClient: initialData?.idClient || (clienti.length > 0 ? clienti[0].idClient : 0),
-  });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.numarInmatriculare || !formData.marca || !formData.idClient) {
-      toast.error("Vă rugăm să completați câmpurile obligatorii.");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    try {
-      await onSave(formData, initialData?.idVehicul);
-      toast.success(initialData ? "Vehicul actualizat cu succes!" : "Vehicul adăugat cu succes!");
-      onClose();
-    } catch (error) {
-      console.error(error);
-      toast.error("A apărut o eroare la salvarea vehiculului.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const clientOptions = clienti
-    .filter(c => c.status === 'Activ')
-    .map(c => ({
-      value: c.idClient.toString(),
-      label: c.tipClient === 'PJ' ? c.nume : `${c.nume} ${c.prenume || ""}`,
-    }));
-
-  return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl sticky top-6">
-      <div className="border-b border-slate-100 bg-slate-50 px-5 py-4 flex justify-between items-center">
-        <h3 className="text-xl font-bold text-slate-800">
-          {initialData ? "Editează Vehicul" : "Adaugă Vehicul Nou"}
-        </h3>
-        <button onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-600">
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-5">
-        <Field label="Număr Înmatriculare *" placeholder="ex: B 100 ABC" value={formData.numarInmatriculare} onChange={(e) => setFormData({ ...formData, numarInmatriculare: e.target.value.toUpperCase() })} required />
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Marcă *" placeholder="ex: Volkswagen" value={formData.marca} onChange={(e) => setFormData({ ...formData, marca: e.target.value })} required />
-          <Field label="Model *" placeholder="ex: Golf" value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} required />
-        </div>
-        <Field label="Serie Șasiu (VIN) *" placeholder="17 caractere" value={formData.vin} onChange={(e) => setFormData({ ...formData, vin: e.target.value.toUpperCase() })} required />
-        <SelectField label="Proprietar (Client) *" options={clientOptions} value={formData.idClient.toString()} onChange={(e) => setFormData({ ...formData, idClient: Number(e.target.value) })} placeholder="Selectează un client" required />
-
-        <div className="pt-4 border-t border-slate-100 flex gap-3">
-          <Button type="button" variant="outline" fullWidth onClick={onClose}>Anulează</Button>
-          <Button type="submit" variant="primary" fullWidth disabled={isSubmitting}>
-            {isSubmitting ? "Se salvează..." : "Salvează"}
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-// ============================================================================
-// 3. COMPONENTA PENTRU DETALII
+// 1. DETALII VEHICUL (STILIZAT CA FORMULARUL DIN CLIENT.TSX)
 // ============================================================================
 interface VehiculDetailProps {
-  vehicul: VehiculEntity;
+  vehicul: any;
   client?: ClientEntity;
   onInchide: () => void;
   onEdit: () => void;
   onDeleteRequest: () => void;
+  onNavigate?: (page: string) => void;
 }
 
-function VehiculDetail({ vehicul, client, onInchide, onEdit, onDeleteRequest }: VehiculDetailProps) {
-  const istoricComenzi: any[] = []; // Urmează să fie populat din backend
+function VehiculDetail({ vehicul, client, onInchide, onEdit, onDeleteRequest, onNavigate }: VehiculDetailProps) {
+  const istoricBrut = vehicul.istoricComenzi || [];
+  const istoricUnic = Array.from(new Map(istoricBrut.map((cmd: any) => [cmd.idComanda, cmd])).values());
 
-  const numeClient = client ? (client.tipClient === 'PJ' ? client.nume : `${client.nume} ${client.prenume || ""}`).trim() : "Client Necunoscut";
+  const numeClient = client 
+    ? (client.tipClient === 'PJ' ? client.nume : `${client.nume} ${client.prenume || ""}`).trim() 
+    : "Client Necunoscut";
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm sticky top-6">
-      <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold text-slate-800">{vehicul.numarInmatriculare}</h3>
-              <span className={`inline-flex rounded-md border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${vehicul.status === 'Activ' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>{vehicul.status}</span>
+    <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-xl animate-in fade-in slide-in-from-top-4 sticky top-6">
+      <div className="flex items-start justify-between mb-6 border-b border-slate-100 pb-3">
+        <div>
+          <h4 className="text-lg font-bold text-slate-800">{vehicul.numarInmatriculare}</h4>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">ID: VHC-{vehicul.idVehicul}</p>
+        </div>
+        <div className="flex items-center gap-2">
+           <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${vehicul.status === 'Activ' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+            {vehicul.status}
+          </span>
+          <button onClick={onInchide} className="p-1 hover:bg-slate-100 rounded-lg text-slate-400">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-2">Specificații Auto</p>
+          <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase font-bold">Marcă & Model</p>
+              <p className="font-bold text-slate-700 text-sm">{vehicul.marca} {vehicul.model}</p>
             </div>
-            <p className="mt-1 text-sm font-medium text-slate-500">ID Sistem: VHC-{vehicul.idVehicul.toString().padStart(4, '0')}</p>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase font-bold">VIN</p>
+              <p className="text-xs font-mono font-bold text-slate-700">{vehicul.vin || '-'}</p>
+            </div>
           </div>
-          <button onClick={onInchide} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-2">Proprietar</p>
+          <div className="p-4 rounded-xl border border-slate-200 bg-white">
+            <p className="font-bold text-slate-800">{numeClient}</p>
+            {client?.telefon && <p className="text-xs text-slate-500 mt-1">📞 {client.telefon}</p>}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-2">Istoric Reparații ({istoricUnic.length})</p>
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            {istoricUnic.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">Lipsă istoric.</p>
+            ) : (
+              istoricUnic.map((cmd: any) => (
+                <div 
+                  key={cmd.idComanda} 
+                  className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all cursor-pointer group"
+                  onClick={() => {
+                    sessionStorage.setItem('gestiune-idComandaSelectata', cmd.idComanda.toString());
+                    if (onNavigate) onNavigate('operational-comenzi');
+                  }}
+                >
+                  <div>
+                    <p className="text-xs font-bold text-slate-700 group-hover:text-indigo-600">{cmd.numarComanda}</p>
+                    <p className="text-[9px] text-slate-400">{new Date(cmd.createdAt).toLocaleDateString('ro-RO')}</p>
+                  </div>
+                  {cmd.status === "FINALIZAT" && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sessionStorage.setItem('facturare-idComandaSelectata', cmd.idComanda.toString());
+                        if (onNavigate) onNavigate('facturare-comenzi');
+                      }}
+                      className="text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 px-2 py-1 rounded"
+                    >
+                      Factură →
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-5 border-b border-slate-100">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Specificații Auto</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div><p className="text-xs text-slate-500">Marcă & Model</p><p className="font-semibold text-slate-800">{vehicul.marca} {vehicul.model}</p></div>
-            <div className="sm:col-span-2"><p className="text-xs text-slate-500">Serie Șasiu (VIN)</p><p className="text-sm font-mono font-medium text-slate-700">{vehicul.vin || '-'}</p></div>
-          </div>
-        </div>
-
-        <div className="p-5 border-b border-slate-100 bg-indigo-50/30">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-400">Proprietar / Utilizator</p>
-          <div className="mt-3">
-            <p className="text-lg font-bold text-slate-800">{numeClient}</p>
-            <p className="text-sm font-medium text-slate-500 mt-1">📞 {client?.telefon || "-"}</p>
-            <p className="text-sm font-medium text-slate-500">📧 {client?.email || "-"}</p>
-          </div>
-        </div>
-
-        <ul className="divide-y divide-slate-100 p-5">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Istoric Comenzi ({istoricComenzi.length})</p>
-          {istoricComenzi.length === 0 && <p className="text-sm text-slate-500">Nicio reparație înregistrată încă.</p>}
-        </ul>
-      </div>
-
-      <div className="mt-auto border-t border-slate-100 p-4 bg-slate-50 flex gap-3">
-        <Button variant="outline" fullWidth onClick={onEdit} className="text-slate-600"><Edit2 className="w-4 h-4 mr-2" /> Editează</Button>
-        <Button variant="danger" fullWidth onClick={onDeleteRequest} disabled={vehicul.status === 'Inactiv'}><Trash2 className="w-4 h-4 mr-2" /> {vehicul.status === 'Activ' ? 'Dezactivează' : 'Inactiv'}</Button>
+      <div className="flex gap-3 mt-8 pt-4 border-t border-slate-50">
+        <Button variant="outline" fullWidth onClick={onEdit}>
+          <Edit2 className="w-4 h-4 mr-2" /> Editează
+        </Button>
+        <Button 
+          variant="ghost" 
+          fullWidth 
+          onClick={onDeleteRequest} 
+          disabled={vehicul.status === 'Inactiv'}
+          className="text-rose-500 hover:bg-rose-50"
+        >
+          <Trash2 className="w-4 h-4 mr-2" /> Dezactivează
+        </Button>
       </div>
     </div>
   );
 }
 
 // ============================================================================
-// 4. PAGINA PRINCIPALĂ (Acum folosește noul Hook)
+// 3. PAGINA PRINCIPALĂ (STRUCTURĂ IDENTICĂ CU CLIENT.TSX)
 // ============================================================================
-export default function Vehicul() {
-  const { 
-    vehiculeProcesate, 
-    vehiculeFiltrateSiSortate, 
-    clienti, 
-    loading, 
-    cautare, 
-    setCautare, 
-    sortField, 
-    handleSort, 
-    stats, 
-    salveaza, 
-    schimbaStatus 
+export default function Vehicule({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const {
+    vehiculeFiltrateSiSortate, clienti, loading, stats, cautare, setCautare,
+    sortField, sortDir, onSort, salveaza, sterge
   } = useVehicul();
 
-  const [idVehiculSelectat, setIdVehiculSelectat] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [vehiculToEdit, setVehiculToEdit] = useState<any | null>(null);
+  const [idSelectat, setIdSelectat] = useState<number | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [vehiculToEdit, setVehiculToEdit] = useState<VehiculEntity | null>(null);
-  const [vehiculToDelete, setVehiculToDelete] = useState<number | null>(null);
 
-  const handleSave = async (data: VehiculFormValues, id?: number) => {
-    await salveaza(data, id);
-    if (id) setIdVehiculSelectat(id); 
+  const deschideAdaugare = () => { setVehiculToEdit(null); setIdSelectat(null); setIsFormOpen(true); };
+  
+  const handleSave = async (data: any) => {
+    try {
+      await salveaza(data, vehiculToEdit?.idVehicul);
+      setIsFormOpen(false);
+      setVehiculToEdit(null);
+      toast.success(vehiculToEdit ? "Vehicul actualizat" : "Vehicul adăugat");
+    } catch (err) { console.error(err); }
   };
 
-  const handleConfirmDeactivate = async () => {
-    if (vehiculToDelete) {
-      await schimbaStatus(vehiculToDelete, 'Inactiv');
-      toast.success("Vehiculul a fost dezactivat cu succes!");
-      setIsConfirmOpen(false);
-      setVehiculToDelete(null);
-    }
+  const renderSortIcon = (field: SortField) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 opacity-30" />;
+    return <span className="text-indigo-600 font-bold text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>;
   };
 
-  const vehiculSelectat = vehiculeProcesate.find(v => v.idVehicul === idVehiculSelectat);
+  const vehiculSelectat = vehiculeFiltrateSiSortate.find(v => v.idVehicul === idSelectat);
 
-  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă vehiculele...</div>;
+  if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă flota auto...</div>;
 
   return (
     <div className="space-y-6 pb-10">
+      {/* HEADER & STATS (STIL CLIENT.TSX) */}
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-        <PageHeader title="Registru Vehicule" description="Evidența detaliată a mașinilor introduse în service, istoricul reparațiilor și legăturile cu clienții proprietari." />
-        <div className="flex flex-wrap items-center justify-between mt-6">
-          <div className="flex flex-wrap gap-4">
-            <StatCard label="Total Vehicule" value={stats.total} icon={<Car className="h-4 w-4" />} />
-            <StatCard label="Vehicule Active" value={stats.activi} tone="success" icon={<ClipboardList className="h-4 w-4" />} />
-          </div>
-          <Button variant="primary" onClick={() => { setVehiculToEdit(null); setIsFormOpen(true); setIdVehiculSelectat(null); }}>
-            <Plus className="w-5 h-5 mr-2" /> Adaugă Vehicul Nou
-          </Button>
+        <PageHeader 
+          title="Gestiune Vehicule" 
+          description="Administrează flota auto a clienților și urmărește istoricul intervențiilor tehnice." 
+          actions={
+            <Button variant={isFormOpen ? "outline" : "primary"} onClick={isFormOpen ? () => setIsFormOpen(false) : deschideAdaugare}>
+              {isFormOpen ? 'Închide Formularul' : '+ Adaugă Vehicul'}
+            </Button>
+          }
+        />
+        <div className="flex flex-wrap gap-4 mt-6">
+          <StatCard label="Total Vehicule" value={stats.total} icon={<Car />} />
+          <StatCard label="Vehicule Active" value={stats.activi} tone="info" icon={<ClipboardList />} />
         </div>
       </div>
 
-      <div className="flex w-full flex-col gap-6 xl:flex-row xl:items-start">
-        <div className="flex-1 space-y-6">
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center">
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input type="text" placeholder="Caută după număr, VIN sau deținător..." value={cautare} onChange={(e) => setCautare(e.target.value)} className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-            </div>
-          </div>
-
-          {vehiculeFiltrateSiSortate.length === 0 ? (
-             <div className="bg-white rounded-2xl border border-slate-100 p-12 shadow-sm">
-               <EmptyState title="Niciun vehicul găsit" description="Nu am găsit nicio mașină care să corespundă criteriilor tale de căutare." />
-             </div>
-          ) : (
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <ThSortable label="Vehicul" field="numarInmatriculare" currentSortField={sortField} onSort={handleSort} />
-                    <ThSortable label="Client / Deținător" field="numeDetinator" currentSortField={sortField} onSort={handleSort} />
-                    <ThSortable label="Detalii Tehnice" field="marca" currentSortField={sortField} onSort={handleSort} />
-                    <ThSortable label="Status" field="status" currentSortField={sortField} onSort={handleSort} />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {vehiculeFiltrateSiSortate.map((v) => (
-                    <tr key={v.idVehicul} onClick={() => { setIdVehiculSelectat(v.idVehicul); setIsFormOpen(false); }} className={`cursor-pointer transition-colors hover:bg-slate-50 ${idVehiculSelectat === v.idVehicul ? 'bg-indigo-50/50' : ''}`}>
-                      <td className="px-6 py-4">
-                        <p className="font-bold text-slate-900">{v.numarInmatriculare}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">VHC-{v.idVehicul.toString().padStart(4, '0')}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-semibold text-slate-800">{v.numeDetinator}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{v.clientObj?.telefon || "-"}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-slate-700">{v.marca} {v.model}</p>
-                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">{v.vin || '-'}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                         <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${v.status === 'Activ' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{v.status}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+      {/* SEARCH BAR (STIL CLIENT.TSX) */}
+      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <input 
+            type="text" placeholder="Caută după număr, serie șasiu sau client..." 
+            className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+            value={cautare} onChange={(e) => setCautare(e.target.value)}
+          />
         </div>
+      </div>
 
-        {(isFormOpen || vehiculSelectat) && (
-          <div className="w-full shrink-0 xl:w-[420px] animate-in fade-in slide-in-from-right-4">
-            {isFormOpen ? (
-              <VehiculForm initialData={vehiculToEdit} clienti={clienti} onClose={() => { setIsFormOpen(false); setVehiculToEdit(null); }} onSave={handleSave} />
-            ) : vehiculSelectat ? (
-              <VehiculDetail vehicul={vehiculSelectat} client={vehiculSelectat.clientObj} onInchide={() => setIdVehiculSelectat(null)} onEdit={() => { setVehiculToEdit(vehiculSelectat); setIsFormOpen(true); }} onDeleteRequest={() => { setVehiculToDelete(vehiculSelectat.idVehicul); setIsConfirmOpen(true); }} />
-            ) : null}
+      {/* FORMULAR ADAUGARE/EDITARE */}
+      {isFormOpen && (
+        <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-xl animate-in fade-in slide-in-from-top-4">
+          <h4 className="mb-6 text-lg font-bold text-slate-800 border-b border-slate-100 pb-3">
+            {vehiculToEdit ? 'Editare Vehicul' : 'Înregistrare Vehicul Nou'}
+          </h4>
+          <VehiculForm 
+            initialData={vehiculToEdit} 
+            clienti={clienti} 
+            onClose={() => { setIsFormOpen(false); setVehiculToEdit(null); }} 
+            onSave={handleSave} 
+          />
+        </div>
+      )}
+
+      {/* TABEL & DETALII (STIL CLIENT.TSX) */}
+      <div className="flex flex-col xl:flex-row gap-6 items-start">
+        <Card className={`overflow-hidden border-slate-100 shadow-sm flex-1 ${vehiculSelectat ? 'hidden xl:block' : 'w-full'}`}>
+          <CardContent className="p-0">
+            {vehiculeFiltrateSiSortate.length === 0 ? (
+               <div className="py-12"><EmptyState icon={<Car />} title="Niciun vehicul găsit" description="Verifică filtrele sau adaugă un vehicul nou." actionLabel="+ Adaugă Vehicul" onAction={deschideAdaugare} /></div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-400 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => onSort('numarInmatriculare')}>
+                        Nr. Înmatriculare {renderSortIcon('numarInmatriculare')}
+                      </th>
+                      <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => onSort('numeDetinator')}>
+                        Client / Proprietar {renderSortIcon('numeDetinator')}
+                      </th>
+                      <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => onSort('marca')}>
+                        Model {renderSortIcon('marca')}
+                      </th>
+                      <th className="px-6 py-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {vehiculeFiltrateSiSortate.map((v) => (
+                      <tr 
+                        key={v.idVehicul} 
+                        onClick={() => { setIdSelectat(v.idVehicul); setIsFormOpen(false); }}
+                        className={`hover:bg-slate-50 transition-colors cursor-pointer group ${idSelectat === v.idVehicul ? 'bg-indigo-50' : ''}`}
+                      >
+                        <td className="px-6 py-4 font-bold text-slate-800 tabular-nums">{v.numarInmatriculare}</td>
+                        <td className="px-6 py-4 font-semibold text-slate-600">{v.numeDetinator}</td>
+                        <td className="px-6 py-4 text-slate-500">{v.marca} {v.model}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${v.status === 'Activ' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                            {v.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* PANOU DETALII SIDEBAR */}
+        {vehiculSelectat && (
+          <div className="w-full xl:w-[450px] shrink-0">
+            <VehiculDetail 
+              vehicul={vehiculSelectat} 
+              client={vehiculSelectat.clientObj}
+              onInchide={() => setIdSelectat(null)}
+              onEdit={() => { setVehiculToEdit(vehiculSelectat); setIsFormOpen(true); }}
+              onDeleteRequest={() => setIsConfirmOpen(true)}
+              onNavigate={onNavigate}
+            />
           </div>
         )}
       </div>
 
-      <ConfirmDialog isOpen={isConfirmOpen} title="Dezactivare Vehicul" description="Ești sigur că vrei să dezactivezi acest vehicul? El nu va mai putea fi selectat pentru comenzi noi în modulul de Recepție." confirmLabel="Dezactivează" cancelLabel="Renunță" onCancel={() => { setIsConfirmOpen(false); setVehiculToDelete(null); }} onConfirm={handleConfirmDeactivate} />
+      <ConfirmDialog 
+        isOpen={isConfirmOpen}
+        title="Dezactivare Vehicul"
+        description="Ești sigur că vrei să marchezi acest vehicul ca inactiv? Acesta nu va mai putea fi selectat pentru recepții noi."
+        onConfirm={async () => {
+          if (idSelectat) await sterge(idSelectat);
+          setIsConfirmOpen(false);
+          setIdSelectat(null);
+        }}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </div>
   );
 }

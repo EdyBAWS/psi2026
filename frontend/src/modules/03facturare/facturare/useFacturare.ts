@@ -1,8 +1,8 @@
-// src/modules/03facturare/useFacturare.ts
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePageSessionState } from '../../../lib/pageState';
 import { FacturareService } from '../facturare.service';
+import { API_BASE_URL } from '../../../lib/api';
 import type { ComandaFacturabilaMock, LinieFacturaMock } from '../../../mock/types';
 
 export type FacturareSortField = 'data' | 'nrComanda' | 'valoare';
@@ -14,26 +14,48 @@ export function useFacturare() {
   const [liniiFactura, setLiniiFactura] = useState<LinieFacturaMock[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Stare Formular Emitere
   const [serieFactura, setSerieFactura] = useState('F-SAG');
   const [numarFactura, setNumarFactura] = useState('');
   const [termenPlata, setTermenPlata] = useState<number>(0);
   const [discountProcent, setDiscountProcent] = useState<number>(0);
 
-  // Stare Sesiune (Căutare & Sortare)
   const [cautare, setCautare] = usePageSessionState('facturare-cautare', '');
   const [sortField, setSortField] = usePageSessionState<FacturareSortField>('facturare-sort-field', 'data');
   const [sortDir, setSortDir] = usePageSessionState<FacturareSortDir>('facturare-sort-dir', 'desc');
 
-  // Fetch Inițial Comenzi
-  useEffect(() => {
-    FacturareService.fetchComenziFacturabile().then((data) => {
+  const incarcaComenzi = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await FacturareService.fetchComenziFacturabile();
       setComenziGata(data);
+
+      // --- LOGICA DE REDIRECȚIONARE ȘI DESCHIDERE AUTOMATĂ ---
+      // Verificăm dacă avem o comandă trimisă din alt modul (ex: Vehicule)
+      const idSalvat = sessionStorage.getItem('facturare-idComandaSelectata');
+      if (idSalvat) {
+        // Rezolvare eroare TS7006: specificăm explicit tipul (c: ComandaFacturabilaMock)
+        const comandaDeDeschis = data.find((c: ComandaFacturabilaMock) => c.idComanda.toString() === idSalvat);
+        if (comandaDeDeschis) {
+          setComandaSelectata(comandaDeDeschis);
+        } else {
+          toast.error("Comanda selectată nu a fost găsită sau nu este finalizată.");
+        }
+        // Curățăm storage-ul pentru a nu bloca aplicația pe această comandă la viitoarele refresh-uri
+        sessionStorage.removeItem('facturare-idComandaSelectata');
+      }
+
+    } catch (error) {
+      console.error("Eroare încărcare comenzi facturabile:", error); // Rezolvare eroare ESLint
+      toast.error('Eroare la încărcarea datelor.');
+    } finally {
       setLoading(false);
-    });
+    }
   }, []);
 
-  // Fetch Linii când se selectează o comandă
+  useEffect(() => { 
+    incarcaComenzi(); 
+  }, [incarcaComenzi]);
+
   useEffect(() => {
     if (comandaSelectata) {
       FacturareService.fetchLiniiFactura(comandaSelectata.idComanda).then(setLiniiFactura);
@@ -42,118 +64,84 @@ export function useFacturare() {
     }
   }, [comandaSelectata]);
 
-  const handleSort = (field: FacturareSortField) => {
-    if (sortField === field) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-      return;
-    }
-    setSortField(field);
-    setSortDir(field === 'data' ? 'desc' : 'asc');
-  };
-
   const comenziFiltrate = useMemo(() => {
     const termen = cautare.trim().toLowerCase();
     return [...comenziGata]
-      .filter((comanda) => {
-        if (termen === '') return true;
-        return [comanda.nrComanda, comanda.client, comanda.vehicul].some((camp) => 
-          camp.toLowerCase().includes(termen)
-        );
-      })
+      .filter((c) => !termen || c.nrComanda.toLowerCase().includes(termen) || c.client.toLowerCase().includes(termen))
       .sort((a, b) => {
-        let comparison = 0;
-        if (sortField === 'data') {
-          comparison = a.dataComanda.localeCompare(b.dataComanda);
-        } else if (sortField === 'nrComanda') {
-          comparison = a.nrComanda.localeCompare(b.nrComanda);
-        } else {
-          comparison = a.totalEstimat - b.totalEstimat;
-        }
-        return sortDir === 'asc' ? comparison : -comparison;
+        const valA = a[sortField === 'valoare' ? 'totalEstimat' : sortField === 'data' ? 'dataComanda' : 'nrComanda'];
+        const valB = b[sortField === 'valoare' ? 'totalEstimat' : sortField === 'data' ? 'dataComanda' : 'nrComanda'];
+        return sortDir === 'asc' ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
       });
   }, [cautare, comenziGata, sortDir, sortField]);
 
-  const totalValoareFacturabila = comenziGata.reduce((total, c) => total + c.totalEstimat, 0);
+  // Calculăm suma totală a comenzilor gata de facturare
+  const totalValoareFacturabila = useMemo(() => {
+    return comenziGata.reduce((acc, c) => acc + (c.totalEstimat || 0), 0);
+  }, [comenziGata]);
 
-  const { subtotal, valoareTVA, valoareDiscount, totalPlata, dataScadenta } = useMemo(() => {
-    const sub = liniiFactura.reduce((acc, linie) => acc + (linie.cantitate * linie.pretUnitar), 0);
+  const { subtotal, valoareDiscount, valoareTVA, totalPlata, dataScadenta } = useMemo(() => {
+    const sub = liniiFactura.reduce((acc, l) => acc + (l.cantitate * l.pretUnitar), 0);
     const disc = sub * (discountProcent / 100);
     const subDupaDiscount = sub - disc;
     const tva = subDupaDiscount * 0.19;
 
-    const dataAzi = new Date();
-    dataAzi.setDate(dataAzi.getDate() + termenPlata);
+    const scadenta = new Date();
+    scadenta.setDate(scadenta.getDate() + termenPlata);
 
-    return {
-      subtotal: sub,
+    return { 
+      subtotal: sub, 
       valoareDiscount: disc,
-      valoareTVA: tva,
-      totalPlata: subDupaDiscount + tva,
-      dataScadenta: dataAzi.toISOString().split('T')[0],
+      valoareTVA: tva, 
+      totalPlata: subDupaDiscount + tva, 
+      dataScadenta: scadenta.toISOString().split('T')[0] 
     };
   }, [liniiFactura, discountProcent, termenPlata]);
 
   const handleEmitereFactura = async () => {
-    if (!comandaSelectata) {
-      toast.error('Selectează o comandă înainte de emiterea facturii.');
-      return;
-    }
-    if (!serieFactura || !numarFactura) {
-      toast.error('Te rog completează seria și numărul facturii.');
-      return;
-    }
-
-    // 1. Pregătim datele pentru backend exact în formatul DTO-ului din NestJS
-    const dateBackend = {
-      numar: Number(numarFactura),
-      serie: serieFactura,
-      idClient: 1, // Setăm 1 pentru că baza de date are deja clientul 1
-      scadenta: new Date(dataScadenta).toISOString(),
-      iteme: liniiFactura.map((linie) => ({
-        descriere: linie.denumire,
-        cantitate: linie.cantitate,
-        pretUnitar: linie.pretUnitar,
-        // Dăm un ID de piesă sau manoperă în funcție de tip
-        ...(linie.tip === 'Manoperă' ? { idManopera: 1 } : { idPiesa: 1 })
-      }))
-    };
+    if (!comandaSelectata || !numarFactura) return toast.error('Completarea datelor este obligatorie.');
 
     try {
-      // 2. Facem apelul REAL către baza de date
-      const response = await fetch('http://localhost:3000/facturare', {
+      // 1. Emitem factura către API
+      const resFactura = await fetch(`${API_BASE_URL}/facturare`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dateBackend),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          numar: Number(numarFactura),
+          serie: serieFactura,
+          idComanda: comandaSelectata.idComanda,
+          scadenta: new Date(dataScadenta).toISOString(),
+          iteme: liniiFactura.map(l => ({ descriere: l.denumire, cantitate: l.cantitate, pretUnitar: l.pretUnitar }))
+        })
       });
 
-      if (!response.ok) {
-        throw new Error('Eroare de la server');
-      }
+      if (!resFactura.ok) throw new Error("Eroare HTTP " + resFactura.status);
 
-      // 3. Dacă totul e ok, finalizăm acțiunea
-      toast.success(`Factura ${serieFactura}-${numarFactura} a fost emisă și salvată în baza de date!`);
-      
-      setComenziGata((prev) => prev.filter((c) => c.idComanda !== comandaSelectata.idComanda));
+      // 2. Actualizăm statusul comenzii la "FACTURAT" în baza de date
+      await fetch(`${API_BASE_URL}/operational/comenzi/${comandaSelectata.idComanda}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'FACTURAT' })
+      });
+
+      toast.success(`Factura ${serieFactura}-${numarFactura} a fost salvată!`);
       setComandaSelectata(null);
       setNumarFactura('');
-      setDiscountProcent(0);
-      setTermenPlata(0);
+      await incarcaComenzi();
     } catch (error) {
-      console.error(error);
-      toast.error('A apărut o eroare la salvarea facturii în baza de date.');
+      console.error("Eroare la emiterea facturii:", error); // Rezolvare eroare ESLint
+      toast.error('Eroare la salvarea facturii.');
     }
   };
 
   return {
-    loading,
-    comenziGata, comenziFiltrate, totalValoareFacturabila,
+    loading, comenziGata, comenziFiltrate, totalValoareFacturabila,
     comandaSelectata, setComandaSelectata,
-    cautare, setCautare, sortField, sortDir, handleSort,
+    cautare, setCautare, sortField, sortDir,
+    handleSort: (f: FacturareSortField) => { setSortField(f); setSortDir(prev => prev === 'asc' ? 'desc' : 'asc'); },
     serieFactura, setSerieFactura, numarFactura, setNumarFactura,
     termenPlata, setTermenPlata, discountProcent, setDiscountProcent,
-    liniiFactura, subtotal, valoareTVA, valoareDiscount, totalPlata, dataScadenta,
+    liniiFactura, subtotal, valoareDiscount, valoareTVA, totalPlata, dataScadenta,
     handleEmitereFactura
   };
 }

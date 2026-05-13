@@ -1,72 +1,52 @@
 import { type ManoperaCatalogMock, type PiesaCatalogMock } from '../../mock/catalog';
-
-const API_URL = 'http://localhost:3000/catalog';
-
-async function handleResponse(response: Response) {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Eroare server');
-  }
-  return response.status !== 204 ? response.json() : null;
-}
+import { apiJson } from '../../lib/api';
 
 // ─── Manoperă ─────────────────────────
 export async function fetchManopera(): Promise<ManoperaCatalogMock[]> {
-  const response = await fetch(`${API_URL}/manopera`);
-  return handleResponse(response);
+  return apiJson('/catalog/manopera');
 }
 
 export async function createManopera(data: Omit<ManoperaCatalogMock, 'idManopera'>): Promise<ManoperaCatalogMock> {
-  const response = await fetch(`${API_URL}/manopera`, {
+  return apiJson('/catalog/manopera', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  return handleResponse(response);
 }
 
 export async function updateManopera(id: number, data: Partial<ManoperaCatalogMock>): Promise<ManoperaCatalogMock> {
-  const response = await fetch(`${API_URL}/manopera/${id}`, {
+  return apiJson(`/catalog/manopera/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  return handleResponse(response);
 }
 
 export async function deleteManopera(id: number): Promise<void> {
-  await fetch(`${API_URL}/manopera/${id}`, { method: 'DELETE' });
+  await apiJson(`/catalog/manopera/${id}`, { method: 'DELETE' });
 }
 
 // ─── Piese ──────────────────────────
 export async function fetchPiese(): Promise<PiesaCatalogMock[]> {
-  const response = await fetch(`${API_URL}/piese`);
-  return handleResponse(response);
+  return apiJson('/catalog/piese');
 }
 
-export async function fetchIstoricPiesa(id: number) {
-  const response = await fetch(`${API_URL}/piese/${id}/istoric`);
-  return handleResponse(response);
+export async function fetchIstoricPiesa(id: number): Promise<any[]> {
+  return apiJson<any[]>(`/catalog/piese/${id}/istoric`);
 }
 
 export async function createPiesa(data: Omit<PiesaCatalogMock, 'idPiesa'>): Promise<PiesaCatalogMock> {
-  const response = await fetch(`${API_URL}/piese`, {
+  return apiJson('/catalog/piese', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  return handleResponse(response);
 }
 
 export async function updatePiesa(id: number, data: Partial<PiesaCatalogMock>): Promise<PiesaCatalogMock> {
-  const response = await fetch(`${API_URL}/piese/${id}`, {
+  return apiJson(`/catalog/piese/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  return handleResponse(response);
 }
 
 export async function deletePiesa(id: number): Promise<void> {
-  await fetch(`${API_URL}/piese/${id}`, { method: 'DELETE' });
+  await apiJson(`/catalog/piese/${id}`, { method: 'DELETE' });
 }

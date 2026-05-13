@@ -31,7 +31,7 @@ export function useVehicul() {
     incarcaDate();
   }, [incarcaDate]);
 
-  const handleSort = (field: SortField) => {
+  const onSort = (field: SortField) => {
     if (sortField === field) {
       setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     } else { 
@@ -41,13 +41,27 @@ export function useVehicul() {
   };
 
   const vehiculeProcesate = useMemo(() => {
-    return vehicule.map((vehicul) => {
+    return vehicule.map((vehicul: any) => {
       const client = vehicul.client || clienti.find(c => c.idClient === vehicul.idClient);
       const numeDetinator = client 
         ? (client.tipClient === 'PJ' ? client.nume : `${client.nume} ${client.prenume || ""}`).trim() 
         : "Necunoscut";
       
-      return { ...vehicul, clientObj: client, numeDetinator };
+      const comenziDirecte = vehicul.comenzi || [];
+      const comenziDinDosare = (vehicul.dosareDauna || []).flatMap((d: any) => d.comenzi || []);
+      
+      // Combinăm toate comenzile
+      const toateComenzile = [...comenziDirecte, ...comenziDinDosare];
+      
+      // Eliminăm duplicatele folosind Map (pe baza idComanda)
+      const istoricUnic = Array.from(new Map(toateComenzile.map(cmd => [cmd.idComanda, cmd])).values());
+
+      // Sortăm descrescător după dată
+      const istoricComenzi = istoricUnic.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      return { ...vehicul, clientObj: client, numeDetinator, istoricComenzi };
     });
   }, [vehicule, clienti]);
 
@@ -81,13 +95,12 @@ export function useVehicul() {
     await incarcaDate(); 
   };
 
-  const schimbaStatus = async (id: number, status: 'Activ' | 'Inactiv') => {
-    await schimbaStatusVehicul(id, status);
+  const sterge = async (id: number) => {
+    await schimbaStatusVehicul(id, 'Inactiv');
     await incarcaDate();
   };
 
   return {
-    vehiculeProcesate,
     vehiculeFiltrateSiSortate,
     clienti,
     loading,
@@ -95,9 +108,9 @@ export function useVehicul() {
     setCautare,
     sortField,
     sortDir,
-    handleSort,
+    onSort,
     stats,
     salveaza,
-    schimbaStatus
+    sterge
   };
 }

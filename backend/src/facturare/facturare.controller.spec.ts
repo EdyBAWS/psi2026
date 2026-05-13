@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { FacturareController } from './facturare.controller';
 import { FacturareService } from './facturare.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificariService } from '../notificari/notificari.service';
 
 describe('FacturareController', () => {
   let controller: FacturareController;
@@ -14,6 +15,10 @@ describe('FacturareController', () => {
         {
           provide: PrismaService,
           useValue: {},
+        },
+        {
+          provide: NotificariService,
+          useValue: { create: jest.fn() },
         },
       ],
     }).compile();

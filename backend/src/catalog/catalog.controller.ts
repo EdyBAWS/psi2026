@@ -9,7 +9,8 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { CatalogService } from './catalog.service';
-import { Prisma } from '@prisma/client';
+import { CreateManoperaDto, CreatePiesaDto } from './dto/create-catalog.dto';
+import { UpdateManoperaDto, UpdatePiesaDto } from './dto/update-catalog.dto';
 
 @Controller('catalog')
 export class CatalogController {
@@ -22,15 +23,20 @@ export class CatalogController {
     return this.catalogService.fetchPiese();
   }
 
+  @Get('piese/:id/istoric')
+  fetchIstoricPiesa(@Param('id', ParseIntPipe) id: number) {
+    return this.catalogService.fetchIstoricPiesa(id);
+  }
+
   @Post('piese')
-  createPiesa(@Body() data: Prisma.PiesaCreateInput) {
+  createPiesa(@Body() data: CreatePiesaDto) {
     return this.catalogService.createPiesa(data);
   }
 
   @Patch('piese/:id')
   updatePiesa(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: Prisma.PiesaUpdateInput,
+    @Body() data: UpdatePiesaDto,
   ) {
     return this.catalogService.updatePiesa(id, data);
   }
@@ -48,14 +54,14 @@ export class CatalogController {
   }
 
   @Post('manopera')
-  createManopera(@Body() data: Prisma.ManoperaCreateInput) {
+  createManopera(@Body() data: CreateManoperaDto) {
     return this.catalogService.createManopera(data);
   }
 
   @Patch('manopera/:id')
   updateManopera(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: Prisma.ManoperaUpdateInput,
+    @Body() data: UpdateManoperaDto,
   ) {
     return this.catalogService.updateManopera(id, data);
   }

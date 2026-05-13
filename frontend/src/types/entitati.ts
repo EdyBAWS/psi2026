@@ -29,3 +29,14 @@ export interface Angajat extends AngajatCore {
 }
 
 export type Asigurator = AsiguratorCore;
+
+export interface Vehicul {
+  idVehicul: number;
+  idClient: number;
+  numarInmatriculare: string;
+  marca: string;
+  model: string;
+  anFabricatie: number;
+  vin: string;
+  status: 'Activ' | 'Inactiv';
+}

@@ -26,7 +26,7 @@ const clientiById = new Map(
 const vehiculeById = new Map(
   mockVehicule.map((vehicul) => [
     vehicul.idVehicul,
-    `${vehicul.marca} ${vehicul.model} (${vehicul.nrInmatriculare})`,
+    `${vehicul.marca} ${vehicul.model} (${vehicul.numarInmatriculare})`,
   ]),
 );
 
@@ -192,18 +192,18 @@ export function obtineComenziFacturabileDinMock(): ComandaFacturabilaMock[] {
   return mockComenzi
     .filter(
       (comanda) =>
-        statusuriFacturabile.has(comanda.status) &&
+        statusuriFacturabile.has(comanda.status ?? "") &&
         !comenziDejaFacturate.has(comanda.idComanda),
     )
     .map((comanda) => ({
       idComanda: comanda.idComanda,
-      nrComanda: comanda.nrComanda,
-      dataComanda: (comanda.dataFinalizare ?? comanda.dataDeschidere)
+      nrComanda: comanda.numarComanda,
+      dataComanda: (comanda.dataFinalizare ?? comanda.dataDeschidere ?? new Date())
         .toISOString()
         .split("T")[0],
       idVehicul: comanda.idVehicul,
-      status: comanda.status,
-      totalEstimat: comanda.totalEstimat,
+      status: comanda.status ?? "Gata de livrare",
+      totalEstimat: comanda.totalEstimat ?? 0,
       client: numeClientDinVehicul(comanda.idVehicul),
       vehicul:
         vehiculeById.get(comanda.idVehicul) ?? `Vehicul #${comanda.idVehicul}`,
@@ -238,12 +238,12 @@ export const facturiEmiseMock: FacturaMock[] = facturiEmiseSeed.map(
         dataEmitere: facturaSeed.dataEmitere,
         dataScadenta: facturaSeed.dataScadenta,
         client: clientiById.get(idClient) ?? `Client #${idClient}`,
-        totalInitial: comanda.totalEstimat,
+        totalInitial: comanda.totalEstimat ?? 0,
         restDePlata: facturaSeed.restDePlata,
         status:
           facturaSeed.restDePlata === 0
             ? "Achitata"
-            : facturaSeed.restDePlata < comanda.totalEstimat
+            : facturaSeed.restDePlata < (comanda.totalEstimat ?? 0)
               ? "Achitata partial"
               : "Emisa",
       } satisfies FacturaMock;
@@ -295,7 +295,7 @@ export const istoricFacturareMock: TranzactieIstoricMock[] = [
     numarDocument: "F-SAG-2026-00124",
     client: facturiEmiseMock[0]?.client ?? "Client necunoscut",
     valoare: facturiEmiseMock[0]?.totalInitial ?? 0,
-    utilizator: "Edy (Admin)",
+    utilizator: "Admin",
     detalii: "Facturare comandă CMD-2026-005 după livrarea vehiculului.",
   },
   {
@@ -305,7 +305,7 @@ export const istoricFacturareMock: TranzactieIstoricMock[] = [
     numarDocument: "PEN-0045",
     client: facturiEmiseMock[1]?.client ?? "Client necunoscut",
     valoare: 126,
-    utilizator: "Edy (Admin)",
+    utilizator: "Admin",
     detalii: `Întârziere la factura ${facturiEmiseMock[1]?.numar ?? "F-SAG-2026-00118"} (1%/zi).`,
   },
   {
@@ -315,7 +315,7 @@ export const istoricFacturareMock: TranzactieIstoricMock[] = [
     numarDocument: facturiEmiseMock[0]?.numar ?? "F-SAG-2026-00124",
     client: facturiEmiseMock[0]?.client ?? "Client necunoscut",
     valoare: -150,
-    utilizator: "Edy (Admin)",
+    utilizator: "Admin",
     detalii: "Campanie de fidelizare pentru client corporate.",
   },
   {
@@ -335,7 +335,7 @@ export const istoricFacturareMock: TranzactieIstoricMock[] = [
     numarDocument: "F-SAG-2026-00126",
     client: facturiEmiseMock[2]?.client ?? "Client necunoscut",
     valoare: facturiEmiseMock[2]?.totalInitial ?? 0,
-    utilizator: "Edy (Admin)",
+    utilizator: "Admin",
     detalii:
       "Facturare comandă CMD-2026-006 pentru lucrare suspensie și bujii.",
   },

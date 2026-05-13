@@ -1,6 +1,7 @@
 // src/modules/03facturare/penalizari/usePenalizare.ts
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '../../../lib/api';
 
 export function usePenalizare() {
   const [clientiBD, setClientiBD] = useState<any[]>([]);
@@ -22,8 +23,8 @@ export function usePenalizare() {
     const fetchToateDatele = async () => {
       try {
         const [resClienti, resFacturi] = await Promise.all([
-          fetch('http://localhost:3000/entitati/clienti'),
-          fetch('http://localhost:3000/facturare')
+          fetch(`${API_BASE_URL}/entitati/clienti`),
+          fetch(`${API_BASE_URL}/facturare`)
         ]);
 
         const dataClienti = resClienti.ok ? await resClienti.json() : [];
@@ -148,7 +149,7 @@ export function usePenalizare() {
         ]
       };
 
-      const response = await fetch('http://localhost:3000/facturare', {
+      const response = await fetch(`${API_BASE_URL}/facturare`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
