@@ -64,4 +64,65 @@ export class CatalogService {
       where: { idManopera: id },
     });
   }
+
+  // ─── KITURI ─────────────────────────────────────────────────────────
+
+  async fetchKituri() {
+    return this.prisma.kitPiese.findMany({
+      include: {
+        piese: {
+          include: {
+            piesa: true,
+          },
+        },
+      },
+      orderBy: { idKit: 'desc' },
+    });
+  }
+
+  async createKit(data: { codKit: string; denumire: string; reducere?: number; piese: { idPiesa: number; cantitate: number }[] }) {
+    return this.prisma.kitPiese.create({
+      data: {
+        codKit: data.codKit,
+        denumire: data.denumire,
+        reducere: data.reducere,
+        piese: {
+          create: data.piese.map(p => ({
+            idPiesa: p.idPiesa,
+            cantitate: p.cantitate,
+          })),
+        },
+      },
+      include: { piese: { include: { piesa: true } } },
+    });
+  }
+
+  async updateKit(id: number, data: { codKit?: string; denumire?: string; reducere?: number; piese?: { idPiesa: number; cantitate: number }[] }) {
+    const updateData: Prisma.KitPieseUpdateInput = {};
+    if (data.codKit !== undefined) updateData.codKit = data.codKit;
+    if (data.denumire !== undefined) updateData.denumire = data.denumire;
+    if (data.reducere !== undefined) updateData.reducere = data.reducere;
+
+    if (data.piese) {
+      updateData.piese = {
+        deleteMany: {},
+        create: data.piese.map(p => ({
+          idPiesa: p.idPiesa,
+          cantitate: p.cantitate,
+        })),
+      };
+    }
+
+    return this.prisma.kitPiese.update({
+      where: { idKit: id },
+      data: updateData,
+      include: { piese: { include: { piesa: true } } },
+    });
+  }
+
+  async deleteKit(id: number) {
+    return this.prisma.kitPiese.delete({
+      where: { idKit: id },
+    });
+  }
 }

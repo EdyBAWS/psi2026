@@ -54,3 +54,33 @@ export class CreateManoperaDto {
   @Min(0)
   pretOra?: number;
 }
+
+import { Type } from 'class-transformer';
+import { ValidateNested, IsArray } from 'class-validator';
+
+export class CreateKitItemDto {
+  @IsNumber()
+  idPiesa: number;
+
+  @IsNumber()
+  @Min(1)
+  cantitate: number;
+}
+
+export class CreateKitDto {
+  @IsString()
+  codKit: string;
+
+  @IsString()
+  denumire: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reducere?: number;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateKitItemDto)
+  piese: CreateKitItemDto[];
+}

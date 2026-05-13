@@ -244,7 +244,21 @@ export async function fetchCatalogManopere(): Promise<CatalogManopera[]> {
   }));
 }
 
-export async function fetchCatalogKituri(): Promise<CatalogKit[]> { return []; }
+export async function fetchCatalogKituri(): Promise<CatalogKit[]> {
+  const res = await fetch(`${API_CAT}/kituri`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.map((kit: any) => ({
+    idKit: kit.idKit,
+    cod: kit.codKit,
+    denumire: kit.denumire,
+    unitateMasura: "kit",
+    pretVanzare: kit.piese?.reduce((sum: number, p: any) => sum + (p.piesa.pretBaza * p.cantitate), 0) * (1 - (kit.reducere || 0) / 100),
+    cotaTVA: 19,
+    disponibilitateStoc: true,
+    piese: kit.piese,
+  }));
+}
 
 export async function fetchPozitiiComanda(): Promise<PozitieComanda[]> { return readPozitiiLocale(); }
 

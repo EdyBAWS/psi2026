@@ -16,6 +16,7 @@ type CatalogOption = {
   id: number; tip: TipPozitie; cod: string; denumire: string;
   unitateMasura: PozitieComandaDraft["unitateMasura"];
   pretVanzare: number; cotaTVA: number; disponibilitateStoc: boolean;
+  piese?: any[];
 };
 
 const formatSuma = (v: number) => new Intl.NumberFormat("ro-RO", { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
@@ -39,7 +40,8 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
     }));
     const kituri = catalogKituri.map(k => ({ 
       id: k.idKit, tip: "Kit" as TipPozitie, cod: k.cod, denumire: k.denumire, 
-      unitateMasura: k.unitateMasura, pretVanzare: k.pretVanzare, cotaTVA: k.cotaTVA, disponibilitateStoc: k.disponibilitateStoc 
+      unitateMasura: k.unitateMasura, pretVanzare: k.pretVanzare, cotaTVA: k.cotaTVA, disponibilitateStoc: k.disponibilitateStoc,
+      piese: k.piese 
     }));
     // FIX: Mapăm pretOra și codManopera
     const manopere = catalogManopere.map(m => ({ 
@@ -56,11 +58,28 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
   }, [cautare, catalog]);
 
   const handleAdd = (item: CatalogOption) => {
-    onChange([...pozitii, { 
-      ...creeazaPozitieDraft(), tipPozitie: item.tip, catalogId: item.id, codArticol: item.cod, 
-      descriere: item.denumire, unitateMasura: item.unitateMasura, pretVanzare: item.pretVanzare, 
-      cotaTVA: item.cotaTVA, disponibilitateStoc: item.disponibilitateStoc 
-    }]);
+    if (item.tip === 'Kit' && item.piese) {
+      const noiPozitii = item.piese.map((p: any) => ({
+        ...creeazaPozitieDraft(),
+        tipPozitie: "Piesa" as TipPozitie,
+        catalogId: p.idPiesa,
+        codArticol: p.piesa.codPiesa,
+        descriere: p.piesa.denumire,
+        unitateMasura: "buc" as any,
+        cantitate: p.cantitate,
+        pretVanzare: p.piesa.pretBaza, // Discount is not applied yet, could apply kit discount here if needed.
+        cotaTVA: 19,
+        disponibilitateStoc: true,
+        observatiiPozitie: `Componentă ${item.denumire}`
+      }));
+      onChange([...pozitii, ...noiPozitii]);
+    } else {
+      onChange([...pozitii, { 
+        ...creeazaPozitieDraft(), tipPozitie: item.tip, catalogId: item.id, codArticol: item.cod, 
+        descriere: item.denumire, unitateMasura: item.unitateMasura, pretVanzare: item.pretVanzare, 
+        cotaTVA: item.cotaTVA, disponibilitateStoc: item.disponibilitateStoc 
+      }]);
+    }
     setCautare(""); setOpen(false);
   };
 

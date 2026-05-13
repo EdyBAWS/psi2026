@@ -7,6 +7,7 @@ import Penalizare from "./modules/03facturare/penalizari/Penalizare";
 import Oferta from "./modules/03facturare/oferte/Oferta";
 import Piesa from "./modules/00catalog/piesa/Piesa";
 import Manopera from "./modules/00catalog/manopera/Manopera";
+import Kituri from "./modules/00catalog/kituri/Kituri";
 
 import { Client } from './modules/01entitati/client/Client';
 import { Angajat } from './modules/01entitati/angajat/Angajat';
@@ -15,6 +16,7 @@ import Vehicul from './modules/01entitati/vehicule/Vehicul';
 import Notificare from "./modules/05notificari/Notificari";
 
 import IstoricFacturare from "./modules/03facturare/istoric/IstoricFacturare";
+import IstoricIncasari from "./modules/04incasari/IstoricIncasari";
 
 export default function App() {
   // Pornim cu dashboard pentru a fi landing page
@@ -42,12 +44,16 @@ export default function App() {
         return <Oferta />;
       case "facturare-istoric":
         return <IstoricFacturare />;
+      case "istoric-incasari":
+        return <IstoricIncasari />;
       case "incasari":
         return <Incasari />;
       case "catalog-piese":
         return <Piesa />;
       case "catalog-manopera":
         return <Manopera />;
+      case "catalog-kituri":
+        return <Kituri />;
       case "notificari":
         return <Notificare onNavigate={setPaginaCurenta} />;
 

@@ -123,6 +123,7 @@ export interface CatalogKit {
   pretVanzare: number;
   cotaTVA: number;
   disponibilitateStoc: boolean;
+  piese?: any[];
 }
 
 export interface PozitieComandaDraft {
