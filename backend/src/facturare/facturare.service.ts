@@ -32,9 +32,9 @@ export class FacturareService {
     });
 
     return {
-      totalFaraTVA,
-      tva: totalTVA,
-      totalGeneral: totalFaraTVA + totalTVA,
+      totalFaraTVA: Number(totalFaraTVA.toFixed(2)),
+      tva: Number(totalTVA.toFixed(2)),
+      totalGeneral: Number((totalFaraTVA + totalTVA).toFixed(2)),
     };
   }
 

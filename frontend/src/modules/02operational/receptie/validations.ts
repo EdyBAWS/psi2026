@@ -22,6 +22,14 @@ export interface ValidarePreluareResult {
   mesajeAvertizare: string[];
   mesajeBlocare: string[];
   poateSalva: boolean;
+  campuriCuEroare: {
+    kilometrajPreluare: boolean;
+    mecanic: boolean;
+    pozitii: boolean;
+    simptomeReclamate: boolean;
+    termenPromis: boolean;
+    tipPlata: boolean;
+  };
 }
 
 // `number | ''` permite câmpul gol în input-urile controlate.
@@ -149,10 +157,20 @@ export function valideazaPreluare({
     );
   }
 
+  const campuriCuEroare = {
+    mecanic: idMecanicSelectat === null,
+    kilometrajPreluare: !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) || detaliiPreluare.kilometrajPreluare <= 0,
+    simptomeReclamate: detaliiPreluare.simptomeReclamate.trim().length < 10,
+    termenPromis: detaliiPreluare.termenPromis === "" || new Date(detaliiPreluare.termenPromis).getTime() < new Date().setHours(0, 0, 0, 0),
+    tipPlata: (esteLucrareAsigurare && detaliiPreluare.tipPlata !== "Asigurare") || (!esteLucrareAsigurare && detaliiPreluare.tipPlata === "Asigurare"),
+    pozitii: !suntPozitiiValide(pozitiiDraft),
+  };
+
   return {
     dosarValid,
     mesajeAvertizare,
     mesajeBlocare,
     poateSalva: mesajeBlocare.length === 0,
+    campuriCuEroare,
   };
 }

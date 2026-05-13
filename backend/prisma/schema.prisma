@@ -152,6 +152,37 @@ model Piesa {
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  
+  kituriIteme  KitPiesaItem[]
+}
+
+model KitPiese {
+  idKit      Int            @id @default(autoincrement())
+  codKit     String         @unique
+  denumire   String
+  reducere   Float?         @default(0) // Procent reducere
+
+  piese      KitPiesaItem[]
+  
+  comandaPozitii ComandaPozitie[]
+  facturaIteme   FacturaItem[]
+
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model KitPiesaItem {
+  idItem    Int      @id @default(autoincrement())
+  
+  idKit     Int
+  kit       KitPiese @relation(fields: [idKit], references: [idKit], onDelete: Cascade)
+  
+  idPiesa   Int
+  piesa     Piesa    @relation(fields: [idPiesa], references: [idPiesa])
+  
+  cantitate Int      @default(1)
+  
+  createdAt DateTime @default(now())
 }
 
 model Manopera {
@@ -226,6 +257,9 @@ model ComandaPozitie {
   cantitate   Int
   pretUnitar  Float
   
+  idKit       Int?
+  kit         KitPiese? @relation(fields: [idKit], references: [idKit], onDelete: SetNull)
+  
   createdAt   DateTime @default(now())
 }
 
@@ -267,6 +301,8 @@ model FacturaItem {
   cotaTva    Float    @default(19)
   idPiesa    Int?
   idManopera Int?
+  idKit      Int?
+  kit        KitPiese? @relation(fields: [idKit], references: [idKit], onDelete: SetNull)
   
   createdAt  DateTime @default(now())
 }

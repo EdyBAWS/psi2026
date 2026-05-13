@@ -128,7 +128,7 @@ export default function FormComanda({
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Mecanic responsabil
+              Mecanic responsabil<span className="text-rose-500 ml-1">*</span>
             </label>
             <select
               // `?? ''` înseamnă:
@@ -153,7 +153,7 @@ export default function FormComanda({
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Tip plată
+              Tip plată<span className="text-rose-500 ml-1">*</span>
             </label>
             <select
               value={detaliiPreluare.tipPlata}
@@ -174,7 +174,7 @@ export default function FormComanda({
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Prioritate
+              Prioritate<span className="text-rose-500 ml-1">*</span>
             </label>
             <select
               value={detaliiPreluare.prioritate}
@@ -195,7 +195,7 @@ export default function FormComanda({
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Termen promis
+              Termen promis<span className="text-rose-500 ml-1">*</span>
             </label>
             <input
               type="date"
@@ -211,7 +211,7 @@ export default function FormComanda({
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Kilometraj preluare
+              Kilometraj preluare<span className="text-rose-500 ml-1">*</span>
             </label>
             <input
               type="number"
@@ -230,7 +230,7 @@ export default function FormComanda({
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Nivel combustibil
+              Nivel combustibil<span className="text-rose-500 ml-1">*</span>
             </label>
             <select
               value={detaliiPreluare.nivelCombustibil}
@@ -274,7 +274,7 @@ export default function FormComanda({
 
           <div className="xl:col-span-2">
             <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Simptome reclamate
+              Simptome reclamate<span className="text-rose-500 ml-1">*</span>
             </label>
             <textarea
               rows={3}

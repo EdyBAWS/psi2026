@@ -9,8 +9,8 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { CatalogService } from './catalog.service';
-import { CreateManoperaDto, CreatePiesaDto } from './dto/create-catalog.dto';
-import { UpdateManoperaDto, UpdatePiesaDto } from './dto/update-catalog.dto';
+import { CreateManoperaDto, CreatePiesaDto, CreateKitDto } from './dto/create-catalog.dto';
+import { UpdateManoperaDto, UpdatePiesaDto, UpdateKitDto } from './dto/update-catalog.dto';
 
 @Controller('catalog')
 export class CatalogController {
@@ -69,5 +69,30 @@ export class CatalogController {
   @Delete('manopera/:id')
   deleteManopera(@Param('id', ParseIntPipe) id: number) {
     return this.catalogService.deleteManopera(id);
+  }
+
+  // ─── RUTARE KITURI ────────────────────────────────────────────────────
+
+  @Get('kituri')
+  fetchKituri() {
+    return this.catalogService.fetchKituri();
+  }
+
+  @Post('kituri')
+  createKit(@Body() data: CreateKitDto) {
+    return this.catalogService.createKit(data);
+  }
+
+  @Patch('kituri/:id')
+  updateKit(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateKitDto,
+  ) {
+    return this.catalogService.updateKit(id, data);
+  }
+
+  @Delete('kituri/:id')
+  deleteKit(@Param('id', ParseIntPipe) id: number) {
+    return this.catalogService.deleteKit(id);
   }
 }

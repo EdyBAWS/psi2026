@@ -24,7 +24,7 @@ export class IncasariService {
       0,
     );
 
-    return Math.max(0, factura.totalGeneral - totalIncasat);
+    return Number(Math.max(0, factura.totalGeneral - totalIncasat).toFixed(2));
   }
 
   async fetchFacturiRestante() {
@@ -52,12 +52,12 @@ export class IncasariService {
           dataEmitere: factura.dataEmiterii.toISOString(),
           dataScadenta: factura.scadenta.toISOString(),
           client: factura.client.nume,
-          totalInitial: factura.totalGeneral,
+          totalInitial: Number(factura.totalGeneral.toFixed(2)),
           restDePlata,
           status: factura.status,
         };
       })
-      .filter((factura) => factura.restDePlata > 0);
+      .filter((factura) => factura.restDePlata > 0.001);
   }
 
   async findAll() {

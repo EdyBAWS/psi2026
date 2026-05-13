@@ -9,8 +9,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
   const [meniuriDeschise, setMeniuriDeschise] = useState<string[]>(['Catalog', 'Facturare']);
 
   const toggleMeniu = (numeMeniu: string) => {
-    setMeniuriDeschise(prev => 
-      prev.includes(numeMeniu) 
+    setMeniuriDeschise(prev =>
+      prev.includes(numeMeniu)
         ? prev.filter(m => m !== numeMeniu)
         : [...prev, numeMeniu]
     );
@@ -23,6 +23,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />,
       subItems: [
         { id: 'catalog-piese', label: 'Piese Auto' },
+        { id: 'catalog-kituri', label: 'Kituri Piese' },
         { id: 'catalog-manopera', label: 'Manoperă' }
       ]
     },
@@ -67,7 +68,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
         { id: 'facturare-comenzi', label: 'Comenzi Finalizate' },
         { id: 'facturare-campanii', label: 'Campanii / Oferte' },
         { id: 'facturare-penalizari', label: 'Penalizări Întârziere' },
-        { id: 'facturare-istoric', label: 'Istoric Facturare' } 
+        { id: 'facturare-istoric', label: 'Istoric Facturare' }
       ]
     },
     {
@@ -75,7 +76,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       isDropdown: true,
       icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
       subItems: [
-        { id: 'incasari', label: 'Registru Încasări' }
+        { id: 'incasari', label: 'Înregistrare Încasare' },
+        { id: 'istoric-incasari', label: 'Istoric Încasări' }
       ]
     }
   ];
@@ -99,9 +101,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
               <div key={categorie.titlu} className="space-y-1">
                 <button
                   onClick={() => toggleMeniu(categorie.titlu)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold text-sm ${
-                    isDeschis || hasActiveChild ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-                  }`}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold text-sm ${isDeschis || hasActiveChild ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                    }`}
                 >
                   <div className="flex items-center">
                     <svg className={`w-5 h-5 mr-3 ${isDeschis || hasActiveChild ? 'text-indigo-400' : 'text-slate-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,11 +121,10 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
                       <button
                         key={item.id}
                         onClick={() => setPagina(item.id)}
-                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                          paginaCurenta === item.id 
-                            ? 'bg-indigo-600/10 text-indigo-400' 
-                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
-                        }`}
+                        className={`w-full text-left px-4 py-2 rounded-lg transition-colors text-sm font-medium ${paginaCurenta === item.id
+                          ? 'bg-indigo-600/10 text-indigo-400'
+                          : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+                          }`}
                       >
                         {item.label}
                       </button>
@@ -139,9 +139,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
             <button
               key={categorie.titlu}
               onClick={() => setPagina(categorie.id!)}
-              className={`w-full flex items-center px-4 py-3 rounded-xl transition-all font-semibold text-sm ${
-                paginaCurenta === categorie.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-              }`}
+              className={`w-full flex items-center px-4 py-3 rounded-xl transition-all font-semibold text-sm ${paginaCurenta === categorie.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                }`}
             >
               <svg className={`w-5 h-5 mr-3 ${paginaCurenta === categorie.id ? 'text-indigo-200' : 'text-slate-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {categorie.icon}
@@ -153,9 +152,8 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
 
         <button
           onClick={() => setPagina('notificari')}
-          className={`w-full flex items-center px-4 py-3 rounded-xl transition-all font-semibold text-sm mt-4 ${
-            paginaCurenta === 'notificari' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-          }`}
+          className={`w-full flex items-center px-4 py-3 rounded-xl transition-all font-semibold text-sm mt-4 ${paginaCurenta === 'notificari' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+            }`}
         >
           <svg className={`w-5 h-5 mr-3 ${paginaCurenta === 'notificari' ? 'text-indigo-200' : 'text-slate-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />

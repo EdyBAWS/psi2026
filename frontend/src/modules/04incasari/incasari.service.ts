@@ -28,6 +28,14 @@ export const IncasariService = {
       dataIncasare: incasare.data,
       suma: incasare.suma,
       modalitate: modalitateFromBackend[incasare.modalitate] ?? incasare.modalitate,
+      referinta: incasare.referinta,
+      client: incasare.client?.nume || 'Client Necunoscut',
+      alocari: incasare.alocari?.map((a: any) => ({
+        idFactura: a.idFactura,
+        numar: a.factura?.numar,
+        serie: a.factura?.serie,
+        sumaAlocata: a.sumaAlocata,
+      })) || [],
     }));
   },
 

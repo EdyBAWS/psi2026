@@ -24,6 +24,29 @@ export async function deleteManopera(id: number): Promise<void> {
   await apiJson(`/catalog/manopera/${id}`, { method: 'DELETE' });
 }
 
+// ─── Kituri ──────────────────────────
+export async function fetchKituri(): Promise<any[]> {
+  return apiJson<any[]>('/catalog/kituri');
+}
+
+export async function createKit(data: any): Promise<any> {
+  return apiJson('/catalog/kituri', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateKit(id: number, data: any): Promise<any> {
+  return apiJson(`/catalog/kituri/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteKit(id: number): Promise<void> {
+  await apiJson(`/catalog/kituri/${id}`, { method: 'DELETE' });
+}
+
 // ─── Piese ──────────────────────────
 export async function fetchPiese(): Promise<PiesaCatalogMock[]> {
   return apiJson('/catalog/piese');

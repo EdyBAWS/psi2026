@@ -130,7 +130,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
             totalEstimat={derivate.indicatori.rezumatPozitii.total} 
             tvaEstimat={derivate.indicatori.rezumatPozitii.tva} 
             blocheazaTipPlataAsigurare={stare.esteLucrareAsigurare}
-            campuriCuEroare={(derivate.validare as any).campuriCuEroare || { mecanic: false, pozitii: false }} 
+            campuriCuEroare={derivate.validare.campuriCuEroare} 
           />
 
           <div className="flex justify-between bg-white p-6 rounded-2xl border shadow-sm">
