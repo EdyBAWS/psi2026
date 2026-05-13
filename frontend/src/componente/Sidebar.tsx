@@ -163,7 +163,7 @@ export default function Sidebar({ setPagina, paginaCurenta }: SidebarProps) {
       </nav>
 
       <div className="p-6 text-sm text-slate-500 border-t border-slate-800/60 shrink-0 flex items-center">
-        <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-slate-300 mr-3 font-bold">ED</div>
+        <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-slate-300 mr-3 font-bold">EX</div>
         <div>
           <p className="text-slate-300 font-medium">G</p>
           <p className="text-xs">Administrator</p>

@@ -149,6 +149,21 @@ export function useNotificari(onNavigate?: (pagina: string) => void) {
   const handleActionClick = (notificare: NotificareMock) => {
     if (!notificare.paginaDestinatie) return;
     actualizeazaNotificare(notificare.id, { citit: true });
+    
+    // Suport pentru highlight
+    if (notificare.metadata) {
+      if (notificare.metadata.idIncasare) {
+        sessionStorage.setItem('highlight-incasare-id', String(notificare.metadata.idIncasare));
+      }
+      if (notificare.metadata.idFactura) {
+        sessionStorage.setItem('facturare-idComandaSelectata', String(notificare.metadata.idComanda || ''));
+        sessionStorage.setItem('highlight-factura-id', String(notificare.metadata.idFactura));
+      }
+      if (notificare.metadata.idComanda) {
+        sessionStorage.setItem('gestiune-idComandaSelectata', String(notificare.metadata.idComanda));
+      }
+    }
+    
     if (onNavigate) {
       onNavigate(notificare.paginaDestinatie);
       return;

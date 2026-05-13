@@ -56,6 +56,7 @@ export interface NotificareMock {
   citit?: boolean;
   arhivata?: boolean;
   stearsa?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface TranzactieIstoricMock {

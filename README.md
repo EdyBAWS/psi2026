@@ -1,58 +1,61 @@
-# Service Auto G
+# Service Auto G — Aplicație de Management Service Auto
 
-`Service Auto G` este o aplicație full-stack pentru administrarea unui service auto. Proiectul are:
+Aplicație full-stack pentru administrarea unui service auto. Acoperă recepție vehicule, dosare de daună, comenzi de reparație, catalog piese & manoperă, kituri de piese, facturare fiscală, încasări și notificări persistate în baza de date.
 
-- frontend administrativ în `React + TypeScript + Vite`
-- backend API în `NestJS`
-- persistență prin `Prisma`
-- bază de date `PostgreSQL` găzduită în Neon
+---
 
-Aplicația acoperă fluxuri precum catalogul de piese și manoperă, gestiunea clienților, angajaților și asiguratorilor, recepția auto, dosare de daună, comenzi de service și facturare.
-Fluxul curent include și încasări plus notificări persistate în baza de date.
+## Stack Tehnologic
 
-## Pornire rapidă
+| Strat | Tehnologie | Rol |
+|-------|-----------|-----|
+| Frontend UI | React 19 + TypeScript | Componente reactive, hook-uri de stare |
+| Build & Dev Server | Vite 8 | HMR, bundle optimizat pentru producție |
+| Stilizare | Tailwind CSS v4 | Clase utilitare direct în JSX |
+| Formulare | react-hook-form + zod | Validare declarativă, fără rerender excesiv |
+| Iconițe | lucide-react | Set consistent SVG icons |
+| Notificări UI | sonner | Toast-uri non-blocante |
+| Backend | NestJS (Node.js) | Module, Controllere, Servicii, DTO-uri |
+| ORM | Prisma Client | Acces type-safe la PostgreSQL |
+| Bază de date | PostgreSQL (Neon cloud) | Stocare relațională persistentă |
+| Validare API | class-validator + ValidationPipe | Respingere payload-uri incorecte |
+| Testare | Jest | Teste unitare și de integrare backend |
 
-Cerințe:
+---
 
-- Node.js 20+
-- npm
-- acces la variabila `DATABASE_URL` în `backend/.env`
+## Pornire Rapidă
 
-Instalare:
+**Cerințe:** Node.js 20+, npm, variabila `DATABASE_URL` în `backend/.env`.
 
 ```bash
+# Instalare dependențe
 npm install --prefix backend
 npm install --prefix frontend
-```
 
-Pornire full-stack din root:
-
-```bash
+# Pornire full-stack concurentă (din root)
 npm run dev
 ```
 
-URL-uri locale:
-
-```text
+URL-uri locale după pornire:
+```
 Frontend: http://127.0.0.1:5173
 Backend:  http://127.0.0.1:3000
 ```
 
-Observație: când rulezi `npm run dev`, Vite afișează URL-ul frontend, apoi Nest scrie multe loguri de startup. Scriptul root reafișează URL-urile după pornire ca să fie ușor de găsit.
+> Scriptul root (`scripts/dev.mjs`) pornește backend-ul NestJS și Vite în paralel și reafișează URL-urile după inițializare.
 
-## Comenzi utile
+---
 
-Din root:
+## Comenzi Utile
 
+**Root (full-stack):**
 ```bash
-npm run dev
-npm run build
-npm run test
-npm run lint
+npm run dev          # pornire full-stack
+npm run build        # build producție ambele
+npm run test         # teste backend
+npm run lint         # lint ambele
 ```
 
-Doar backend:
-
+**Backend:**
 ```bash
 npm run start:dev --prefix backend
 npm run build --prefix backend
@@ -60,341 +63,168 @@ npm test --prefix backend -- --runInBand
 npm run lint --prefix backend
 ```
 
-Doar frontend:
-
+**Frontend:**
 ```bash
 npm run dev --prefix frontend -- --host 127.0.0.1
 npm run build --prefix frontend
 npm run lint --prefix frontend
 ```
 
-Prisma / bază de date:
-
+**Prisma / baza de date:**
 ```bash
 cd backend
-npx prisma validate
-npx prisma generate
-npx prisma migrate status
-npm run seed
+npx prisma validate          # verifică schema
+npx prisma generate          # regenerează clientul după schimbări de schemă
+npx prisma migrate status    # starea migrărilor
+npm run seed                 # populează BD cu date demo (atenție: resetează!)
 ```
 
-## Stack
+---
 
-Frontend:
+## Structura Repo
 
-- React 19
-- TypeScript
-- Vite 8
-- Tailwind CSS v4
-- `react-hook-form` + `zod`
-- `lucide-react`
-- `sonner`
-
-Backend:
-
-- NestJS
-- Prisma Client
-- PostgreSQL / Neon
-- `class-validator`
-- Jest
-
-## Ce face fiecare tehnologie
-
-### React
-
-React este biblioteca folosită pentru interfață. În loc să modificăm manual HTML-ul din browser, scriem componente. O componentă primește date prin `props`, ține stare prin `useState` / hook-uri și întoarce JSX, adică descrierea ecranului.
-
-În acest proiect, React este folosit pentru pagini precum catalog, entități, operațional și facturare.
-
-### TypeScript
-
-TypeScript este JavaScript cu tipuri. Tipurile ne ajută să prindem erori înainte de rulare, de exemplu când folosim `numarComanda` greșit sau trimitem un câmp care nu există în model.
-
-În proiect, tipurile frontend sunt în fișiere precum:
-
-```text
-frontend/src/modules/02operational/types.ts
-frontend/src/types/
 ```
-
-### Vite
-
-Vite este serverul de dezvoltare și tool-ul de build pentru frontend. Când rulezi frontend-ul, Vite servește aplicația pe:
-
-```text
-http://127.0.0.1:5173
-```
-
-La `npm run build --prefix frontend`, Vite creează varianta optimizată pentru producție în `frontend/dist`.
-
-### Tailwind CSS
-
-Tailwind oferă clase CSS gata de folosit direct în JSX. De exemplu, `rounded-xl`, `bg-white`, `text-sm`, `flex` și `gap-4` sunt clase Tailwind.
-
-Avantajul este că stilizarea rămâne aproape de componentă și se poate ajusta rapid fără fișiere CSS separate pentru fiecare componentă.
-
-### NestJS
-
-NestJS este framework-ul backend. El organizează codul în module, controllere și servicii.
-
-Rolurile principale:
-
-- `Module`: grupează codul unei zone, de exemplu `OperationalModule`
-- `Controller`: definește rutele HTTP, de exemplu `GET /operational/comenzi`
-- `Service`: conține logica reală și apelează baza de date
-- `DTO`: descrie ce date acceptă un request
-
-Exemplu simplificat:
-
-```text
-browser/front-end
-  -> POST /operational/comenzi
-  -> OperationalController
-  -> OperationalService
-  -> Prisma
-  -> PostgreSQL
-```
-
-### DTO și ValidationPipe
-
-DTO înseamnă `Data Transfer Object`. Este clasa care spune backend-ului ce formă trebuie să aibă datele primite.
-
-`ValidationPipe` citește DTO-ul și validează request-ul. În `backend/src/main.ts`, `whitelist: true` elimină câmpurile care nu sunt definite în DTO. Asta protejează API-ul de payload-uri greșite.
-
-Exemplu: dacă DTO-ul pentru comandă acceptă doar status `Activ` / `Inactiv`, frontend-ul nu trebuie să trimită status UI precum `In Lucru` sau `Asteapta piese`.
-
-### Prisma
-
-Prisma este stratul dintre codul TypeScript și baza de date. În loc să scriem SQL manual pentru fiecare operație, folosim Prisma Client:
-
-```ts
-prisma.comanda.findMany()
-prisma.comanda.create()
-prisma.vehicul.update()
-```
-
-Fișierul important este:
-
-```text
-backend/prisma/schema.prisma
-```
-
-Acolo sunt definite modelele, relațiile și enum-urile. După ce schimbi schema, rulezi:
-
-```bash
-npx prisma generate
-```
-
-### Migrații Prisma
-
-O migrare este istoricul unei schimbări de bază de date. Dacă adaugi un tabel sau un câmp nou, Prisma creează un fișier SQL în:
-
-```text
-backend/prisma/migrations/
-```
-
-Migrațiile fac ca baza de date altui coleg sau a mediului de producție să poată ajunge la aceeași structură.
-
-### PostgreSQL
-
-PostgreSQL este baza de date relațională. Ea păstrează datele reale: clienți, vehicule, dosare, comenzi, facturi și iteme.
-
-Relațional înseamnă că tabelele se leagă între ele. De exemplu:
-
-```text
-Client -> Vehicul -> DosarDauna -> Comanda -> Factura
-```
-
-În modulul operațional, comanda este legată de vehicul prin dosar:
-
-```text
-Comanda.idDosar -> DosarDauna.idDosar -> DosarDauna.idVehicul -> Vehicul.idVehicul
-```
-
-### Neon
-
-Neon este serviciul cloud care găzduiește baza PostgreSQL. Aplicația se conectează la Neon prin `DATABASE_URL` din:
-
-```text
-backend/.env
-```
-
-Fără `DATABASE_URL` corect, Prisma nu poate citi sau scrie date.
-
-### Seed data
-
-Seed-ul populează baza cu date inițiale pentru testare și demo. În proiect, seed-ul este în:
-
-```text
-backend/prisma/seedData.ts
-```
-
-Îl rulezi cu:
-
-```bash
-npm run seed --prefix backend
-```
-
-Seed-ul curent creează date pentru toate modulele:
-
-- asiguratori, angajați și clienți PF/PJ;
-- piese și manopere cu stocuri diferite, inclusiv stoc critic;
-- vehicule, dosare de daună și comenzi de service;
-- facturi emise, facturi achitate, facturi restante și facturi cu plată parțială;
-- încasări reale alocate pe facturi;
-- notificări inițiale pentru facturi emise, facturi restante, încasări, comenzi și stoc critic.
-
-După seed, pagina `05 Notificări` nu trebuie să fie goală. Ar trebui să vezi notificări de tip `Info`, `Avertizare` și `Succes`.
-
-Important: `npm run seed --prefix backend` curăță datele demo existente și le recreează. Folosește comanda doar dacă e ok să pierzi datele de test introduse manual.
-
-### Jest
-
-Jest rulează testele backend. Testele verifică rapid că modulele principale se construiesc și că metodele de bază răspund corect.
-
-Comandă:
-
-```bash
-npm test --prefix backend -- --runInBand
-```
-
-## Cum este organizat repo-ul
-
-```text
 psi2026/
 ├── package.json             # scripturi root pentru full-stack
 ├── scripts/
-│   └── dev.mjs              # pornește backend + frontend împreună
+│   └── dev.mjs              # pornire concurentă backend + frontend
+├── documentation/           # modele proiect PSI (PDF) + documentație Word
 ├── backend/
-│   ├── README.md
 │   ├── package.json
 │   ├── prisma/
-│   │   ├── schema.prisma
-│   │   ├── migrations/
-│   │   └── seedData.ts
+│   │   ├── schema.prisma    # modele, relații, enum-uri
+│   │   ├── migrations/      # istoricul modificărilor de BD
+│   │   └── seed/            # date demo pentru toate modulele
 │   └── src/
-│       ├── catalog/
-│       ├── entitati/
-│       ├── operational/
-│       ├── facturare/
-│       └── prisma/
+│       ├── app.module.ts
+│       ├── catalog/         # piese, manoperă, kituri
+│       ├── entitati/        # clienți, angajați, asiguratori
+│       ├── operational/     # vehicule, dosare daună, comenzi, pozitii deviz
+│       ├── facturare/       # emitere facturi, iteme, next-number
+│       ├── incasari/        # înregistrare și alocare încasări
+│       ├── notificari/      # creare, citire, arhivare notificări
+│       ├── workflows/       # teste de integrare full-flow
+│       └── prisma/          # PrismaService singleton
 └── frontend/
-    ├── README.md
     ├── package.json
     └── src/
-        ├── App.tsx
-        ├── componente/
-        ├── mock/
-        ├── modules/
+        ├── App.tsx           # router principal (sessionStorage-based navigation)
+        ├── componente/ui/    # componente reutilizabile (Button, Field, StatCard...)
         ├── lib/
-        └── types/
+        │   ├── api.ts        # wrapper fetch cu API_BASE_URL
+        │   └── pageState.ts  # hook usePageSessionState (persistă filtre între navigări)
+        ├── mock/             # tipuri și date demo partajate (types.ts, notificari.ts)
+        └── modules/          # (detaliat mai jos)
 ```
 
-## Logica backend-ului
+---
 
-Backend-ul folosește structura standard NestJS:
+## Module Frontend
 
-```text
-Controller -> Service -> PrismaService -> PostgreSQL
-```
+### `00catalog` — Nomenclatoare
 
-Pe scurt:
+| Submodul | Funcționalități |
+|----------|----------------|
+| `piesa/` | CRUD piese, stoc, preț bază, tip (Nouă/SH), garanție, grad uzură, badge stoc critic |
+| `manopera/` | CRUD norme de timp, categorii (Mecanică Ușoară/Grea, Diagnoză, Electrică, Tinichigerie), medie normă |
+| `kituri/` | Kituri (set ≥2 piese), reducere procentuală, calculator dinamic preț final, valoare economie client |
 
-- `Controller` definește endpoint-urile HTTP: `GET`, `POST`, `PATCH`, `DELETE`
-- `DTO` definește forma datelor primite în request
-- `Service` conține logica aplicației și apelează Prisma
-- `PrismaService` gestionează conexiunea la baza de date
-- `schema.prisma` definește tabelele, relațiile și enum-urile
-- `migrations/` păstrează istoricul modificărilor de bază de date
+### `01entitati` — Entități Sistem
 
-Exemplu din modulul operațional:
+| Submodul | Funcționalități |
+|----------|----------------|
+| `client/` | Clienți PF/PJ, CNP/CUI/serieCI, sold debitor, activare/dezactivare |
+| `vehicule/` | Flotă auto, VIN, marca/model, proprietar, istoric comenzi per vehicul cu navigare directă |
+| `angajat/` | Personal (Manager/Mecanic/Receptioner), cost orar, specializare, departament |
+| `asigurator/` | Societăți asigurare, CUI, termen plată zile, email daune, IBAN |
 
-```text
-POST /operational/vehicule
-  -> OperationalController.createVehicul()
-  -> OperationalService.createVehicul()
-  -> prisma.vehicul.create()
-  -> tabelul Vehicul din PostgreSQL
-```
+### `02operational` — Flux Operațional
 
-Aceeași idee se repetă în modulele `catalog`, `entitati`, `operational` și `facturare`.
+**`preluare-auto/`** — Recepție vehicul:
+- Selecție vehicul din flotă, validare comandă activă existentă
+- Flux cu/fără asigurator, creare dosar daună sau dosar tehnic
+- Deviz estimativ: adăugare piese, manoperă și kituri cu cantitate și preț editabile inline
+- Calcul în timp real: subtotal, TVA, total
+- Validare câmpuri obligatorii, preview număr comandă, contor pași flux
 
-## Cum vorbește frontend-ul cu backend-ul
+**`gestiune-comenzi/`** — Registru comenzi:
+- Filtrare după status, mecanic, tip plată, termen depășit, text liber
+- Sortare multi-câmp cu persistare în sessionStorage
+- Panou detalii lateral: schimbare status, vizualizare deviz, mecanic asignat
+- Navigare directă din Vehicule sau din Notificări cu highlight automat
 
-Frontend-ul trimite cereri HTTP către backend prin `fetch`. De exemplu, modulul operațional citește comenzi din:
+### `03facturare` — Facturare
 
-```text
-GET http://127.0.0.1:3000/operational/comenzi
-```
+| Submodul | Funcționalități |
+|----------|----------------|
+| `facturare/` | Emitere factură din comandă finalizată, serie/număr/scadență, discount comercial, linii extrase din deviz, total cu TVA |
+| `istoric/` | Registru facturi emise, filtru tip operațiune, vizualizare detalii factură, descărcare PDF |
+| `penalizari/` | Calculul penalizărilor de întârziere, procent configurat, 2 zecimale, aplicare manuală |
+| `oferte/` | Campanii și oferte comerciale |
 
-În `02operational`, fișierul care izolează comunicarea cu backend-ul este:
+### `04incasari` — Încasări
 
-```text
-frontend/src/modules/02operational/operational.service.ts
-```
+**`Incasari.tsx`** — Înregistrare încasare nouă:
+- Selectare client → afișare facturi restante cu restul de plată calculat
+- Alocare sumă pe una sau mai multe facturi simultan
+- Modalitate: Cash / POS / Transfer Bancar
+- Referință document generată automat: `CASH-001`, `POS-001`, `OP-001`
+- La achitare completă → status factură → `Platita` automat
+- Generare notificare de succes cu link direct în Istoric Încasări
 
-Acest fișier face trei lucruri importante:
+**`IstoricIncasari.tsx`** — Registru:
+- Toate încasările cu client, referință, modalitate, facturi stinse, sumă
+- Căutare liberă
+- Highlight vizual pe rândul relevant când se navighează din Notificări
 
-- apelează endpoint-urile NestJS
-- transformă răspunsurile backend în tipuri pe care UI-ul le poate folosi
-- traduce diferențele dintre statusurile simple din backend și statusurile mai descriptive din frontend
+### `05notificari` — Centru Notificări
 
-Pentru începători: componenta React nu ar trebui să știe toate detaliile despre Prisma sau despre forma exactă a JSON-ului din backend. De aceea există acest strat de service pe frontend.
+- Notificări persistate în baza de date (nu doar în memorie)
+- Tipuri: `Info`, `Avertizare`, `Succes`
+- Funcționalități: marchează citit, arhivează, restaurează, șterge definitiv
+- Navigare contextuală: click pe notificare → redirect pe pagina relevantă + highlight pe item (încasare, factură, comandă)
+- Filtrare: Toate / Avertizare / Info / Succes / Arhivă
 
-## Module backend
+---
+
+## Module Backend
 
 ### `catalog`
-
-Gestionează:
-
-- piese
-- manoperă
-
-Endpoint-uri utile:
-
-```text
-GET    /catalog/piese
-POST   /catalog/piese
-PATCH  /catalog/piese/:id
-DELETE /catalog/piese/:id
+```
+GET    /catalog/piese              → listă piese
+POST   /catalog/piese              → creare piesă
+PATCH  /catalog/piese/:id          → actualizare piesă
+DELETE /catalog/piese/:id          → ștergere piesă
 
 GET    /catalog/manopera
 POST   /catalog/manopera
 PATCH  /catalog/manopera/:id
 DELETE /catalog/manopera/:id
+
+GET    /catalog/kituri
+POST   /catalog/kituri
+PATCH  /catalog/kituri/:id
+DELETE /catalog/kituri/:id
 ```
 
 ### `entitati`
-
-Gestionează:
-
-- clienți
-- angajați
-- asiguratori
-
-Endpoint-uri utile:
-
-```text
+```
 GET   /entitati/clienti
 POST  /entitati/clienti
 PATCH /entitati/clienti/:id
 PATCH /entitati/clienti/:id/status
 
 GET   /entitati/angajati
+POST  /entitati/angajati
+PATCH /entitati/angajati/:id
+
 GET   /entitati/asiguratori
+POST  /entitati/asiguratori
+PATCH /entitati/asiguratori/:id
 ```
 
 ### `operational`
-
-Gestionează fluxul operațional al service-ului:
-
-- vehicule
-- dosare de daună
-- comenzi de service
-
-Endpoint-uri utile:
-
-```text
+```
 GET   /operational/vehicule
 POST  /operational/vehicule
 PATCH /operational/vehicule/:id
@@ -407,114 +237,299 @@ PATCH /operational/dosare/:id
 GET   /operational/comenzi
 POST  /operational/comenzi
 PATCH /operational/comenzi/:id
+
+GET   /operational/pozitii?idComanda=X  → deviz comandă
+POST  /operational/pozitii
+PATCH /operational/pozitii/:id
+DELETE /operational/pozitii/:id
 ```
 
 ### `facturare`
-
-Gestionează facturi și iteme de factură.
-
-Endpoint-uri utile:
-
-```text
-GET    /facturare
-GET    /facturare/:id
-POST   /facturare
-PATCH  /facturare/:id
+```
+GET  /facturare                    → comenzi facturabile
+GET  /facturare/:id                → detalii factură
+POST /facturare                    → emitere factură
+PATCH /facturare/:id
 DELETE /facturare/:id
+GET  /facturare/next-number        → numărul următor disponibil
+GET  /facturare/:id/linii          → liniile dintr-o factură (din deviz)
 ```
 
-## Modelul de date
-
-Schema principală este în:
-
-```text
-backend/prisma/schema.prisma
+### `incasari`
+```
+GET  /incasari                     → toate încasările cu alocări
+POST /incasari                     → înregistrare încasare nouă + alocare pe facturi
+GET  /incasari/facturi-restante    → facturi cu rest > 0 pentru selectare client
 ```
 
-Modele importante:
+### `notificari`
+```
+GET    /notificari                 → toate notificările active
+PATCH  /notificari/:id             → actualizare stare (citit, arhivat)
+DELETE /notificari/:id             → ștergere definitivă
+```
 
-- `Client`
-- `Angajat`
-- `Asigurator`
-- `Vehicul`
-- `DosarDauna`
-- `Comanda`
-- `Piesa`
-- `Manopera`
-- `Factura`
-- `FacturaItem`
+---
 
-Relații importante:
+## Model de Date (schema.prisma)
 
-- un `Client` poate avea mai multe `Vehicul`
-- un `Client` poate avea mai multe `DosarDauna`
-- un `Vehicul` poate apărea în mai multe `DosarDauna`
-- un `DosarDauna` poate avea mai multe `Comanda`
-- o `Comanda` poate avea mai multe `Factura`
-- o `Factura` are mai multe `FacturaItem`
+### Modele
 
-## Cum adaugi un endpoint nou
+| Model | Câmpuri cheie |
+|-------|--------------|
+| `Client` | tipClient (PF/PJ), nume, prenume, CNP, CUI, telefon, email, adresa, soldDebitor, status |
+| `Angajat` | tipAngajat, nume, prenume, CNP, costOrar, specializare, departament |
+| `Asigurator` | denumire, CUI, emailDaune, IBAN, termenPlataZile |
+| `Vehicul` | numarInmatriculare, marca, model, vin, idClient |
+| `DosarDauna` | numarDosar, idClient, idVehicul, idAsigurator (opțional) |
+| `Comanda` | numarComanda, status (enum), idDosar, idAngajat, idClient, idVehicul, totalEstimat |
+| `ComandaPozitie` | idComanda, idArticol, tipArticol (PIESA/MANOPERA), cantitate, pretUnitar, idKit |
+| `Piesa` | codPiesa, denumire, producator, categorie, pretBaza, stoc, tip (NOUA/SH), luniGarantie |
+| `KitPiese` | codKit, denumire, reducere (%) |
+| `KitPiesaItem` | idKit, idPiesa, cantitate |
+| `Manopera` | codManopera, denumire, categorie, durataStd, pretOra |
+| `Factura` | serie, numar, dataEmiterii, scadenta, status, idClient, idComanda, totalFaraTVA, tva, totalGeneral |
+| `FacturaItem` | idFactura, descriere, cantitate, pretUnitar, cotaTva, idPiesa, idManopera, idKit |
+| `Incasare` | idClient, data, suma, modalitate (enum), referinta |
+| `IncasareAlocare` | idIncasare, idFactura, sumaAlocata |
+| `Notificare` | tip, mesaj, paginaDestinatie, sursaModul, textActiune, citit, arhivata, metadata (JSON), idFactura, idComanda |
 
-Pentru începători, cel mai simplu traseu este:
+### Relații
 
-1. Verifică dacă există modelul în `backend/prisma/schema.prisma`.
-2. Dacă modifici schema, creează o migrare Prisma.
-3. Creează sau actualizează DTO-ul în modulul potrivit.
-4. Adaugă metoda în `*.service.ts`.
-5. Expune metoda prin `*.controller.ts`.
-6. Adaugă un test simplu în `*.spec.ts`.
-7. Rulează verificările.
+```
+Client ──< Vehicul
+Client ──< DosarDauna
+Client ──< Incasare
+Client ──< Factura
 
-Exemplu de verificări:
+Vehicul ──< DosarDauna
+Asigurator ──< DosarDauna
+
+DosarDauna ──< Comanda
+Comanda ──< ComandaPozitie
+Comanda ──< Factura
+Comanda ──< Notificare
+
+KitPiese ──< KitPiesaItem ──> Piesa
+KitPiese ──< ComandaPozitie
+KitPiese ──< FacturaItem
+
+Factura ──< FacturaItem
+Factura ──< IncasareAlocare ──> Incasare
+Factura ──< Notificare
+```
+
+### Enum-uri
+
+```
+StatusReparatie:    IN_ASTEPTARE_DIAGNOZA → ASTEAPTA_APROBARE_CLIENT
+                    → IN_ASTEPTARE_PIESE → IN_LUCRU → FINALIZAT → FACTURAT → ANULAT
+StatusFactura:      Emisa · Platita · Anulata
+ModalitateIncasare: Cash · POS · TransferBancar
+TipNotificare:      Info · Avertizare · Succes
+TipClient:          PF · PJ
+TipAngajat:         Manager · Mecanic · Receptioner
+TipPiesa:           NOUA · SH
+StatusGeneral:      Activ · Inactiv
+```
+
+---
+
+## Logica Backend (NestJS)
+
+Structura standard NestJS: `Controller → Service → PrismaService → PostgreSQL`
+
+- **Controller** — definește rutele HTTP (`GET`, `POST`, `PATCH`, `DELETE`), nu conține logică de business
+- **DTO** — descrie forma datelor acceptate în request; `ValidationPipe` + `whitelist: true` elimină câmpurile nedefinite
+- **Service** — conține logica aplicației: calcule, validări de business, apeluri Prisma
+- **PrismaService** — singleton care gestionează conexiunea la baza de date
+- **schema.prisma** — sursa unică de adevăr pentru structura bazei de date
+- **migrations/** — istoricul tuturor modificărilor de schemă, aplicabil pe orice mediu
+
+Exemplu flux complet:
+```
+POST /incasari
+  → IncasariController.create(dto)
+  → IncasariService.create(dto)
+     → validare sume alocate ≤ rest factură
+     → prisma.incasare.create() cu alocări nested
+     → actualizare status factură dacă rest = 0
+     → NotificariService.create() cu metadata idIncasare
+  → răspuns JSON cu încasarea creată
+```
+
+---
+
+## Comunicare Frontend ↔ Backend
+
+Frontend-ul comunică exclusiv prin `fetch` via `api.ts`:
+```ts
+// lib/api.ts
+export const API_BASE_URL = 'http://127.0.0.1:3000';
+export async function apiJson<T>(path: string, options?: RequestInit): Promise<T>
+```
+
+Fiecare modul frontend are un `*.service.ts` care:
+1. Apelează endpoint-urile NestJS
+2. Transformă răspunsurile backend în tipuri TypeScript frontend
+3. Traduce statusurile Prisma (enum uppercase) în statusuri UI (string descriptive)
+
+Exemplu mapare status:
+```ts
+// operational.service.ts
+const mapStatusFromPrisma = (s?: string): StatusComanda => {
+  switch (s) {
+    case 'IN_LUCRU': return 'In lucru';
+    case 'FINALIZAT': return 'Finalizat';
+    // ...
+  }
+};
+```
+
+---
+
+## Componente UI Reutilizabile (`componente/ui/`)
+
+| Componentă | Descriere |
+|-----------|-----------|
+| `StatCard` | Card indicator cu valoare, label, tonuri (default/success/warning/info/danger), icon opțional |
+| `PageHeader` | Header de pagină cu titlu, descriere și slot pentru acțiuni (butoane) |
+| `Button` | Variante: primary, secondary, outline, ghost; dimensiuni sm/md/lg; fullWidth |
+| `Field` | Input text/number/date cu label, hint, eroare |
+| `SelectField` | Select cu opțiuni, label, eroare |
+| `ConfirmDialog` | Modal de confirmare cu titlu, descriere, butoane Confirmă/Anulează |
+| `EmptyState` | Stare goală cu icon, titlu, descriere, acțiune opțională |
+| `Card / CardContent` | Container card cu border și shadow |
+| `StatusBadge` | Badge colorat per status comandă |
+
+Design: glassmorphism, micro-animații hover, watermark icon decorativ în header-uri, inline editing cantitate/preț pe devize.
+
+---
+
+## Persistența Stării între Navigări
+
+Hook-ul `usePageSessionState` din `lib/pageState.ts` funcționează ca `useState` dar sincronizează automat valoarea în `sessionStorage`. Filtrele, sortările și ID-urile selectate sunt păstrate când utilizatorul navighează între pagini și revine.
+
+```ts
+const [filtruStatus, setFiltruStatus] = usePageSessionState<StatusComanda | 'Toate'>(
+  'gestiune-status', 'Toate'
+);
+```
+
+Notificările folosesc același mecanism pentru a transmite ID-ul elementului relevant (`highlight-incasare-id`, `highlight-factura-id`, `gestiune-idComandaSelectata`) și a declanșa efectul de highlight pe pagina destinație.
+
+---
+
+## Fluxuri Principale
+
+### 1. Recepție Auto
+```
+Selectare vehicul din flotă
+  → Validare comandă activă existentă
+  → Flux asigurare (DA: creare/selectare dosar daună + asigurator) / (NU: dosar tehnic auto-generat)
+  → Completare deviz: piese + manoperă + kituri, cantitate și preț editabile inline
+  → Validare câmpuri obligatorii (mecanic, termen promis, km)
+  → Salvare → creare Comanda + ComandaPozitii în BD
+```
+
+### 2. Gestiune Comenzi
+```
+Vizualizare registru comenzi cu filtre multi-criteriu
+  → Click comandă → panou detalii lateral
+  → Schimbare status (dropdown) → PATCH /operational/comenzi/:id
+  → Vizualizare deviz complet
+```
+
+### 3. Facturare
+```
+Selectare comandă cu status FINALIZAT
+  → Linii factură extrase automat din deviz
+  → Configurare: serie, număr, termen plată, discount comercial
+  → Calcul: subtotal - discount + TVA 19% = total
+  → POST /facturare → factură salvată → status comandă → FACTURAT
+  → Notificare „Factură emisă" generată automat
+```
+
+### 4. Încasări
+```
+Selectare client → afișare facturi restante cu rest calculat
+  → Introducere sumă încasată + modalitate plată
+  → Alocare sumă pe una/mai multe facturi
+  → POST /incasari → Incasare + IncasareAlocare create
+  → Dacă rest factură = 0 → status factură → Platita
+  → Referință auto-generată (OP-001, POS-001, CASH-001)
+  → Notificare Succes cu link direct → Istoric Încasări + highlight rând
+```
+
+### 5. Notificări Contextuale
+```
+Eveniment în sistem (încasare, factură, stoc critic)
+  → NotificariService.create() backend
+  → Centru Notificări afișează notificarea
+  → Click pe buton acțiune → sessionStorage.setItem('highlight-X-id', id)
+  → onNavigate(paginaDestinatie)
+  → Pagina destinație citește highlight-ul → animație amber 5 secunde
+```
+
+---
+
+## Seed & Date Demo
 
 ```bash
-npm run build --prefix backend
-npm test --prefix backend -- --runInBand
+npm run seed --prefix backend
+```
+
+Creează complet:
+- **3 asiguratori** (Allianz, Generali, Omniasig) cu date de contact reale
+- **5 angajați** (1 manager, 3 mecanici, 1 receptioner) cu cost orar
+- **6 clienți** PF/PJ cu CNP/CUI, unii cu sold debitor
+- **8 vehicule** asociate clienților, cu VIN și marcă/model
+- **10+ piese** cu stocuri variate (inclusiv stoc critic <5), prețuri și tip
+- **5 kituri** cu piese componente și procente de reducere
+- **8 manopere** pe categorii diferite cu norme de timp
+- **Dosare daună** legate de vehicule și asiguratori
+- **Comenzi** în statusuri diverse: In lucru, Finalizat, Facturat
+- **Facturi** emise, achitate parțial, achitate complet
+- **Încasări** reale alocate pe facturi
+- **Notificări** inițiale de tip Info, Avertizare, Succes
+
+> ⚠️ Seed-ul **șterge și recreează** toate datele demo. Nu îl rula dacă ai date manuale importante de păstrat.
+
+---
+
+## Starea Validată
+
+Backend verificat cu:
+```bash
+npx prisma validate && npx prisma generate && npx prisma migrate status
+npm run build --prefix backend    # compilare TypeScript fără erori
+npm test --prefix backend -- --runInBand   # teste Jest
 npm run lint --prefix backend
 ```
 
-## Tips pentru începători
-
-- În NestJS, controller-ul nu ar trebui să conțină logică grea. El doar primește request-ul și cheamă service-ul.
-- Service-ul este locul potrivit pentru logica aplicației: create, update, status changes, calculări și apeluri către Prisma.
-- DTO-urile descriu ce primește API-ul. Dacă un request pică pe validare, verifică DTO-ul și `ValidationPipe`.
-- Prisma folosește numele modelelor din `schema.prisma`. Dacă ai `model Vehicul`, în cod vei folosi `prisma.vehicul`.
-- După schimbări în `schema.prisma`, rulează `npx prisma generate`.
-- Dacă baza de date nu răspunde, verifică `DATABASE_URL` din `backend/.env` și conexiunea la Neon.
-- Pentru erori de port ocupat, oprește procesul vechi sau schimbă portul.
-- Nu comita `node_modules`, `dist`, cache-uri sau fișiere `.env` cu secrete.
-- Rulează build și test înainte de commit. Un endpoint care pare să meargă manual poate rupe TypeScript sau testele.
-
-## Starea validată
-
-Backend-ul a fost verificat cu:
-
+Frontend verificat cu:
 ```bash
-npx prisma validate
-npx prisma generate
-npx prisma migrate status
-npm run build --prefix backend
-npm test --prefix backend -- --runInBand
-npm run lint --prefix backend
+npm run build --prefix frontend   # vite build fără erori TypeScript
 ```
 
-Au fost testate și endpoint-uri reale pentru:
+Endpoint-uri testate real: catalog, entități, operațional (vehicule, dosare, comenzi, pozitii), facturare, încasări, notificări.
 
-- catalog
-- entități
-- operațional
-- facturare
+---
 
-Pentru modulul operațional s-a verificat și un flux temporar `POST/PATCH` pentru vehicul, dosar și comandă, urmat de cleanup în baza de date.
+## Cum Adaugi un Endpoint Nou
 
-Stare frontend:
+1. Verifică/actualizează modelul în `backend/prisma/schema.prisma`
+2. Dacă ai modificat schema: `npx prisma generate` (+ migrare dacă e necesară)
+3. Creează/actualizează DTO-ul în modulul potrivit (`*.dto.ts`)
+4. Adaugă metoda în `*.service.ts` cu logica de business
+5. Expune metoda prin `*.controller.ts` cu decoratorul HTTP corespunzător
+6. Adaugă un test în `*.spec.ts`
+7. Rulează verificările: `build` + `test` + `lint`
 
-- aplicația pornește local prin Vite
-- `npm run build --prefix frontend` trece
-- `02operational` folosește backend real pentru vehicule, dosare, comenzi, clienți, mecanici, asiguratori, piese și manoperă
-- unele zone frontend păstrează încă state local sau mock-uri pentru fluxuri demo care nu au încă model backend complet
+---
 
-## Documentație detaliată
+## Documentație
 
-- [backend/README.md](backend/README.md)
-- [frontend/README.md](frontend/README.md)
+- [`backend/README.md`](backend/README.md) — detalii specifice backend
+- [`frontend/README.md`](frontend/README.md) — detalii specifice frontend
+- [`documentation/`](documentation/) — modele de proiect PSI (PDF Partea 1-4) + documentație Word

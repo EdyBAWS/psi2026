@@ -5,7 +5,7 @@ import { mockComenzi, mockDosareDauna } from "./operational";
 import type { NotificareMock } from "./types";
 
 const comandaGataDeFacturare = mockComenzi.find(
-  (comanda) => comanda.status === "Gata de livrare",
+  (comanda) => (comanda.status as any) === "Gata de livrare",
 );
 const facturaRestantaVeche = facturiRestanteMock.find(
   (factura) => factura.dataScadenta < "2026-03-26",
@@ -19,7 +19,7 @@ export const notificariMock: NotificareMock[] = [
     mesaj: facturaRestantaVeche
       ? `Factura ${facturaRestantaVeche.numar} a depășit scadența și are încă ${facturaRestantaVeche.restDePlata.toFixed(2)} RON de încasat.`
       : "Există facturi emise care necesită urmărire la încasare.",
-    paginaDestinatie: "incasari",
+    paginaDestinatie: "istoric-incasari",
     sursaModul: "Încasări",
     textActiune: "Deschide Încasări",
     tip: "Avertizare",

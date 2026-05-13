@@ -18,7 +18,11 @@ export default function Facturare() {
   if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă comenzile...</div>;
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+        <Receipt className="w-64 h-64 text-indigo-900" />
+      </div>
+      <div className="relative z-10">
       <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">
@@ -280,6 +284,7 @@ export default function Facturare() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

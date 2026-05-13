@@ -82,7 +82,11 @@ export default function Manopera() {
   return (
     <div className="space-y-6 pb-10">
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+          <Clock className="w-64 h-64 text-indigo-900" />
+        </div>
+        <div className="relative z-10">
         <PageHeader
           title="Nomenclator Manoperă"
           description="Administrează timpii tehnologici de reparație, structurați pe categorii de reparații."
@@ -99,6 +103,7 @@ export default function Manopera() {
             value={`${mediaNorma.toFixed(1)} ore`}
             tone="success"
           />
+        </div>
         </div>
       </div>
 

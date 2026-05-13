@@ -161,7 +161,7 @@ export class IncasariService {
     await this.notificariService.create({
       tip: TipNotificare.Succes,
       mesaj: `Încasare de ${dto.sumaIncasata.toFixed(2)} RON înregistrată pentru ${incasare.client.nume}.`,
-      paginaDestinatie: 'incasari',
+      paginaDestinatie: 'istoric-incasari',
       sursaModul: 'Încasări',
       textActiune: 'Deschide Încasări',
       metadata: {

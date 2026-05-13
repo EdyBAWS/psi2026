@@ -18,6 +18,7 @@ const mapNotificare = (notificare: any): NotificareMock => ({
   citit: notificare.citit,
   arhivata: notificare.arhivata,
   stearsa: notificare.stearsa,
+  metadata: notificare.metadata,
 });
 
 export const NotificariService = {

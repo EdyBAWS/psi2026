@@ -57,6 +57,10 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
     return catalog.filter(i => i.denumire.toLowerCase().includes(t) || i.cod.toLowerCase().includes(t)).slice(0, 12);
   }, [cautare, catalog]);
 
+  const updatePozitie = (draftId: string, camp: keyof PozitieComandaDraft, valoare: any) => {
+    onChange(pozitii.map(p => p._draftId === draftId ? { ...p, [camp]: valoare } : p));
+  };
+
   const handleAdd = (item: CatalogOption) => {
     if (item.tip === 'Kit' && item.piese) {
       const noiPozitii = item.piese.map((p: any) => ({
@@ -111,8 +115,28 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
             return (
               <tr key={p._draftId} className="hover:bg-slate-50/50">
                 <td className="px-4 py-3"><p className="font-bold">{p.descriere}</p><p className="text-[10px] text-slate-400">{p.codArticol} · {p.unitateMasura}</p></td>
-                <td className="px-4 py-3 text-center font-bold">{p.cantitate}</td>
-                <td className="px-4 py-3 text-right">{formatSuma(p.pretVanzare)}</td>
+                <td className="px-4 py-3 text-center">
+                  <input 
+                    type="number" 
+                    min="1" 
+                    className="w-20 text-center rounded-lg border border-slate-200 py-1.5 px-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
+                    value={p.cantitate} 
+                    onChange={(e) => updatePozitie(p._draftId, 'cantitate', Number(e.target.value))} 
+                  />
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <input 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      className="w-28 text-right rounded-lg border border-slate-200 py-1.5 px-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
+                      value={p.pretVanzare} 
+                      onChange={(e) => updatePozitie(p._draftId, 'pretVanzare', Number(e.target.value))} 
+                    />
+                    <span className="text-xs text-slate-500 font-medium">RON</span>
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-right font-bold text-indigo-600">{formatSuma(v.total)}</td>
                 <td className="px-4 py-3 text-center"><button onClick={() => onChange(pozitii.filter(it => it._draftId !== p._draftId))} className="text-slate-400 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button></td>
               </tr>

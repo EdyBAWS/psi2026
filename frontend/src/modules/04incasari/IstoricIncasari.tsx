@@ -9,6 +9,19 @@ export default function IstoricIncasari() {
   const [loading, setLoading] = useState(true);
   const [istoricIncasari, setIstoricIncasari] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [highlightId, setHighlightId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const id = sessionStorage.getItem('highlight-incasare-id');
+    if (id) {
+      setHighlightId(Number(id));
+      // Ștergem din session storage pentru a nu evidenția la refresh
+      setTimeout(() => {
+        sessionStorage.removeItem('highlight-incasare-id');
+        setHighlightId(null);
+      }, 5000); // 5 secunde de highlight
+    }
+  }, []);
 
   useEffect(() => {
     IncasariService.fetchIncasariIstoric().then(data => {
@@ -40,7 +53,11 @@ export default function IstoricIncasari() {
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+          <BanknoteArrowDown className="w-64 h-64 text-indigo-900" />
+        </div>
+        <div className="relative z-10">
         <PageHeader
           title="Istoric Încasări"
           description="Vizualizează toate încasările înregistrate în sistem."
@@ -57,6 +74,7 @@ export default function IstoricIncasari() {
             tone="success"
             icon={<BanknoteArrowDown className="h-4 w-4" />}
           />
+        </div>
         </div>
       </div>
 
@@ -89,7 +107,14 @@ export default function IstoricIncasari() {
             <tbody className="divide-y divide-slate-100">
               {incasariFiltrate.length > 0 ? (
                 incasariFiltrate.map((incasare) => (
-                  <tr key={incasare.idIncasare} className="hover:bg-slate-50/50 transition-colors">
+                  <tr 
+                    key={incasare.idIncasare} 
+                    className={`hover:bg-slate-50/50 transition-all duration-1000 ${
+                      highlightId === incasare.idIncasare 
+                        ? 'bg-amber-50 shadow-[inset_0_0_0_2px_rgba(245,158,11,0.2)] scale-[1.01] z-10' 
+                        : ''
+                    }`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-slate-600">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-slate-400" />

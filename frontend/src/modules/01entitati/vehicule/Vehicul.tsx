@@ -166,7 +166,11 @@ export default function Vehicule({ onNavigate }: { onNavigate?: (page: string) =
   return (
     <div className="space-y-6 pb-10">
       {/* HEADER & STATS (STIL CLIENT.TSX) */}
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+          <Car className="w-64 h-64 text-indigo-900" />
+        </div>
+        <div className="relative z-10">
         <PageHeader 
           title="Gestiune Vehicule" 
           description="Administrează flota auto a clienților și urmărește istoricul intervențiilor tehnice." 
@@ -179,6 +183,7 @@ export default function Vehicule({ onNavigate }: { onNavigate?: (page: string) =
         <div className="flex flex-wrap gap-4 mt-6">
           <StatCard label="Total Vehicule" value={stats.total} icon={<Car />} />
           <StatCard label="Vehicule Active" value={stats.activi} tone="info" icon={<ClipboardList />} />
+        </div>
         </div>
       </div>
 

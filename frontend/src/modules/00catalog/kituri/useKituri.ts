@@ -32,6 +32,15 @@ export function useKituri() {
     k.codKit.toLowerCase().includes(cautare.toLowerCase())
   );
 
+  const totalKituri = kituri.length;
+  const reducereMaxima = kituri.length > 0 ? Math.max(...kituri.map(k => k.reducere || 0)) : 0;
+  const valoareMedieKit = kituri.length > 0 
+    ? kituri.reduce((sum, k) => {
+        const valoare = k.piese?.reduce((s: number, p: any) => s + (p.piesa?.pretBaza || 0) * p.cantitate, 0) || 0;
+        return sum + valoare * (1 - (k.reducere || 0) / 100);
+      }, 0) / kituri.length
+    : 0;
+
   const handleDeschideAdaugare = () => {
     setForm({ codKit: '', denumire: '', reducere: 0, piese: [] });
     setEditId(null);
@@ -102,6 +111,9 @@ export function useKituri() {
     handleEditeaza,
     handleSterge,
     handleDeschideAdaugare,
-    handleInchideFormular
+    handleInchideFormular,
+    totalKituri,
+    reducereMaxima,
+    valoareMedieKit
   };
 }
