@@ -21,7 +21,7 @@ export default function DemoFloatingUI() {
     )}>
       {/* MAIN WIDGET */}
       <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 overflow-hidden flex flex-col">
-        
+
         {/* HEADER */}
         <div className="bg-indigo-600 px-6 py-4 flex items-center justify-between text-white shadow-lg">
           <div className="flex items-center gap-3">
@@ -35,7 +35,7 @@ export default function DemoFloatingUI() {
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 hover:bg-white/10 rounded-full transition-colors"
           >
@@ -52,7 +52,7 @@ export default function DemoFloatingUI() {
                 <span className="text-sm font-black text-indigo-600">{Math.round(progress)}%</span>
               </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-50">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 transition-all duration-1000 ease-out"
                   style={{ width: `${progress}%` }}
                 />
@@ -108,7 +108,7 @@ export default function DemoFloatingUI() {
             </div>
 
             {/* CONSOLE TOGGLE */}
-            <button 
+            <button
               onClick={() => setShowConsole(!showConsole)}
               className={cn(
                 "w-full py-3 rounded-2xl border flex items-center justify-center gap-2 text-xs font-black transition-all",
@@ -122,7 +122,7 @@ export default function DemoFloatingUI() {
         )}
       </div>
 
-      {/* DETACHED CONSOLE */}
+      {/* DETACHED  CONSOLE */}
       {isExpanded && showConsole && (
         <div className="absolute bottom-full mb-4 right-0 w-[450px] bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden flex flex-col animate-in zoom-in-95 fade-in duration-300 origin-bottom-right">
           <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
