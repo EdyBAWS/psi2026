@@ -32,6 +32,7 @@ enum TipAngajat {
   Mecanic
   Receptioner
   Inspector
+  Contabil
 }
 
 enum TipPiesa {
@@ -92,6 +93,7 @@ model Angajat {
   telefon       String
   email         String?
   tipAngajat    TipAngajat
+  esteInspector Boolean?   @default(false)
   specializare  String?
   costOrar      Float?
   departament   String?
@@ -301,10 +303,11 @@ model Factura {
   incasari     IncasareAlocare[]
   notificari   Notificare[]
   
-  totalFaraTVA   Float             @default(0)
+  totalFaraTVA    Float             @default(0)
   discountProcent Float             @default(0)
-  tva            Float             @default(0)
-  totalGeneral   Float             @default(0)
+  penalizareProcent Float           @default(0)
+  tva             Float             @default(0)
+  totalGeneral    Float             @default(0)
   
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt

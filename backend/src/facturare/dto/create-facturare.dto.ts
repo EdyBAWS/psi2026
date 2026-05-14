@@ -60,6 +60,12 @@ export class CreateFacturareDto {
   @Max(100)
   discountProcent?: number;
 
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  penalizareProcent?: number;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateFacturaItemDto)

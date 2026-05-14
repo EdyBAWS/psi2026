@@ -18,10 +18,17 @@ import Notificare from "./modules/05notificari/Notificari";
 import IstoricFacturare from "./modules/03facturare/istoric/IstoricFacturare";
 import IstoricIncasari from "./modules/04incasari/IstoricIncasari";
 import AutomatedFlow from "./modules/99demo/AutomatedFlow";
+import { DemoProvider } from "./modules/99demo/DemoContext";
+import DemoFloatingUI from "./modules/99demo/DemoFloatingUI";
 
 export default function App() {
   // Pornim cu dashboard pentru a fi landing page
   const [paginaCurenta, setPaginaCurenta] = useState<string>("dashboard");
+
+  // Expunem navigarea pentru simulatorul demo
+  if (typeof window !== 'undefined') {
+    (window as any).__demoNavigate = setPaginaCurenta;
+  }
 
   const randeazaPagina = () => {
     switch (paginaCurenta) {
@@ -71,15 +78,18 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
-      <Sidebar setPagina={setPaginaCurenta} paginaCurenta={paginaCurenta} />
-      <main className="flex-1 overflow-auto">
-        <div className="p-8 max-w-400 mx-auto">
-          <div key={paginaCurenta} className="page-transition-enter">
-            {randeazaPagina()}
+    <DemoProvider>
+      <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden relative">
+        <Sidebar setPagina={setPaginaCurenta} paginaCurenta={paginaCurenta} />
+        <main className="flex-1 overflow-auto">
+          <div className="p-8 max-w-400 mx-auto">
+            <div key={paginaCurenta} className="page-transition-enter">
+              {randeazaPagina()}
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+        <DemoFloatingUI />
+      </div>
+    </DemoProvider>
   );
 }

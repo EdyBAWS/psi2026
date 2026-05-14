@@ -23,7 +23,7 @@ export function Angajat() {
   const [confirmStatus, setConfirmStatus] = useState<{ id: number, action: 'Activ' | 'Inactiv' } | null>(null);
 
   const { register, control, handleSubmit, formState: { errors }, reset } = useForm<AngajatFormValues>({
-    resolver: zodResolver(angajatSchema),
+    resolver: zodResolver(angajatSchema) as any,
     shouldUnregister: true,
     defaultValues: { tipAngajat: 'Mecanic', status: 'Activ', costOrar: 0, sporConducere: 0 }
   });
@@ -91,7 +91,7 @@ export function Angajat() {
       {isFormOpen && (
         <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-xl animate-in fade-in slide-in-from-top-4">
           <h4 className="mb-6 text-lg font-bold text-slate-800 border-b border-slate-100 pb-3">{editId ? 'Editare Angajat' : 'Definire Angajat Nou'}</h4>
-          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit as any, onInvalid)} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Field label="Nume *" {...register('nume')} error={errors.nume?.message} />
               <Field label="Prenume *" {...register('prenume')} error={errors.prenume?.message} />
@@ -99,17 +99,30 @@ export function Angajat() {
               <Field label="Telefon *" {...register('telefon')} error={errors.telefon?.message} />
               <Field label="Email" type="email" {...register('email')} error={errors.email?.message} />
               <SelectField 
+                id="select-rol-angajat"
                 label="Rol Angajat *" 
                 options={[
                   { label: 'Mecanic', value: 'Mecanic' },
                   { label: 'Manager', value: 'Manager' },
                   { label: 'Recepționer', value: 'Receptioner' },
-                  { label: 'Inspector Daune', value: 'Inspector' }
+                  { label: 'Inspector Daune', value: 'Inspector' },
+                  { label: 'Contabil', value: 'Contabil' }
                 ]}
                 {...register('tipAngajat')} error={errors.tipAngajat?.message} 
               />
               {tipAngajat === 'Mecanic' && (
                 <>
+                  <div className="flex items-center gap-3 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 col-span-1 md:col-span-2">
+                    <input 
+                      type="checkbox" 
+                      id="esteInspector" 
+                      {...register('esteInspector')} 
+                      className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" 
+                    />
+                    <label htmlFor="esteInspector" className="text-sm font-semibold text-slate-700 cursor-pointer">
+                      Acest mecanic este și Inspector Daune (permite alocarea pe dosare)
+                    </label>
+                  </div>
                   <Field label="Specializare *" placeholder="ex: Mecanică Ușoară" {...register('specializare')} error={errors.specializare?.message} />
                   <Field label="Cost Orar (RON)" type="number" step="0.01" min="0" placeholder="0" {...register('costOrar', { valueAsNumber: true })} error={errors.costOrar?.message} />
                 </>
@@ -133,6 +146,12 @@ export function Angajat() {
                   <Field label="Specializare" placeholder="ex: Evaluări Daune" {...register('specializare')} error={errors.specializare?.message} />
                   <Field label="Departament" {...register('departament')} error={errors.departament?.message} />
                   <Field label="Număr Birou" {...register('nrBirou')} error={errors.nrBirou?.message} />
+                  <Field label="Cost Orar (RON)" type="number" step="0.01" min="0" placeholder="0" {...register('costOrar', { valueAsNumber: true })} error={errors.costOrar?.message} />
+                </>
+              )}
+              {tipAngajat === 'Contabil' && (
+                <>
+                  <Field label="Departament *" {...register('departament')} error={errors.departament?.message} />
                   <Field label="Cost Orar (RON)" type="number" step="0.01" min="0" placeholder="0" {...register('costOrar', { valueAsNumber: true })} error={errors.costOrar?.message} />
                 </>
               )}

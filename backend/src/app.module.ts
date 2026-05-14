@@ -9,6 +9,7 @@ import { FacturareModule } from './facturare/facturare.module';
 import { OperationalModule } from './operational/operational.module';
 import { IncasariModule } from './incasari/incasari.module';
 import { NotificariModule } from './notificari/notificari.module';
+import { DemoModule } from './demo/demo.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { NotificariModule } from './notificari/notificari.module';
     OperationalModule,
     IncasariModule,
     NotificariModule,
+    DemoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

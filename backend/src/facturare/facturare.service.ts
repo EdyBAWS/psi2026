@@ -21,7 +21,7 @@ export class FacturareService {
     return (max._max.numar || 0) + 1;
   }
 
-  private calculeazaTotaluri(iteme: CreateFacturareDto['iteme'], discountProcent: number = 0) {
+  private calculeazaTotaluri(iteme: CreateFacturareDto['iteme'], discountProcent: number = 0, penalizareProcent: number = 0) {
     let totalFaraTVA = 0;
     
     iteme.forEach((item) => {
@@ -29,12 +29,14 @@ export class FacturareService {
     });
 
     const valoareDiscount = totalFaraTVA * (discountProcent / 100);
-    const bazaImpozabila = totalFaraTVA - valoareDiscount;
+    const valoarePenalizare = totalFaraTVA * (penalizareProcent / 100);
+    const bazaImpozabila = totalFaraTVA - valoareDiscount + valoarePenalizare;
     const tva = bazaImpozabila * 0.19;
 
     return {
       totalFaraTVA: Number(totalFaraTVA.toFixed(2)),
       discountProcent: Number(discountProcent.toFixed(2)),
+      penalizareProcent: Number(penalizareProcent.toFixed(2)),
       tva: Number(tva.toFixed(2)),
       totalGeneral: Number((bazaImpozabila + tva).toFixed(2)),
     };
@@ -45,7 +47,7 @@ export class FacturareService {
       throw new Error('Factura trebuie să conțină cel puțin un item!');
     }
 
-    const totaluri = this.calculeazaTotaluri(dto.iteme, dto.discountProcent || 0);
+    const totaluri = this.calculeazaTotaluri(dto.iteme, dto.discountProcent || 0, dto.penalizareProcent || 0);
     const numar = await this.getNextNumber();
 
     const factura = await this.prisma.factura.create({

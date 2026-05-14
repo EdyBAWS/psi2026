@@ -1,137 +1,192 @@
-export async function wait(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+import { wait as helperWait, checkStop } from './demoHelper';
+
+// --- VIRTUAL MOUSE ---
+let cursor: HTMLDivElement | null = null;
+
+function ensureCursor() {
+  if (cursor) return cursor;
+  cursor = document.createElement('div');
+  cursor.id = 'demo-virtual-cursor';
+  cursor.style.position = 'fixed';
+  cursor.style.width = '24px';
+  cursor.style.height = '24px';
+  cursor.style.borderRadius = '50%';
+  cursor.style.backgroundColor = 'rgba(99, 102, 241, 0.8)';
+  cursor.style.border = '2px solid white';
+  cursor.style.boxShadow = '0 0 15px rgba(99, 102, 241, 0.6)';
+  cursor.style.zIndex = '999999';
+  cursor.style.pointerEvents = 'none';
+  cursor.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  cursor.style.display = 'none';
+  
+  const dot = document.createElement('div');
+  dot.style.width = '6px';
+  dot.style.height = '6px';
+  dot.style.backgroundColor = 'white';
+  dot.style.borderRadius = '50%';
+  dot.style.margin = '7px';
+  cursor.appendChild(dot);
+
+  document.body.appendChild(cursor);
+  return cursor;
 }
 
-export async function simulateClick(selector: string) {
-  const el = document.querySelector(selector) as HTMLElement;
-  if (!el) {
-    console.warn(`Element not found for selector: ${selector}`);
-    return false;
-  }
+async function moveCursorTo(el: HTMLElement) {
+  const c = ensureCursor();
+  const rect = el.getBoundingClientRect();
+  const targetX = rect.left + rect.width / 2 - 12;
+  const targetY = rect.top + rect.height / 2 - 12;
   
-  // Visual feedback
-  const originalOutline = el.style.outline;
-  el.style.outline = '4px solid #4f46e5';
-  el.style.outlineOffset = '2px';
-  await wait(300);
+  c.style.display = 'block';
+  c.style.left = `${targetX}px`;
+  c.style.top = `${targetY}px`;
+  
+  await new Promise(r => setTimeout(r, 400));
+  c.style.transform = 'scale(1.3)';
+  await new Promise(r => setTimeout(r, 100));
+  c.style.transform = 'scale(1)';
+}
+
+// --- CORE FINDER ---
+export function findElement(selector: string): HTMLElement | null {
+  if (!selector) return null;
+  
+  // 1. By ID (Direct Match)
+  let el = document.getElementById(selector);
+  if (el) return el;
+
+  // 2. Search inside active form (Strict)
+  const activeForm = document.querySelector('form');
+  if (activeForm) {
+    try {
+      el = activeForm.querySelector(`#${selector}`) ||
+           activeForm.querySelector(`[name="${selector}"]`) ||
+           activeForm.querySelector(`[id="${selector}"]`);
+      if (el) return el as HTMLElement;
+    } catch(e) {}
+  }
+
+  // 3. If it looks like an ID (starts with input- or btn-), DON'T fallback to text search
+  if (selector.startsWith('input-') || selector.startsWith('btn-') || selector.startsWith('select-')) {
+    return (document.querySelector(`#${selector}`) as HTMLElement) || null;
+  }
+
+  // 4. By Text (Labels, Buttons) - Only for descriptive selectors
+  const all = document.querySelectorAll('button, a, label, span, p, h4');
+  const search = selector.toLowerCase().trim();
+  
+  const found = Array.from(all).find(e => {
+    const text = (e as HTMLElement).innerText || (e as HTMLElement).textContent || "";
+    return text.toLowerCase().trim() === search;
+  });
+
+  if (!found) {
+    // Partial match as fallback for text
+    const partial = Array.from(all).find(e => {
+      const text = (e as HTMLElement).innerText || (e as HTMLElement).textContent || "";
+      return text.toLowerCase().includes(search);
+    });
+    if (partial) return partial as HTMLElement;
+  }
+
+  if (found && found.tagName === 'LABEL') {
+    const forId = found.getAttribute('for');
+    if (forId) return document.getElementById(forId);
+    return found.parentElement?.querySelector('input, select, textarea') as HTMLElement || found;
+  }
+
+  return (found as HTMLElement) || null;
+}
+
+export async function waitForElementToDisappear(selector: string, timeout = 5000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const el = findElement(selector);
+    if (!el || (el as HTMLElement).offsetParent === null) return true;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  return false;
+}
+
+export async function simulateClick(selector: string, speed: any, pause: any, stop: any) {
+  await checkStop(stop);
+  let el = findElement(selector);
+  if (!el) {
+    await helperWait(1000, speed, pause, stop);
+    el = findElement(selector);
+  }
+  if (!el) return false;
+
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  await moveCursorTo(el);
+  await helperWait(200, speed, pause, stop);
+  
   el.click();
-  el.style.outline = originalOutline;
+  el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+  
   return true;
 }
 
-export async function simulateTyping(selector: string, text: string) {
-  const el = document.querySelector(selector) as HTMLInputElement;
+export async function simulateTyping(selector: string, text: string, speed: any, pause: any, stop: any) {
+  await checkStop(stop);
+  let el = findElement(selector) as HTMLElement;
+  
   if (!el) {
-    console.warn(`Input not found for selector: ${selector}`);
-    return false;
+    await helperWait(1000, speed, pause, stop);
+    el = findElement(selector) as HTMLElement;
   }
-  
+
+  if (el && !(el instanceof HTMLInputElement) && !(el instanceof HTMLTextAreaElement)) {
+    el = (el.querySelector('input, textarea') as HTMLElement) || el;
+  }
+
+  if (!el || (!(el instanceof HTMLInputElement) && !(el instanceof HTMLTextAreaElement))) return false;
+
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  await moveCursorTo(el);
   el.focus();
-  const originalBg = el.style.backgroundColor;
-  el.style.backgroundColor = '#f5f3ff';
-  el.value = '';
   
+  const proto = el instanceof HTMLInputElement ? window.HTMLInputElement.prototype : window.HTMLTextAreaElement.prototype;
+  const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+  
+  setter?.call(el, "");
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+
   for (const char of text) {
-    el.value += char;
+    await checkStop(stop);
+    setter?.call(el, (el as any).value + char);
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
-    await wait(Math.random() * 40 + 20);
+    await helperWait(20, speed, pause, stop);
   }
   
-  el.style.backgroundColor = originalBg;
-  await wait(150);
   return true;
 }
 
-export async function runVisualScript(onStep: (msg: string) => void, navigate: (path: string) => void) {
-  try {
-    // --- 1. CATALOG ---
-    onStep("Navigăm la Catalog pentru a adăuga o manoperă nouă...");
-    navigate('catalog-manopera');
-    await wait(1500);
-    
-    onStep("Definim o normă de lucru: 'Revizie Generală'...");
-    await simulateClick('#btn-add-manopera');
-    await wait(800);
-    await simulateTyping('#input-cod-manopera', 'MAN-REV-GEN');
-    await simulateTyping('#input-denumire-manopera', 'Revizie Generala (Demo Visual)');
-    await simulateTyping('#input-durata-manopera', '2.5');
-    await wait(500);
-    await simulateClick('#btn-save-manopera');
-    await wait(1500);
-
-    // --- 2. OPERATIONAL - RECEPTIE ---
-    onStep("Flux de Recepție: Identificăm vehiculul după numărul de înmatriculare...");
-    navigate('operational-receptie');
-    await wait(2000);
-    
-    onStep("Căutăm 'B-101-SIM' în baza de date CRM...");
-    await simulateTyping('#input-search-vehicul', 'B-101-SIM');
-    await wait(1000);
-    await simulateClick('#btn-select-vehicul-0');
-    await wait(2000);
-
-    onStep("Completăm datele de recepție: Kilometraj și Simptome...");
-    await simulateTyping('#input-kilometraj-preluare', '155400');
-    await simulateTyping('#input-simptome-reclamate', 'Zgomot suspect punte fata, se solicita revizie generala si verificare frane.');
-    
-    onStep("Asignăm echipa tehnică pentru această lucrare...");
-    await simulateClick('#select-mecanic-preluare');
-    await wait(500);
-    
-    onStep("Deschidem comanda în sistem...");
-    await simulateClick('#btn-save-preluare');
-    await wait(2500);
-
-    // --- 3. OPERATIONAL - GESTIUNE ---
-    onStep("Monitorizăm fluxul de lucru în timp real...");
-    navigate('operational-comenzi');
-    await wait(2000);
-
-    // --- 4. FACTURARE ---
-    onStep("Lucrarea a fost finalizată. Trecem la procesul de facturare...");
-    navigate('facturare-comenzi');
-    await wait(2000);
-
-    onStep("Selectăm comanda nou creată pentru a genera factura fiscală...");
-    await simulateClick('#btn-open-factura-0');
-    await wait(1500);
-    
-    onStep("Confirmăm datele fiscale și emitem factura...");
-    await simulateTyping('#input-serie-factura', 'F-SIM');
-    await simulateTyping('#input-numar-factura', '2026001');
-    await wait(1000);
-    await simulateClick('#btn-save-factura');
-    await wait(2500);
-
-    // --- 5. INCASARI ---
-    onStep("Finalizăm tranzacția prin înregistrarea plății...");
-    navigate('incasari');
-    await wait(2000);
-
-    onStep("Căutăm clientul pentru a stinge datoria curentă...");
-    await simulateTyping('#input-search-client-incasare', 'Client Test 1');
-    await wait(1000);
-    
-    // Simulare selectare din dropdown
-    const dropdownItem = document.querySelector('li.cursor-pointer') as HTMLElement;
-    if (dropdownItem) dropdownItem.click();
-    await wait(1500);
-
-    onStep("Repartizăm suma încasată pe facturile restante...");
-    await simulateClick('#btn-pay-all-0');
-    await wait(800);
-    await simulateTyping('#input-referinta-incasare', 'SIM-OP-1002');
-    await wait(1000);
-    
-    onStep("Validăm plata și actualizăm soldul în timp real...");
-    await simulateClick('#btn-save-incasare');
-    await wait(2000);
-
-    onStep("Simularea completă a parcurs cu succes toate modulele: Catalog -> Recepție -> Facturare -> Încasare.");
-    return true;
-  } catch (error) {
-    console.error("Visual script failed:", error);
-    return false;
+export async function simulateSelect(selector: string, value: string, speed: any, pause: any, stop: any) {
+  await checkStop(stop);
+  let el = findElement(selector) as HTMLElement;
+  
+  if (!el) {
+    await helperWait(1000, speed, pause, stop);
+    el = findElement(selector) as HTMLElement;
   }
+
+  if (el && !(el instanceof HTMLSelectElement)) {
+    el = (el.querySelector('select') as HTMLElement) || el;
+  }
+
+  if (!el || !(el instanceof HTMLSelectElement)) return false;
+
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  await moveCursorTo(el);
+  el.focus();
+  
+  el.value = value;
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  
+  await helperWait(300, speed, pause, stop);
+  return true;
 }

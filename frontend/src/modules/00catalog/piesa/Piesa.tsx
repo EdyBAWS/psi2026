@@ -214,6 +214,7 @@ export default function Piesa() {
               required
             />
             <SelectField
+              id="select-categorie"
               label="Categorie"
               value={form.categorie ?? 'Altele'}
               onChange={(e) =>
