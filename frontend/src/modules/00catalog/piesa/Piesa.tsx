@@ -178,6 +178,7 @@ export default function Piesa() {
       {/* ── FORMULAR ADĂUGARE / EDITARE ──────────────────────────────────────── */}
       {arataFormular && (
         <form
+          id="form-piesa"
           onSubmit={handleSalvare}
           className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-indigo-100 animate-in fade-in slide-in-from-top-4"
         >
@@ -187,6 +188,7 @@ export default function Piesa() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <Field
+              id="input-cod-piesa"
               label="Cod Piesă *"
               value={form.codPiesa ?? ''}
               onChange={(e) => setForm({ ...form, codPiesa: e.target.value })}
@@ -194,6 +196,7 @@ export default function Piesa() {
               required
             />
             <Field
+              id="input-denumire-piesa"
               label="Denumire Piesă *"
               value={form.denumire ?? ''}
               onChange={(e) => setForm({ ...form, denumire: e.target.value })}
@@ -202,6 +205,7 @@ export default function Piesa() {
               required
             />
             <Field
+              id="input-producator-piesa"
               label="Producător *"
               value={form.producator ?? ''}
               onChange={(e) => setForm({ ...form, producator: e.target.value })}
@@ -217,6 +221,7 @@ export default function Piesa() {
               options={CATEGORII_PIESA}
             />
             <Field
+              id="input-pret-baza"
               label="Preț Bază (RON) *"
               type="number"
               step="0.01"
@@ -225,6 +230,7 @@ export default function Piesa() {
               required
             />
             <Field
+              id="input-stoc"
               label="Stoc"
               type="number"
               value={form.stoc ?? 0}

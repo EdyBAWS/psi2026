@@ -17,6 +17,7 @@ import Notificare from "./modules/05notificari/Notificari";
 
 import IstoricFacturare from "./modules/03facturare/istoric/IstoricFacturare";
 import IstoricIncasari from "./modules/04incasari/IstoricIncasari";
+import AutomatedFlow from "./modules/99demo/AutomatedFlow";
 
 export default function App() {
   // Pornim cu dashboard pentru a fi landing page
@@ -56,6 +57,8 @@ export default function App() {
         return <Kituri />;
       case "notificari":
         return <Notificare onNavigate={setPaginaCurenta} />;
+      case "simulator-flux":
+        return <AutomatedFlow onNavigate={setPaginaCurenta} />;
 
       default:
         return (
