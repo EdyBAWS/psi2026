@@ -46,11 +46,11 @@ export const angajatSchema = z
     CNP: z.string().trim().min(13, 'CNP-ul trebuie să aibă 13 caractere.'),
     telefon: z.string().trim().min(6, mesajTelefon),
     email: z.string().trim().email(mesajEmail).or(z.literal('')),
-    tipAngajat: z.enum(['Manager', 'Mecanic', 'Receptioner']),
+    tipAngajat: z.enum(['Manager', 'Mecanic', 'Receptioner', 'Inspector']),
     departament: z.string().trim().optional(),
-    sporConducere: z.number().min(0).optional(),
+    sporConducere: z.number({ error: 'Introdu un număr valid.' }).min(0, 'Minim 0.').optional(),
     specializare: z.string().trim().optional(),
-    costOrar: z.number().min(0).optional(),
+    costOrar: z.number({ error: 'Introdu un număr valid.' }).min(0, 'Minim 0.').optional(),
     nrBirou: z.string().trim().optional(),
     tura: z.string().trim().optional(),
   })
@@ -65,6 +65,7 @@ export const angajatSchema = z
       ctx.addIssue({ code: 'custom', message: 'Obligatoriu.', path: ['nrBirou'] });
     }
   });
+
 
 export const asiguratorSchema = z.object({
   denumire: z.string().min(2, 'Denumirea este obligatorie'),

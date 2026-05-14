@@ -150,6 +150,7 @@ export default function FormComanda({
                 </span>
               ))}
               <select
+                id="select-mecanic-preluare"
                 value=""
                 onChange={(e) => {
                   if (e.target.value) toggleMecanic(Number(e.target.value));
@@ -218,6 +219,7 @@ export default function FormComanda({
               Termen promis<span className="text-rose-500 ml-1">*</span>
             </label>
             <input
+              id="input-termen-promis"
               type="date"
               value={detaliiPreluare.termenPromis}
               onChange={(event) =>
@@ -234,6 +236,7 @@ export default function FormComanda({
               Kilometraj preluare<span className="text-rose-500 ml-1">*</span>
             </label>
             <input
+              id="input-kilometraj-preluare"
               type="number"
               min="0"
               value={detaliiPreluare.kilometrajPreluare}
@@ -297,6 +300,7 @@ export default function FormComanda({
               Simptome reclamate<span className="text-rose-500 ml-1">*</span>
             </label>
             <textarea
+              id="input-simptome-reclamate"
               rows={3}
               value={detaliiPreluare.simptomeReclamate}
               onChange={(event) =>

@@ -1,7 +1,8 @@
-import { API_BASE_URL, apiJson } from "../../lib/api";
-import { saveClient, saveVehicul, saveAngajat, saveAsigurator } from "../01entitati/entitati.service";
-import { createComanda, createDosarDauna, updateComanda, updatePozitiiComanda, fetchCatalogPiese, fetchCatalogManopere, fetchMecanici, fetchAngajati, fetchAsiguratori, fetchClienti, fetchVehicule } from "../02operational/operational.service";
+import { apiJson } from "../../lib/api";
+import { saveClient, saveVehicul, saveAngajat, saveAsigurator, type ClientEntity } from "../01entitati/entitati.service";
+import { createComanda, createDosarDauna, updateComanda, updatePozitiiComanda, fetchAsiguratori, fetchMecanici, fetchVehicule } from "../02operational/operational.service";
 import { createPiesa, createManopera, createKit } from "../00catalog/catalog.service";
+import { type PiesaCatalog, type ManoperaCatalog } from "../../types/catalog";
 
 export interface TestStep {
   id: string;
@@ -18,6 +19,7 @@ export async function runAutomatedTestFlow(onProgress: (steps: TestStep[]) => vo
     { id: 'operational', label: 'Flux Operațional (Recepție, Diagnoză, Lucru)', status: 'pending' },
     { id: 'finalizare', label: 'Finalizare Lucrări și Control Calitate', status: 'pending' },
     { id: 'facturare', label: 'Emitere Facturi (Scadențe, Penalități, Discount)', status: 'pending' },
+    { id: 'incasare', label: 'Înregistrare Încasări și Închidere Sold', status: 'pending' },
   ];
 
   const updateStatus = (id: string, status: TestStep['status'], message?: string) => {
@@ -39,7 +41,7 @@ export async function runAutomatedTestFlow(onProgress: (steps: TestStep[]) => vo
       { codPiesa: 'DISC-FR-F', denumire: 'Disc Frână Față', producator: 'Brembo', categorie: 'Frânare', pretBaza: 350, stoc: 15, tip: 'NOUA', status: 'Activ' },
       { codPiesa: 'BEC-H7', denumire: 'Bec H7 Vision', producator: 'Philips', categorie: 'Electrice', pretBaza: 35, stoc: 200, tip: 'NOUA', status: 'Activ' },
     ];
-    const createdPiese = [];
+    const createdPiese: PiesaCatalog[] = [];
     for (const p of pieseData) {
       createdPiese.push(await createPiesa(p as any));
     }
@@ -48,7 +50,7 @@ export async function runAutomatedTestFlow(onProgress: (steps: TestStep[]) => vo
       { codManopera: 'REV-STD', denumire: 'Revizie Standard', pretOra: 100, categorie: 'Mecanică', status: 'Activ' },
       { codManopera: 'DIAG-COMP', denumire: 'Diagnoză Computerizată', pretOra: 150, categorie: 'Electrică', status: 'Activ' },
     ];
-    const createdManopere = [];
+    const createdManopere: ManoperaCatalog[] = [];
     for (const m of manoperaData) {
       createdManopere.push(await createManopera(m as any));
     }
@@ -78,7 +80,7 @@ export async function runAutomatedTestFlow(onProgress: (steps: TestStep[]) => vo
 
     // 3. CRM
     updateStatus('crm', 'loading');
-    const createdClients = [];
+    const createdClients: ClientEntity[] = [];
     for (let i = 1; i <= 3; i++) {
       createdClients.push(await saveClient({
         nume: `Client Test ${i}`, tipClient: 'PF', telefon: `070000000${i}`, email: `client${i}@test.com`, adresa: `Strada Test ${i}`, CNP: `190010100000${i}`, serieCI: `RK${123450 + i}`, status: 'Activ', soldDebitor: 0
@@ -166,6 +168,30 @@ export async function runAutomatedTestFlow(onProgress: (steps: TestStep[]) => vo
     });
     
     updateStatus('facturare', 'success', 'Emise 2 facturi: una cu scadență 15 zile (RCA) și una cu 10 zile și discount 10%.');
+    
+    // 7. Incasare
+    updateStatus('incasare', 'loading');
+    // Luăm facturile restante pentru a le stinge pe cele tocmai create
+    const facturiRestante: any[] = await apiJson('/incasari/facturi-restante');
+    
+    // Stingem factura pentru Client Test 1 (Comanda 1)
+    const client1 = createdClients[0];
+    const factura1 = facturiRestante.find((f: any) => f.idClient === client1?.idClient);
+    if (factura1) {
+      await apiJson('/incasari', {
+        method: 'POST',
+        body: JSON.stringify({
+          idClient: createdClients[0].idClient,
+          sumaIncasata: factura1.restDePlata,
+          modalitate: 'TransferBancar',
+          referinta: 'OP-SIM-001',
+          data: new Date().toISOString(),
+          alocari: [{ idFactura: factura1.idFactura, sumaAlocata: factura1.restDePlata }]
+        })
+      });
+    }
+
+    updateStatus('incasare', 'success', 'Încasare înregistrată: Soldul pentru Client Test 1 a fost stins integral.');
 
   } catch (error) {
     console.error("Simulation failed:", error);

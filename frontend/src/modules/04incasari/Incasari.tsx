@@ -89,6 +89,7 @@ export default function Incasari() {
                 </svg>
               </div>
               <input
+                id="input-search-client-incasare"
                 type="text"
                 className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-[13px] text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="Caută clientul după nume sau CUI..."
@@ -144,7 +145,7 @@ export default function Incasari() {
 
               {facturiRestante.length > 0 ? (
                 <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
-                  {facturiRestante.map((factura) => {
+                  {facturiRestante.map((factura, index) => {
                     const alocatNum = Number(factura.sumaAlocata) || 0;
                     const esteAchitatIntegral = alocatNum === factura.restDePlata && alocatNum > 0;
                     const estePlatitPartial = alocatNum > 0 && alocatNum < factura.restDePlata;
@@ -175,6 +176,7 @@ export default function Incasari() {
 
                         <div className="mt-3 md:mt-0 flex w-full md:w-auto items-center gap-3">
                           <Button
+                            id={`btn-pay-all-${index}`}
                             variant="outline"
                             size="sm"
                             type="button"
@@ -230,6 +232,7 @@ export default function Incasari() {
               <div>
                 <label className="mb-1 block text-[13px] font-medium text-slate-700">Bani primiți (RON) *</label>
                 <input
+                  id="input-suma-incasata"
                   type="number"
                   min="0"
                   step="0.01"
@@ -275,6 +278,7 @@ export default function Incasari() {
                   Referință document {isReferintaObligatorie && <span className="text-rose-500">*</span>}
                 </label>
                 <input
+                  id="input-referinta-incasare"
                   type="text"
                   className={`w-full rounded-md border px-3 py-2 text-[13px] focus:outline-none focus:ring-1 ${
                     referintaLipsa
@@ -313,6 +317,7 @@ export default function Incasari() {
 
             <div className="mt-6">
               <Button
+                id="btn-save-incasare"
                 variant="primary"
                 type="submit"
                 className="w-full justify-center"
