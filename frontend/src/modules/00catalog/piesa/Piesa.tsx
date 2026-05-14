@@ -130,10 +130,11 @@ export default function Piesa() {
             value={`${valoareStoc.toLocaleString('ro-RO')} RON`}
             tone="info"
           />
-          <StatCard label="Stoc Epuizat" value={stocEpuizat} tone="danger" />
           {stocCritic > 0 && (
             <StatCard label="Stoc Critic (<5)" value={stocCritic} tone="warning" />
           )}
+          <StatCard label="Stoc Epuizat" value={stocEpuizat} tone="danger" />
+
         </div>
         </div>
       </div>
