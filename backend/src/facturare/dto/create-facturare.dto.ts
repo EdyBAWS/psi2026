@@ -30,8 +30,9 @@ export class CreateFacturaItemDto {
 }
 
 export class CreateFacturareDto {
+  @IsOptional()
   @IsNumber()
-  numar: number;
+  numar?: number;
 
   @IsOptional()
   @IsString()
