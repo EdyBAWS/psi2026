@@ -19,18 +19,19 @@ export const FacturareService = {
   },
 
   async fetchLiniiFactura(idComanda: number) {
-    const res = await fetch(`${API_BASE_URL}/operational/pozitii?idComanda=${idComanda}`);
+    const res = await fetch(`${API_BASE_URL}/operational/comenzi/${idComanda}/pozitii`);
     if (!res.ok) return [];
     
     const data = await res.json();
     return data.map((p: any) => ({
-      idLinie: p.idPozitieCmd || p.idPozitie || p.id,
-      idPiesa: p.idPiesa,
-      idKit: p.idKit,
-      tip: p.tipArticol || p.tipPozitie,
-      denumire: p.descriere || p.denumire || p.codArticol || 'Articol',
+      idLinie: p.idPozitie,
+      idPiesa: p.tipArticol === 'PIESA' ? p.idArticol : null,
+      idKit: p.tipArticol === 'KIT' ? (p.idKit || p.idArticol) : null,
+      idManopera: p.tipArticol === 'MANOPERA' ? p.idArticol : null,
+      tip: p.tipArticol === 'MANOPERA' ? 'Manopera' : (p.tipArticol === 'KIT' ? 'Kit' : 'Piesa'),
+      denumire: p.descriere || p.codArticol || 'Articol',
       cantitate: Number(p.cantitate) || 0,
-      pretUnitar: Number(p.pretUnitar || p.pretVanzare || 0)
+      pretUnitar: Number(p.pretUnitar || 0)
     }));
   },
 

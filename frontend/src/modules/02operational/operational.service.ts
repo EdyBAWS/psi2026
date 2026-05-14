@@ -17,8 +17,6 @@ import { API_BASE_URL } from "../../lib/api";
 const API_OP = `${API_BASE_URL}/operational`;
 const API_ENT = `${API_BASE_URL}/entitati`;
 const API_CAT = `${API_BASE_URL}/catalog`;
-const POZITII_STORAGE_KEY = "psi-operational-pozitii-comanda";
-
 const mapStatusToPrisma = (status?: StatusComanda): string => {
   if (!status) return "IN_ASTEPTARE_DIAGNOZA";
   switch (status as string) {
@@ -115,16 +113,6 @@ const mapComanda = (c: any, fallback?: Partial<ComandaService>): ComandaService 
     prioritate: fallback?.prioritate ?? "Normala",
     tipPlata: fallback?.tipPlata ?? (dosar?.idAsigurator ? "Asigurare" : "Client Direct"),
   };
-};
-
-const readPozitiiLocale = (): PozitieComanda[] => {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(window.localStorage.getItem(POZITII_STORAGE_KEY) ?? "[]"); } catch { return []; }
-};
-
-const writePozitiiLocale = (pozitii: PozitieComanda[]) => {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(POZITII_STORAGE_KEY, JSON.stringify(pozitii));
 };
 
 export const fetchComenzi = async (): Promise<ComandaService[]> => {
@@ -274,56 +262,57 @@ export async function fetchCatalogKituri(): Promise<CatalogKit[]> {
   }));
 }
 
-export async function fetchPozitiiComanda(): Promise<PozitieComanda[]> { return readPozitiiLocale(); }
+export async function fetchPozitiiComanda(): Promise<PozitieComanda[]> {
+  const response = await fetch(`${API_OP}/comenzi-pozitii`);
+  if (!response.ok) return [];
+  const data = await response.json();
+  return data.map((p: any) => ({
+    idPozitieCmd: p.idPozitie,
+    idComanda: p.idComanda,
+    idPiesa: p.tipArticol === 'PIESA' ? p.idArticol : null,
+    idKit: p.tipArticol === 'KIT' ? (p.idKit || p.idArticol) : null,
+    idManopera: p.tipArticol === 'MANOPERA' ? p.idArticol : null,
+    tipPozitie: p.tipArticol === 'MANOPERA' ? 'Manopera' : (p.tipArticol === 'KIT' ? 'Kit' : 'Piesa'),
+    codArticol: p.codArticol || '',
+    descriere: p.descriere || '',
+    unitateMasura: p.unitateMasura || 'buc',
+    cantitate: p.cantitate || 0,
+    pretVanzare: p.pretUnitar || 0,
+    discountProcent: p.discount || 0,
+    cotaTVA: p.cotaTva || 19,
+    disponibilitateStoc: true,
+    observatiiPozitie: p.observatii || '',
+  }));
+}
 
 export async function createPozitiiComanda(idComanda: number, pozitii: PozitieComandaDraft[]): Promise<PozitieComanda[]> {
-  const existente = readPozitiiLocale();
-  const stamp = Date.now();
-  const pozitiiSalvate = pozitii.map((pozitie, index): PozitieComanda => ({
-    idPozitieCmd: stamp + index,
-    idComanda,
-    idPiesa: pozitie.tipPozitie === "Piesa" ? pozitie.catalogId : null,
-    idKit: pozitie.tipPozitie === "Kit" ? pozitie.catalogId : null,
-    idManopera: pozitie.tipPozitie === "Manopera" ? pozitie.catalogId : null,
-    tipPozitie: pozitie.tipPozitie,
-    codArticol: pozitie.codArticol,
-    descriere: pozitie.descriere,
-    unitateMasura: pozitie.unitateMasura,
-    cantitate: pozitie.cantitate,
-    pretVanzare: pozitie.pretVanzare,
-    discountProcent: pozitie.discountProcent,
-    cotaTVA: pozitie.cotaTVA,
-    disponibilitateStoc: pozitie.disponibilitateStoc,
-    observatiiPozitie: pozitie.observatiiPozitie,
-  }));
-
-  writePozitiiLocale([...existente, ...pozitiiSalvate]);
-  return pozitiiSalvate;
+  return updatePozitiiComanda(idComanda, pozitii);
 }
 
 export async function updatePozitiiComanda(idComanda: number, pozitiiDraft: PozitieComandaDraft[]): Promise<PozitieComanda[]> {
-  const toateExistente = readPozitiiLocale();
-  const faraComandaCurenta = toateExistente.filter(p => p.idComanda !== idComanda);
+  const res = await fetch(`${API_OP}/comenzi/${idComanda}/pozitii`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(pozitiiDraft),
+  });
+  if (!res.ok) throw new Error(await parseApiError(res, "Eroare la salvarea devizului"));
   
-  const stamp = Date.now();
-  const noiPozitii = pozitiiDraft.map((p, index): PozitieComanda => ({
-    idPozitieCmd: stamp + index,
-    idComanda,
-    idPiesa: p.tipPozitie === "Piesa" ? p.catalogId : null,
-    idKit: p.tipPozitie === "Kit" ? p.catalogId : null,
-    idManopera: p.tipPozitie === "Manopera" ? p.catalogId : null,
-    tipPozitie: p.tipPozitie,
-    codArticol: p.codArticol,
-    descriere: p.descriere,
-    unitateMasura: p.unitateMasura,
-    cantitate: p.cantitate,
-    pretVanzare: p.pretVanzare,
-    discountProcent: p.discountProcent,
-    cotaTVA: p.cotaTVA,
-    disponibilitateStoc: p.disponibilitateStoc,
-    observatiiPozitie: p.observatiiPozitie,
+  const data = await res.json();
+  return data.map((p: any) => ({
+    idPozitieCmd: p.idPozitie,
+    idComanda: p.idComanda,
+    idPiesa: p.tipArticol === 'PIESA' ? p.idArticol : null,
+    idKit: p.tipArticol === 'KIT' ? (p.idKit || p.idArticol) : null,
+    idManopera: p.tipArticol === 'MANOPERA' ? p.idArticol : null,
+    tipPozitie: p.tipArticol === 'MANOPERA' ? 'Manopera' : (p.tipArticol === 'KIT' ? 'Kit' : 'Piesa'),
+    codArticol: p.codArticol || '',
+    descriere: p.descriere || '',
+    unitateMasura: p.unitateMasura || 'buc',
+    cantitate: p.cantitate || 0,
+    pretVanzare: p.pretUnitar || 0,
+    discountProcent: p.discount || 0,
+    cotaTVA: p.cotaTva || 19,
+    disponibilitateStoc: true,
+    observatiiPozitie: p.observatii || '',
   }));
-
-  writePozitiiLocale([...faraComandaCurenta, ...noiPozitii]);
-  return noiPozitii;
 }

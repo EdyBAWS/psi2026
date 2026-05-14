@@ -96,4 +96,23 @@ export class OperationalController {
   ) {
     return this.operationalService.updateComanda(id, data);
   }
+
+  // --- POZIȚII COMANDĂ ---
+  @Get('comenzi/:id/pozitii')
+  getPozitiiByComanda(@Param('id', ParseIntPipe) id: number) {
+    return this.operationalService.getPozitiiByComanda(id);
+  }
+
+  @Get('comenzi-pozitii')
+  getAllPozitii() {
+    return this.operationalService.getAllPozitii();
+  }
+
+  @Post('comenzi/:id/pozitii')
+  updatePozitiiComanda(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() pozitii: any[],
+  ) {
+    return this.operationalService.updatePozitiiComanda(id, pozitii);
+  }
 }

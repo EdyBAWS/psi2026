@@ -261,13 +261,19 @@ model ComandaPozitie {
   idComanda   Int
   comanda     Comanda  @relation(fields: [idComanda], references: [idComanda], onDelete: Cascade)
   
-  idArticol   Int      // Va contine fie idPiesa, fie idManopera
-  tipArticol  String   // Ex: "PIESA" sau "MANOPERA"
-  cantitate   Int
-  pretUnitar  Float
-  
-  idKit       Int?
+  tipArticol  String   // "PIESA", "MANOPERA", "KIT"
+  idArticol   Int?     // idPiesa sau idManopera
+  idKit       Int?     // idKit separat daca e cazul
   kit         KitPiese? @relation(fields: [idKit], references: [idKit], onDelete: SetNull)
+
+  codArticol  String?
+  descriere   String
+  unitateMasura String?
+  cantitate   Float
+  pretUnitar  Float
+  discount    Float    @default(0)
+  cotaTva     Float    @default(19)
+  observatii  String?
   
   createdAt   DateTime @default(now())
 }
@@ -295,9 +301,10 @@ model Factura {
   incasari     IncasareAlocare[]
   notificari   Notificare[]
   
-  totalFaraTVA Float             @default(0)
-  tva          Float             @default(0)
-  totalGeneral Float             @default(0)
+  totalFaraTVA   Float             @default(0)
+  discountProcent Float             @default(0)
+  tva            Float             @default(0)
+  totalGeneral   Float             @default(0)
   
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt

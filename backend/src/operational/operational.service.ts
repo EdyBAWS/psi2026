@@ -204,4 +204,52 @@ export class OperationalService {
 
     return comanda;
   }
+
+  // --- POZIȚII COMANDĂ (DEVIZ) ---
+  async getPozitiiByComanda(idComanda: number) {
+    return this.prisma.comandaPozitie.findMany({
+      where: { idComanda },
+      orderBy: { idPozitie: 'asc' },
+    });
+  }
+
+  async getAllPozitii() {
+    return this.prisma.comandaPozitie.findMany({
+      orderBy: { idPozitie: 'asc' },
+    });
+  }
+
+  async updatePozitiiComanda(idComanda: number, pozitii: any[]) {
+    // Folosim o tranzacție pentru a asigura atomicitatea (ștergem tot și recreăm)
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Ștergem pozițiile existente pentru această comandă
+      await tx.comandaPozitie.deleteMany({
+        where: { idComanda },
+      });
+
+      // 2. Creăm noile poziții
+      const created = await Promise.all(
+        pozitii.map((p) =>
+          tx.comandaPozitie.create({
+            data: {
+              idComanda,
+              tipArticol: p.tipArticol || p.tipPozitie?.toUpperCase() || 'PIESA',
+              idArticol: p.idArticol || p.catalogId || null,
+              idKit: p.idKit || (p.tipPozitie === 'Kit' ? p.catalogId : null),
+              codArticol: p.codArticol,
+              descriere: p.descriere || '',
+              unitateMasura: p.unitateMasura,
+              cantitate: Number(p.cantitate) || 0,
+              pretUnitar: Number(p.pretUnitar || p.pretVanzare) || 0,
+              discount: Number(p.discount || p.discountProcent) || 0,
+              cotaTva: Number(p.cotaTva || p.cotaTVA) || 19,
+              observatii: p.observatii || p.observatiiPozitie || null,
+            },
+          }),
+        ),
+      );
+
+      return created;
+    });
+  }
 }

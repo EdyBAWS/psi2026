@@ -14,6 +14,7 @@ export interface LinieFactura {
   idLinie: number;
   idPiesa?: number;
   idKit?: number;
+  idManopera?: number;
   tip?: "Piesa" | "Kit" | "Manopera";
   denumire: string;
   cantitate: number;

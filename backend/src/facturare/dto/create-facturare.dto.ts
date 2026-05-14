@@ -5,6 +5,8 @@ import {
   IsArray,
   ValidateNested,
   IsDateString,
+  Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -50,6 +52,12 @@ export class CreateFacturareDto {
 
   @IsDateString()
   scadenta: Date;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  discountProcent?: number;
 
   @IsArray()
   @ValidateNested({ each: true })
