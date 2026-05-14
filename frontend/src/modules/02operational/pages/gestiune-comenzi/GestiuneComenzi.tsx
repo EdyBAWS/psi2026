@@ -22,6 +22,7 @@ interface GestiuneComenziProps {
   catalogKituri: CatalogKit[];
   onActualizeazaComanda: (idComanda: number, modificari: Partial<ComandaService>) => Promise<void>;
   onActualizeazaPozitii: (idComanda: number, pozitii: PozitieComandaDraft[]) => Promise<void>;
+  onStergeComanda: (idComanda: number) => Promise<void>;
 }
 
 export default function GestiuneComenzi(props: GestiuneComenziProps) {
@@ -88,6 +89,7 @@ export default function GestiuneComenzi(props: GestiuneComenziProps) {
               catalogKituri={props.catalogKituri}
               onActualizeazaComanda={props.onActualizeazaComanda}
               onActualizeazaPozitii={props.onActualizeazaPozitii}
+              onStergeComanda={props.onStergeComanda}
               onInchide={() => setters.setIdComandaSelectata(null)}
             />
           </div>

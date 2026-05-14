@@ -56,6 +56,7 @@ export default function Facturare() {
         <>
           <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:flex-row md:items-center md:justify-between">
             <input
+              id="input-cautare-factura"
               type="text"
               value={cautare}
               onChange={(e) => setCautare(e.target.value)}
@@ -172,6 +173,7 @@ export default function Facturare() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Termen Plată</label>
               <select
+                id="select-termen-plata-factura"
                 value={termenPlata}
                 onChange={(e) => setTermenPlata(Number(e.target.value))}
                 className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500"

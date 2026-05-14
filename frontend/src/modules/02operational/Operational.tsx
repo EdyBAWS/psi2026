@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { fetchAsiguratori, fetchCatalogKituri, fetchCatalogManopere, fetchCatalogPiese, fetchClienti, fetchComenzi, fetchDosareDauna, fetchMecanici, fetchAngajati, fetchPozitiiComanda, fetchVehicule, createComanda, createDosarDauna, createPozitiiComanda, updateComanda, updatePozitiiComanda } from "./operational.service";
+import { fetchAsiguratori, fetchCatalogKituri, fetchCatalogManopere, fetchCatalogPiese, fetchClienti, fetchComenzi, fetchDosareDauna, fetchMecanici, fetchAngajati, fetchPozitiiComanda, fetchVehicule, createComanda, createDosarDauna, createPozitiiComanda, updateComanda, updatePozitiiComanda, deleteComanda } from "./operational.service";
 import GestiuneComenzi from "./pages/gestiune-comenzi/GestiuneComenzi";
 import PreluareAuto, { type SalvarePreluarePayload } from "./pages/preluare-auto/PreluareAuto";
 import type { Asigurator, CatalogKit, CatalogManopera, CatalogPiesa, Client, ComandaService, DosarDauna, Mecanic, PozitieComanda, PozitieComandaDraft, Vehicul } from "./types";
@@ -117,6 +117,17 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
     }
   };
 
+  const handleStergeComanda = async (idComanda: number) => {
+    try {
+      await deleteComanda(idComanda);
+      setComenzi((prev) => prev.filter(c => c.idComanda !== idComanda));
+      setPozitii((prev) => prev.filter(p => p.idComanda !== idComanda));
+      toast.success("Comanda a fost ștearsă definitiv.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Comanda nu a putut fi ștearsă.");
+    }
+  };
+
   const seIncarca = Object.values(loading).some(Boolean);
 
   return (
@@ -137,9 +148,9 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
           catalogPiese={catalogPiese} catalogKituri={catalogKituri} catalogManopere={catalogManopere}
           onActualizeazaComanda={handleActualizeazaComanda} 
           onActualizeazaPozitii={handleActualizeazaPozitii}
+          onStergeComanda={handleStergeComanda}
         />
       )}
     </section>
   );
 }
-

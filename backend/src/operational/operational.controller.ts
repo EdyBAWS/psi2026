@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   ParseIntPipe,
+  Delete,
 } from '@nestjs/common';
 import { OperationalService } from './operational.service';
 import {
@@ -95,6 +96,11 @@ export class OperationalController {
     @Body() data: UpdateComandaDto,
   ) {
     return this.operationalService.updateComanda(id, data);
+  }
+
+  @Delete('comenzi/:id')
+  deleteComanda(@Param('id', ParseIntPipe) id: number) {
+    return this.operationalService.deleteComanda(id);
   }
 
   // --- POZIȚII COMANDĂ ---

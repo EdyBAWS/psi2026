@@ -17,7 +17,7 @@ import {
   updateManopera,
 } from '../catalog.service';
 
-export type SortFieldManopera = 'codManopera' | 'denumire' | 'durataStd';
+export type SortFieldManopera = 'codManopera' | 'denumire' | 'durataStd' | 'pretOra';
 export type SortDir = 'asc' | 'desc';
 
 // Starea goală a formularului — reutilizată la reset după submit/anulare.
@@ -78,6 +78,7 @@ export function useManopera() {
       if (sortField === 'codManopera') cmp = a.codManopera.localeCompare(b.codManopera);
       if (sortField === 'denumire') cmp = a.denumire.localeCompare(b.denumire);
       if (sortField === 'durataStd') cmp = a.durataStd - b.durataStd;
+      if (sortField === 'pretOra') cmp = (a.pretOra || 0) - (b.pretOra || 0);
       return sortDir === 'asc' ? cmp : -cmp;
     });
 

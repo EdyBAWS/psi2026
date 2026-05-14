@@ -102,8 +102,9 @@ export default function Incasari() {
                 <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
                   {clientiFiltrati.length > 0 ? (
                     <ul className="py-1">
-                      {clientiFiltrati.map((platitor) => (
+                      {clientiFiltrati.map((platitor, index) => (
                         <li
+                          id={`btn-select-client-${index}`}
                           key={`${platitor.tipEntitate}-${platitor.idEntitate}`}
                           onClick={() => handleSelectClient(platitor)}
                           className="cursor-pointer px-4 py-2 text-[13px] hover:bg-slate-50"

@@ -182,6 +182,17 @@ export default function Manopera() {
               {...register('durataStd', { valueAsNumber: true })}
               error={errors.durataStd?.message}
             />
+            <Field
+              id="input-pret-ora-manopera"
+              label="Preț Orar (RON) *"
+              type="number"
+              step="1"
+              min="1"
+              placeholder="ex: 120"
+              hint="Preț manoperă pe oră (fără TVA)"
+              {...register('pretOra', { valueAsNumber: true })}
+              error={errors.pretOra?.message}
+            />
           </div>
           <div className="mt-6 flex justify-end gap-3">
             <Button variant="outline" type="button" onClick={handleInchideFormular}>
@@ -229,6 +240,13 @@ export default function Manopera() {
                   Durată Standard{' '}
                   <SortIndicator field="durataStd" activeField={sortField} dir={sortDir} />
                 </th>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors text-right w-40"
+                  onClick={() => handleSort('pretOra')}
+                >
+                  Preț Orar{' '}
+                  <SortIndicator field="pretOra" activeField={sortField} dir={sortDir} />
+                </th>
                 <th className="px-6 py-4 text-center w-28">Acțiuni</th>
               </tr>
             </thead>
@@ -250,6 +268,11 @@ export default function Manopera() {
                   <td className="px-6 py-4 text-right">
                     <p className="font-bold text-emerald-700 text-base">
                       {item.durataStd.toFixed(1)} h
+                    </p>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <p className="font-bold text-indigo-600 text-base">
+                      {item.pretOra.toFixed(2)} RON
                     </p>
                   </td>
                   <td className="px-6 py-4">

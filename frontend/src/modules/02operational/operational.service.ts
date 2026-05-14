@@ -316,3 +316,10 @@ export async function updatePozitiiComanda(idComanda: number, pozitiiDraft: Pozi
     observatiiPozitie: p.observatii || '',
   }));
 }
+
+export async function deleteComanda(idComanda: number): Promise<void> {
+  const res = await fetch(`${API_OP}/comenzi/${idComanda}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(await parseApiError(res, "Eroare la ștergerea comenzii"));
+}

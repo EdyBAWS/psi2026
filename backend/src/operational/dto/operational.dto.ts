@@ -21,7 +21,7 @@ export class UpdateVehiculDto extends PartialType(CreateVehiculDto) {}
 
 // --- DOSARE DAUNĂ ---
 export class CreateDosarDaunaDto {
-  @IsString() numarDosar: string;
+  @IsOptional() @IsString() numarDosar?: string;
   @IsNumber() idClient: number;
   @IsNumber() idVehicul: number;
   @IsOptional() @IsNumber() idAsigurator?: number;
@@ -32,7 +32,7 @@ export class UpdateDosarDaunaDto extends PartialType(CreateDosarDaunaDto) {}
 
 // --- COMENZI REPARAȚIE ---
 export class CreateComandaDto {
-  @IsString() numarComanda: string;
+  @IsOptional() @IsString() numarComanda?: string;
   @IsOptional() @IsDateString() dataPreconizata?: string;
   @IsOptional() @IsNumber() idDosar?: number;
   @IsOptional() @IsNumber() idClient?: number;

@@ -4,7 +4,7 @@ import StatusBadge from "../../../shared-components/StatusBadge";
 import { type DetaliiComandaSelectata, formatSuma } from "../gestiuneComenzi.helpers";
 import type { CatalogKit, CatalogManopera, CatalogPiesa, ComandaService, Mecanic, PozitieComanda, PozitieComandaDraft, StatusComanda } from "../../../types";
 import TabelPozitii from "../../../shared-components/TabelPozitii";
-import { User, Car, Clock, ShieldCheck, Save, X, Edit3, Settings2 } from "lucide-react";
+import { User, Car, Clock, ShieldCheck, Save, X, Edit3, Settings2, Trash2 } from "lucide-react";
 
 interface GestiuneComenziDetailProps extends DetaliiComandaSelectata {
   mecanici: Mecanic[];
@@ -13,6 +13,7 @@ interface GestiuneComenziDetailProps extends DetaliiComandaSelectata {
   catalogKituri: CatalogKit[];
   onActualizeazaComanda: (idComanda: number, modificari: Partial<ComandaService>) => Promise<void>;
   onActualizeazaPozitii: (idComanda: number, pozitii: PozitieComandaDraft[]) => Promise<void>;
+  onStergeComanda: (idComanda: number) => Promise<void>;
   onInchide: () => void;
 }
 
@@ -50,6 +51,7 @@ export default function GestiuneComenziDetail({
   vehiculSelectat,
   onActualizeazaComanda,
   onActualizeazaPozitii,
+  onStergeComanda,
   onInchide,
 }: GestiuneComenziDetailProps) {
   const [editareStatus, setEditareStatus] = useState(false);
@@ -98,7 +100,20 @@ export default function GestiuneComenziDetail({
     }
   };
 
+  const handleSterge = async () => {
+    if (!window.confirm("Ești sigur că vrei să ștergi definitiv această comandă? Această acțiune este ireversibilă.")) return;
+    
+    setSalvareInCurs(true);
+    try {
+      await onStergeComanda(comandaSelectata.idComanda);
+      onInchide();
+    } finally {
+      setSalvareInCurs(false);
+    }
+  };
+
   const isFacturat = comandaSelectata.status === "Facturat";
+  const isAnulat = comandaSelectata.status === "Anulat";
 
   return (
     <div className="flex h-full w-full flex-col bg-white">
@@ -117,6 +132,7 @@ export default function GestiuneComenziDetail({
           </div>
         </div>
         <button
+          id="btn-close-comanda-detail"
           onClick={onInchide}
           className="group flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
         >
@@ -159,6 +175,7 @@ export default function GestiuneComenziDetail({
               <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status & Echipa</div>
               {!isFacturat && (
                 <button
+                  id="btn-edit-status"
                   onClick={() => setEditareStatus(!editareStatus)}
                   className="text-[10px] font-black uppercase text-indigo-600 hover:underline"
                 >
@@ -173,6 +190,7 @@ export default function GestiuneComenziDetail({
                   <div>
                     <label className="text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Status</label>
                     <select
+                      id="select-status-comanda"
                       value={status}
                       onChange={(e) => setStatus(e.target.value as StatusComanda)}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
@@ -225,6 +243,7 @@ export default function GestiuneComenziDetail({
                     </div>
                   </div>
                   <button
+                    id="btn-save-status"
                     onClick={handleSalveazaStatus}
                     disabled={salvareInCurs}
                     className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black text-white hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:bg-slate-200 shadow-lg shadow-indigo-100"
@@ -248,6 +267,22 @@ export default function GestiuneComenziDetail({
                       )) : <p className="text-xs text-slate-400 italic">Niciun mecanic alocat</p>}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {isAnulat && (
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <button
+                    onClick={handleSterge}
+                    disabled={salvareInCurs}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-rose-50 py-3 text-sm font-black text-rose-600 hover:bg-rose-100 active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {salvareInCurs ? "Se șterge..." : "Șterge Comanda"}
+                  </button>
+                  <p className="mt-2 text-[10px] text-center text-slate-400 font-bold uppercase tracking-wider">
+                    Comanda poate fi ștearsă deoarece este anulată
+                  </p>
                 </div>
               )}
             </div>

@@ -18,6 +18,7 @@ type CatalogOption = {
   unitateMasura: PozitieComandaDraft["unitateMasura"];
   pretVanzare: number; cotaTVA: number; disponibilitateStoc: boolean;
   piese?: any[];
+  durata?: number;
 };
 
 const formatSuma = (v: number) => new Intl.NumberFormat("ro-RO", { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
@@ -47,7 +48,8 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
     // FIX: Mapăm pretOra și codManopera
     const manopere = catalogManopere.map(m => ({ 
       id: m.idManopera, tip: "Manopera" as TipPozitie, cod: m.codManopera, denumire: m.denumire, 
-      unitateMasura: "ore" as any, pretVanzare: m.pretOra, cotaTVA: m.cotaTVA || 19, disponibilitateStoc: true 
+      unitateMasura: "ore" as any, pretVanzare: m.pretOra, cotaTVA: m.cotaTVA || 19, disponibilitateStoc: true,
+      durata: m.durataStd 
     }));
     return [...piese, ...kituri, ...manopere];
   }, [catalogPiese, catalogKituri, catalogManopere]);
@@ -63,26 +65,32 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
   };
 
   const handleAdd = (item: CatalogOption) => {
-    if (item.tip === 'Kit' && item.piese) {
-      const noiPozitii = item.piese.map((p: any) => ({
+    if (item.tip === 'Kit') {
+      const bulletList = (item.piese || []).map((p: any) => `• ${p.piesa?.denumire || 'Articol'} (${p.cantitate} ${p.piesa?.unitateMasura || 'buc'})`).join('\n');
+      
+      const pozitieKit: PozitieComandaDraft = {
         ...creeazaPozitieDraft(),
-        tipPozitie: "Piesa" as TipPozitie,
-        catalogId: p.idPiesa,
-        codArticol: p.piesa.codPiesa,
-        descriere: p.piesa.denumire,
-        unitateMasura: "buc" as any,
-        cantitate: p.cantitate,
-        pretVanzare: p.piesa.pretBaza, // Discount is not applied yet, could apply kit discount here if needed.
-        cotaTVA: 19,
-        disponibilitateStoc: true,
-        observatiiPozitie: `Componentă ${item.denumire}`
-      }));
-      onChange([...pozitii, ...noiPozitii]);
+        tipPozitie: "Kit",
+        catalogId: item.id,
+        codArticol: item.cod,
+        descriere: `${item.denumire}\n${bulletList}`,
+        unitateMasura: "kit",
+        cantitate: 1,
+        pretVanzare: item.pretVanzare,
+        cotaTVA: item.cotaTVA,
+        disponibilitateStoc: item.disponibilitateStoc,
+        observatiiPozitie: ""
+      };
+      onChange([...pozitii, pozitieKit]);
+      setOpen(false);
+      setCautare("");
+      return;
     } else {
       onChange([...pozitii, { 
         ...creeazaPozitieDraft(), tipPozitie: item.tip, catalogId: item.id, codArticol: item.cod, 
         descriere: item.denumire, unitateMasura: item.unitateMasura, pretVanzare: item.pretVanzare, 
-        cotaTVA: item.cotaTVA, disponibilitateStoc: item.disponibilitateStoc 
+        cotaTVA: item.cotaTVA, disponibilitateStoc: item.disponibilitateStoc,
+        cantitate: item.tip === 'Manopera' ? (item.durata || 1) : 1
       }]);
     }
     setCautare(""); setOpen(false);
@@ -94,6 +102,7 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
         <div className="relative">
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${(areEroare && pozitii.length === 0) ? "text-rose-500" : "text-slate-400"}`} />
           <input 
+            id="input-search-articol"
             type="text" 
             className={`w-full rounded-xl border py-3 pl-10 pr-4 shadow-sm focus:ring-2 focus:outline-none ${(areEroare && pozitii.length === 0) ? "border-rose-300 bg-rose-50 ring-2 ring-rose-500/50 focus:border-rose-400 focus:ring-rose-500" : "border-slate-200 focus:ring-indigo-500 focus:border-indigo-300"}`} 
             placeholder="Caută articol..." 
@@ -104,8 +113,13 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
         </div>
         {open && cautare && (
           <div className="absolute z-50 left-6 right-6 mt-1 bg-white shadow-xl rounded-xl border divide-y overflow-y-auto max-h-[400px]">
-            {filtrat.map(i => (
-              <div key={`${i.tip}-${i.id}`} onClick={() => handleAdd(i)} className="p-3 hover:bg-indigo-50 cursor-pointer flex justify-between items-center group">
+            {filtrat.map((i, index) => (
+              <div 
+                id={`btn-select-articol-${index}`}
+                key={`${i.tip}-${i.id}`} 
+                onClick={() => handleAdd(i)} 
+                className="p-3 hover:bg-indigo-50 cursor-pointer flex justify-between items-center group"
+              >
                 <div className="flex flex-col gap-0.5">
                   <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">{i.tip} · {i.cod}</p>
                   <p className="text-sm font-bold text-slate-700 group-hover:text-indigo-900 transition-colors">{i.denumire}</p>
@@ -137,7 +151,10 @@ export default function TabelPozitii({ catalogKituri, catalogManopere, catalogPi
                 className="hover:bg-slate-50/50 animate-in fade-in slide-in-from-left-4 duration-300"
                 style={{ animationDelay: `${idx * 40}ms` }}
               >
-                <td className="px-4 py-3"><p className="font-bold">{p.descriere}</p><p className="text-[10px] text-slate-400">{p.codArticol} · {p.unitateMasura}</p></td>
+                <td className="px-4 py-3">
+                  <p className="font-bold text-slate-800 whitespace-pre-line leading-relaxed">{p.descriere}</p>
+                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">{p.tipPozitie} · {p.codArticol} · {p.unitateMasura}</p>
+                </td>
                 <td className="px-4 py-3 text-center">
                   <input 
                     type="number" 

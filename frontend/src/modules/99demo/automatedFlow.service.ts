@@ -51,9 +51,9 @@ export async function runAutomatedTestFlow(
     { cod: 'AMB-LUK-REP', denumire: 'Kit Ambreiaj LUK RepSet', prod: 'LUK', cat: 'Transmisie', pret: 890.00, stoc: '2', gar: '24' },
   ];
   const manoperaDeAdaugat = [
-    { cod: 'MAN-REV-U', denumire: 'Revizie Ulei + Filtre', cat: 'Mecanică Ușoară', ore: '1.5' },
-    { cod: 'MAN-INL-P', denumire: 'Înlocuire Plăcuțe Frână', cat: 'Mecanică Ușoară', ore: '1.0' },
-    { cod: 'MAN-DIAG-E', denumire: 'Diagnoză Electronică', cat: 'Diagnoză', ore: '0.5' },
+    { cod: 'MAN-REV-U', denumire: 'Revizie Ulei + Filtre', cat: 'Mecanică Ușoară', ore: '1.5', pret: 150 },
+    { cod: 'MAN-INL-P', denumire: 'Înlocuire Plăcuțe Frână', cat: 'Mecanică Ușoară', ore: '1.0', pret: 120 },
+    { cod: 'MAN-DIAG-E', denumire: 'Diagnoză Electronică', cat: 'Diagnoză', ore: '0.5', pret: 100 },
   ];
 
   const kituriDeCreat = [
@@ -143,6 +143,7 @@ export async function runAutomatedTestFlow(
       await simulateTyping('input-denumire-manopera', m.denumire, speedRef, pauseRef, stopRef);
       await simulateSelect('select-categorie-manopera', m.cat, speedRef, pauseRef, stopRef);
       await simulateTyping('input-durata-manopera', m.ore, speedRef, pauseRef, stopRef);
+      await simulateTyping('input-pret-ora-manopera', m.pret.toString(), speedRef, pauseRef, stopRef);
       await simulateClick('btn-save-manopera', speedRef, pauseRef, stopRef);
       await wait(500, speedRef, pauseRef, stopRef);
     }
@@ -266,6 +267,185 @@ export async function runAutomatedTestFlow(
   } catch (error) {
     if (error instanceof Error && error.message === "STOPPED") return;
     onLog(`EROARE: ${error instanceof Error ? error.message : "Eroare necunoscută"}`);
+    const currentStep = steps.find(s => s.status === 'loading');
+    if (currentStep) updateStatus(currentStep.id, 'error', error instanceof Error ? error.message : "Eroare");
+  }
+}
+
+export async function runOperationalDemoFlow(
+  onProgress: (steps: TestStep[]) => void,
+  onLog: (msg: string) => void,
+  pauseRef: React.MutableRefObject<boolean>,
+  speedRef: React.MutableRefObject<number>,
+  stopRef: React.MutableRefObject<boolean>
+) {
+  const steps: TestStep[] = [
+    { id: 'receptie', label: 'Modul Operational: Receptie', status: 'pending' },
+    { id: 'finalizare', label: 'Modul Operational: Finalizare', status: 'pending' },
+    { id: 'facturare', label: 'Modul Facturare: Emitere', status: 'pending' },
+    { id: 'incasare', label: 'Modul Incasari: Plata Client', status: 'pending' },
+    { id: 'notificari', label: 'Modul Notificari: Confirmare', status: 'pending' },
+  ];
+
+  const updateStatus = (id: string, status: TestStep['status'], message?: string) => {
+    const step = steps.find(s => s.id === id);
+    if (step) {
+      step.status = status;
+      if (message) step.message = message;
+    }
+    onProgress([...steps]);
+  };
+
+  try {
+    // --- PAS 1: RECEPTIE ---
+    updateStatus('receptie', 'loading', 'Preluare vehicul B-01-AAA...');
+    navigate('operational-receptie');
+    await wait(1000, speedRef, pauseRef, stopRef);
+
+    await simulateTyping('input-search-vehicul', 'B-01-AAA', speedRef, pauseRef, stopRef);
+    await wait(500, speedRef, pauseRef, stopRef);
+    await simulateClick('btn-select-vehicul-0', speedRef, pauseRef, stopRef);
+    await wait(1000, speedRef, pauseRef, stopRef);
+
+    await simulateSelectByLabel('select-mecanic-preluare', 'Ionescu Gelu', speedRef, pauseRef, stopRef);
+    await simulateSelect('select-tip-plata-preluare', 'Client Direct', speedRef, pauseRef, stopRef);
+    await simulateSelect('select-prioritate-preluare', 'Normala', speedRef, pauseRef, stopRef);
+    await simulateTyping('input-kilometraj-preluare', '145000', speedRef, pauseRef, stopRef);
+    await simulateSelect('select-nivel-combustibil-preluare', '1/2', speedRef, pauseRef, stopRef);
+    await simulateTyping('input-simptome-reclamate', 'Zgomot roata fata dreapta la franare', speedRef, pauseRef, stopRef);
+
+    // Adaugam Kit Franare
+    await simulateTyping('input-search-articol', 'KIT-FRANA-A', speedRef, pauseRef, stopRef);
+    await wait(800, speedRef, pauseRef, stopRef);
+    await simulateClick('btn-select-articol-0', speedRef, pauseRef, stopRef);
+
+    // Adaugam Diagnoza
+    await simulateTyping('input-search-articol', 'MAN-DIAG-E', speedRef, pauseRef, stopRef);
+    await wait(800, speedRef, pauseRef, stopRef);
+    await simulateClick('btn-select-articol-0', speedRef, pauseRef, stopRef);
+
+    await wait(1000, speedRef, pauseRef, stopRef);
+    await simulateClick('btn-save-preluare', speedRef, pauseRef, stopRef);
+    await wait(1500, speedRef, pauseRef, stopRef);
+    updateStatus('receptie', 'success');
+
+    // --- PAS 1.5: FINALIZARE ---
+    updateStatus('finalizare', 'loading', 'Finalizare comanda CMD-2026-001...');
+    navigate('operational-comenzi');
+    await wait(1500, speedRef, pauseRef, stopRef);
+
+    await simulateTyping('input-cautare-comenzi', 'CMD-2026-001', speedRef, pauseRef, stopRef);
+    await wait(800, speedRef, pauseRef, stopRef);
+    await simulateClick('btn-select-comanda-CMD-2026-001', speedRef, pauseRef, stopRef);
+    await wait(1000, speedRef, pauseRef, stopRef);
+
+    await simulateClick('btn-edit-status', speedRef, pauseRef, stopRef);
+    await wait(500, speedRef, pauseRef, stopRef);
+    await simulateSelect('select-status-comanda', 'Finalizat', speedRef, pauseRef, stopRef);
+    await simulateClick('btn-save-status', speedRef, pauseRef, stopRef);
+    await wait(1000, speedRef, pauseRef, stopRef); // Așteaptă 1s după salvare
+
+    await simulateClick('btn-close-comanda-detail', speedRef, pauseRef, stopRef); // Apasă pe X
+    await wait(800, speedRef, pauseRef, stopRef);
+
+    updateStatus('finalizare', 'success');
+
+    // --- PAS 2: FACTURARE ---
+    updateStatus('facturare', 'loading', 'Generare factura fiscala...');
+    navigate('facturare-comenzi');
+    await wait(1500, speedRef, pauseRef, stopRef);
+
+    await simulateTyping('input-cautare-factura', 'CMD-2026-001', speedRef, pauseRef, stopRef);
+    await wait(800, speedRef, pauseRef, stopRef);
+    await simulateClick('btn-open-factura-0', speedRef, pauseRef, stopRef);
+    await wait(1000, speedRef, pauseRef, stopRef);
+
+    await simulateTyping('input-serie-factura', 'PSI', speedRef, pauseRef, stopRef);
+    await simulateTyping('input-numar-factura', '1001', speedRef, pauseRef, stopRef);
+    await simulateSelect('select-termen-plata-factura', 'Pe loc (Cash/Card)', speedRef, pauseRef, stopRef);
+
+    await wait(1000, speedRef, pauseRef, stopRef);
+    await simulateClick('btn-save-factura', speedRef, pauseRef, stopRef);
+    await wait(1500, speedRef, pauseRef, stopRef);
+    updateStatus('facturare', 'success');
+
+    onLog("SUCCES: Fluxul operațional (Recepție -> Facturare) a fost simulat complet!");
+
+  } catch (error) {
+    if (error instanceof Error && error.message === "STOPPED") return;
+    onLog(`EROARE OPERATIONAL: ${error instanceof Error ? error.message : "Eroare necunoscută"}`);
+    const currentStep = steps.find(s => s.status === 'loading');
+    if (currentStep) updateStatus(currentStep.id, 'error', error instanceof Error ? error.message : "Eroare");
+  }
+}
+
+export async function runIncasariDemoFlow(
+  onProgress: (steps: TestStep[]) => void,
+  onLog: (msg: string) => void,
+  pauseRef: React.MutableRefObject<boolean>,
+  speedRef: React.MutableRefObject<number>,
+  stopRef: React.MutableRefObject<boolean>
+) {
+  const steps: TestStep[] = [
+    { id: 'incasare', label: 'Înregistrare Încasare', status: 'pending' },
+    { id: 'notificari', label: 'Flux Notificări', status: 'pending' },
+  ];
+
+  const navigate = (pageId: string) => {
+    onLog(`Navigare la pagina: ${pageId}`);
+    if ((window as any).__demoNavigate) {
+      (window as any).__demoNavigate(pageId);
+    }
+  };
+
+  const updateStatus = (id: string, status: TestStep['status'], message?: string) => {
+    const step = steps.find(s => s.id === id);
+    if (step) {
+      step.status = status;
+      if (message) step.message = message;
+    }
+    onProgress([...steps]);
+  };
+
+  try {
+    onProgress(steps);
+
+    // --- PAS 1: INCASARE ---
+    updateStatus('incasare', 'loading', 'Căutare client și înregistrare plată...');
+    navigate('incasari');
+    await wait(1500, speedRef, pauseRef, stopRef);
+
+    await simulateTyping('input-search-client-incasare', 'Dumitru', speedRef, pauseRef, stopRef);
+    await wait(800, speedRef, pauseRef, stopRef);
+    await simulateClick('btn-select-client-0', speedRef, pauseRef, stopRef); // Selectează primul rezultat (Dumitru Ion)
+    await wait(1000, speedRef, pauseRef, stopRef);
+
+    // Înregistrăm plata pentru factura de 1001 (sau oricare apare prima)
+    await simulateClick('btn-pay-all-0', speedRef, pauseRef, stopRef);
+    await wait(500, speedRef, pauseRef, stopRef);
+    
+    // Deși acum se completează automat la "Plătește tot", o simulăm și noi pentru vizibilitate
+    await simulateTyping('input-suma-incasata', '954.68', speedRef, pauseRef, stopRef);
+    await wait(800, speedRef, pauseRef, stopRef);
+
+    await simulateTyping('input-referinta-incasare', 'Chitanță Demo 2026', speedRef, pauseRef, stopRef);
+    await wait(1000, speedRef, pauseRef, stopRef);
+
+    await simulateClick('btn-save-incasare', speedRef, pauseRef, stopRef);
+    await wait(1500, speedRef, pauseRef, stopRef);
+    updateStatus('incasare', 'success');
+
+    // --- PAS 2: NOTIFICARI ---
+    updateStatus('notificari', 'loading', 'Verificare notificări sistem...');
+    navigate('notificari');
+    await wait(2000, speedRef, pauseRef, stopRef);
+    updateStatus('notificari', 'success');
+
+    onLog("SUCCES: Fluxul de încasări și notificări a fost simulat complet!");
+
+  } catch (error) {
+    if (error instanceof Error && error.message === "STOPPED") return;
+    onLog(`EROARE ÎNCASĂRI: ${error instanceof Error ? error.message : "Eroare necunoscută"}`);
     const currentStep = steps.find(s => s.status === 'loading');
     if (currentStep) updateStatus(currentStep.id, 'error', error instanceof Error ? error.message : "Eroare");
   }

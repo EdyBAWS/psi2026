@@ -21,6 +21,6 @@ export interface ManoperaCatalog {
   denumire: string;
   categorie: CategorieManopera;
   durataStd: number;
-  pretOra?: number;
+  pretOra: number;
 }
 

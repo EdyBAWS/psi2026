@@ -177,6 +177,7 @@ export default function FormComanda({
               Tip plată<span className="text-rose-500 ml-1">*</span>
             </label>
             <select
+              id="select-tip-plata-preluare"
               value={detaliiPreluare.tipPlata}
               disabled={blocheazaTipPlataAsigurare}
               onChange={(event) =>
@@ -198,6 +199,7 @@ export default function FormComanda({
               Prioritate<span className="text-rose-500 ml-1">*</span>
             </label>
             <select
+              id="select-prioritate-preluare"
               value={detaliiPreluare.prioritate}
               onChange={(event) =>
                 onDetaliiChange({
@@ -256,6 +258,7 @@ export default function FormComanda({
               Nivel combustibil<span className="text-rose-500 ml-1">*</span>
             </label>
             <select
+              id="select-nivel-combustibil-preluare"
               value={detaliiPreluare.nivelCombustibil}
               onChange={(event) =>
                 onDetaliiChange({

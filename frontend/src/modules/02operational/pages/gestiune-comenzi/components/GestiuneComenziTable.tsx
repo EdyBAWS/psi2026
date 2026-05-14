@@ -56,6 +56,7 @@ export default function GestiuneComenziTable({
           ) : (
             comenzi.map(({ client, comanda, intarziata, vehicul }) => (
               <tr 
+                id={`btn-select-comanda-${comanda.numarComanda}`}
                 key={comanda.idComanda} 
                 onClick={() => onSelecteazaComanda(idComandaSelectata === comanda.idComanda ? null : comanda.idComanda)}
                 className={`cursor-pointer transition-all duration-500 hover:bg-slate-50 ${idComandaSelectata === comanda.idComanda ? 'bg-indigo-50 shadow-[inset_0_0_0_2px_rgba(79,70,229,0.2)] animate-[pulse_2s_ease-in-out_infinite]' : ''}`}

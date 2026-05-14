@@ -72,15 +72,24 @@ export class OperationalService {
   }
 
   async createDosar(data: CreateDosarDaunaDto) {
-    const numarDosar = await this.getNextNumarDosar();
-    const { idInspector, ...rest } = data;
-    return this.prisma.dosarDauna.create({ 
-      data: {
-        ...rest,
-        numarDosar,
-        idInspector: idInspector ?? undefined,
-      } 
-    });
+    try {
+      const numarDosar = await this.getNextNumarDosar();
+      const { idInspector, ...rest } = data;
+      
+      // Eliminăm numarDosar din rest pentru a nu intra în conflict cu cel generat
+      delete (rest as any).numarDosar;
+
+      return await this.prisma.dosarDauna.create({ 
+        data: {
+          ...rest,
+          numarDosar,
+          idInspector: idInspector ?? undefined,
+        } 
+      });
+    } catch (error) {
+      console.error('ERROR creating dosar:', error);
+      throw error;
+    }
   }
 
   async updateDosar(id: number, data: UpdateDosarDaunaDto) {
@@ -154,20 +163,28 @@ export class OperationalService {
   }
 
   async createComanda(data: CreateComandaDto) {
-    const numarComanda = await this.getNextNumarComanda();
-    const { idMecanici, ...rest } = data;
-    
-    return this.prisma.comanda.create({
-      data: {
-        ...rest,
-        numarComanda,
-        dataPreconizata: data.dataPreconizata ? new Date(data.dataPreconizata) : null,
-        mecanici: idMecanici ? {
-          connect: idMecanici.map(id => ({ idAngajat: id }))
-        } : undefined
-      },
-      include: { mecanici: true }
-    });
+    try {
+      const numarComanda = await this.getNextNumarComanda();
+      const { idMecanici, ...rest } = data;
+      
+      // Eliminăm numarComanda din rest pentru a nu intra în conflict cu cel generat
+      delete (rest as any).numarComanda;
+
+      return await this.prisma.comanda.create({
+        data: {
+          ...rest,
+          numarComanda,
+          dataPreconizata: data.dataPreconizata ? new Date(data.dataPreconizata) : null,
+          mecanici: idMecanici ? {
+            connect: idMecanici.map(id => ({ idAngajat: id }))
+          } : undefined
+        },
+        include: { mecanici: true }
+      });
+    } catch (error) {
+      console.error('ERROR creating comanda:', error);
+      throw error;
+    }
   }
 
   async updateComanda(id: number, data: UpdateComandaDto) {
@@ -250,6 +267,12 @@ export class OperationalService {
       );
 
       return created;
+    });
+  }
+
+  async deleteComanda(id: number) {
+    return this.prisma.comanda.delete({
+      where: { idComanda: id },
     });
   }
 }

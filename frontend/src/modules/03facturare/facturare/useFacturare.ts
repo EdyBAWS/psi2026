@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
-import { usePageSessionState } from '../../../lib/pageState';
 import { FacturareService } from '../facturare.service';
 import { recordConsumPiesa } from '../../00catalog/catalog.service';
 import { API_BASE_URL } from '../../../lib/api';
@@ -25,9 +24,9 @@ export function useFacturare() {
     else _setDiscountProcent(val);
   };
 
-  const [cautare, setCautare] = usePageSessionState('facturare-cautare', '');
-  const [sortField, setSortField] = usePageSessionState<FacturareSortField>('facturare-sort-field', 'data');
-  const [sortDir, setSortDir] = usePageSessionState<FacturareSortDir>('facturare-sort-dir', 'desc');
+  const [cautare, setCautare] = useState('');
+  const [sortField, setSortField] = useState<FacturareSortField>('data');
+  const [sortDir, setSortDir] = useState<FacturareSortDir>('desc');
 
   const incarcaComenzi = useCallback(async () => {
     setLoading(true);

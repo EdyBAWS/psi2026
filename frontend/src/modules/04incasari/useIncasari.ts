@@ -1,7 +1,6 @@
 // src/modules/04incasari/useIncasari.ts
 import { useState, useEffect, useMemo, type ChangeEvent, type FormEvent } from 'react';
 import { toast } from 'sonner';
-import { usePageSessionState } from '../../lib/pageState';
 import { IncasariService } from './incasari.service';
 import { type Factura } from '../../types/facturare';
 
@@ -61,13 +60,12 @@ export function useIncasari() {
   const [facturiRestanteBD, setFacturiRestanteBD] = useState<Factura[]>([]);
   const [istoricIncasariBD, setIstoricIncasariBD] = useState<any[]>([]);
 
-  const [searchClient, setSearchClient] = usePageSessionState('incasari-search-client', '');
+  const [searchClient, setSearchClient] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-
   const [idEntitateSelectata, setIdEntitateSelectata] = useState<number | null>(null);
   const [tipEntitateSelectata, setTipEntitateSelectata] = useState<'client' | 'asigurator' | null>(null);
   const [sumaIncasata, setSumaIncasata] = useState<number | ''>('');
-  const [modalitate, setModalitate] = usePageSessionState<ModalitatePlata>('incasari-modalitate', 'Transfer Bancar');
+  const [modalitate, setModalitate] = useState<ModalitatePlata>('Transfer Bancar');
   const [dataIncasare, setDataIncasare] = useState<string>(dataAziISO());
   const [referinta, setReferinta] = useState('');
   const [facturiRestante, setFacturiRestante] = useState<FacturaAlocabila[]>([]);
@@ -205,6 +203,10 @@ export function useIncasari() {
 
   const aplicaSumaMaxima = (idFactura: number, restDePlata: number) => {
     handleAlocareSuma(idFactura, restDePlata.toString());
+    // Dacă nu avem nicio sumă introdusă, o punem pe aceasta ca fiind suma primită
+    if (!sumaIncasata || Number(sumaIncasata) === 0) {
+      setSumaIncasata(restDePlata);
+    }
   };
 
   const resetaAlocari = () => {

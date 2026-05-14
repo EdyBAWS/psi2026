@@ -23,7 +23,14 @@ export default function GestiuneComenziFilters(props: GestiuneComenziFiltersProp
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input type="text" value={props.cautare} onChange={(e) => props.onCautareChange(e.target.value)} placeholder="Căutare..." className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input 
+            id="input-cautare-comenzi"
+            type="text" 
+            value={props.cautare} 
+            onChange={(e) => props.onCautareChange(e.target.value)} 
+            placeholder="Căutare..." 
+            className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500" 
+          />
         </div>
         <select value={props.filtruStatus} onChange={(e) => props.onFiltruStatusChange(e.target.value as any)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
           {statusuriFiltrare.map((s: StatusComanda | "Toate") => <option key={s} value={s}>{s}</option>)}

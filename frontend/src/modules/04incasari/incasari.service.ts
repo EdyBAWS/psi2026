@@ -20,12 +20,12 @@ export const IncasariService = {
     return data.map(f => ({
       idFactura: f.idFactura,
       idClient: f.idClient,
-      numar: f.numar.toString(),
-      dataEmitere: f.dataEmiterii,
-      dataScadenta: f.scadenta,
-      client: f.client?.nume || 'Client necunoscut',
-      totalInitial: f.totalGeneral,
-      restDePlata: f.totalGeneral - (f.incasari?.reduce((acc: number, val: any) => acc + val.sumaAlocata, 0) || 0),
+      numar: f.numar,
+      dataEmitere: f.dataEmitere,
+      dataScadenta: f.dataScadenta,
+      client: f.client, // Backend deja trimite string-ul cu numele
+      totalInitial: f.totalInitial,
+      restDePlata: f.restDePlata,
       status: f.status
     }));
   },

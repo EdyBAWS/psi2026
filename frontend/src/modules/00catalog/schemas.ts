@@ -38,6 +38,9 @@ export const manoperaSchema = z.object({
   denumire: z.string().trim().min(3, 'Denumirea este obligatorie.'),
   categorie: z.string().min(1, 'Selectează o categorie.'),
   durataStd: z.number().min(0.1, 'Durata minimă este 0.1 ore.'),
+  pretOra: z.number({ 
+    message: 'Prețul orar este obligatoriu și trebuie să fie un număr.',
+  }).min(1, 'Prețul orar este obligatoriu.'),
 });
 
 export type PiesaFormValues = z.infer<typeof piesaSchema>;

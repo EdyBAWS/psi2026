@@ -32,7 +32,7 @@ export default function AutomatedFlow({ onNavigate }: { onNavigate?: (p: string)
 
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => startDemo(onNavigate)}
+                onClick={() => startDemo('setup', onNavigate)}
                 disabled={isRunning}
                 className={`
                   group relative flex items-center gap-4 px-10 py-5 rounded-2xl font-black text-lg transition-all duration-300
@@ -41,8 +41,36 @@ export default function AutomatedFlow({ onNavigate }: { onNavigate?: (p: string)
                     : 'bg-white text-indigo-900 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.2)] border-none'}
                 `}
               >
-                {isRunning ? <Loader2 className="animate-spin" /> : <Rocket className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
-                {isRunning ? 'SIMULARE ÎN CURS...' : 'PORNEȘTE SIMULAREA'}
+                {isRunning ? <Loader2 className="animate-spin" size={24} /> : <Database className="group-hover:rotate-12 transition-transform" size={24} />}
+                {isRunning ? 'SIMULARE ÎN CURS...' : '1. POPULARE CATALOG & ENTITĂȚI'}
+              </button>
+
+              <button
+                onClick={() => startDemo('operational', onNavigate)}
+                disabled={isRunning}
+                className={`
+                  group relative flex items-center gap-4 px-10 py-5 rounded-2xl font-black text-lg transition-all duration-300
+                  ${isRunning 
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' 
+                    : 'bg-indigo-600 text-white hover:scale-[1.02] active:scale-[0.98] shadow-xl border-none'}
+                `}
+              >
+                {isRunning ? <Loader2 className="animate-spin" size={24} /> : <Zap className="group-hover:scale-125 transition-transform" size={24} />}
+                {isRunning ? 'SIMULARE ÎN CURS...' : '2. FLUX OPERAȚIONAL COMPLET'}
+              </button>
+
+              <button
+                onClick={() => startDemo('incasari', onNavigate)}
+                disabled={isRunning}
+                className={`
+                  group relative flex items-center gap-4 px-10 py-5 rounded-2xl font-black text-lg transition-all duration-300
+                  ${isRunning 
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' 
+                    : 'bg-emerald-600 text-white hover:scale-[1.02] active:scale-[0.98] shadow-xl border-none'}
+                `}
+              >
+                {isRunning ? <Loader2 className="animate-spin" size={24} /> : <CheckCircle2 className="group-hover:rotate-12 transition-transform" size={24} />}
+                {isRunning ? 'SIMULARE ÎN CURS...' : '3. ÎNCASĂRI & NOTIFICĂRI'}
               </button>
               
               {isRunning && (

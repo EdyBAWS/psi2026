@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
-import { runAutomatedTestFlow, type TestStep } from './automatedFlow.service';
+import { runAutomatedTestFlow, runOperationalDemoFlow, runIncasariDemoFlow, type TestStep } from './automatedFlow.service';
 
 interface DemoContextType {
   isRunning: boolean;
@@ -8,7 +8,7 @@ interface DemoContextType {
   speedMultiplier: number;
   steps: TestStep[];
   visualLog: string;
-  startDemo: (onNavigate?: (p: string) => void) => Promise<void>;
+  startDemo: (type: 'setup' | 'operational' | 'incasari', onNavigate?: (p: string) => void) => Promise<void>;
   togglePause: () => void;
   stopDemo: () => void;
   setSpeed: (speed: number) => void;
@@ -33,12 +33,13 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     speedRef.current = speedMultiplier;
   }, [isPaused, speedMultiplier]);
 
-  const startDemo = async (onNavigate?: (p: string) => void) => {
+  const startDemo = async (type: 'setup' | 'operational' | 'incasari', onNavigate?: (p: string) => void) => {
     setIsRunning(true);
     setIsPaused(false);
     setIsFinished(false);
     stopRef.current = false;
-    setVisualLog("Simulator pornit...\n");
+    setSteps([]);
+    setVisualLog(`Simulator pornit [Flux: ${type}]...\n`);
     
     // Inject the navigation helper
     if (onNavigate) {
@@ -46,7 +47,12 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      await runAutomatedTestFlow(
+      let runner;
+      if (type === 'setup') runner = runAutomatedTestFlow;
+      else if (type === 'operational') runner = runOperationalDemoFlow;
+      else runner = runIncasariDemoFlow;
+      
+      await runner(
         (newSteps) => setSteps(newSteps),
         (msg) => setVisualLog(prev => prev + `> ${msg}\n`),
         pauseRef,
