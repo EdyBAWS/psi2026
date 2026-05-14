@@ -39,3 +39,4 @@ export function StatCard({ icon, label, tone, value }: StatCardProps) {
     </div>
   );
 }
+

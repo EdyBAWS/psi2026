@@ -99,3 +99,4 @@ export function useClient() {
     stats: { totalActivi: clientiActivi.length, totalPJ, soldTotal }
   };
 }
+

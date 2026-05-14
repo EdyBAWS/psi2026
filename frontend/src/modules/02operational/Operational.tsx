@@ -142,3 +142,4 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
     </section>
   );
 }
+

@@ -47,3 +47,4 @@ export function CardContent({
 }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('px-6 pb-6', className)} {...props} />;
 }
+

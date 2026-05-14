@@ -7,7 +7,10 @@ import { Field } from '../../../componente/ui/Field';
 import { PageHeader } from '../../../componente/ui/PageHeader';
 import { SelectField } from '../../../componente/ui/SelectField';
 import { StatCard } from '../../../componente/ui/StatCard';
-import { type CategoriePiesa, type TipPiesaCatalogMock } from '../../../mock/catalog';
+import { 
+  type TipPiesaCatalog,
+  type CategoriePiesa,
+} from '../../../types/catalog';
 import { usePiesa, type SortFieldPiesa } from './usePiesa';
 
 const CATEGORII_PIESA: { label: string; value: CategoriePiesa }[] = [
@@ -68,10 +71,10 @@ export default function Piesa() {
     stocCritic,
     form,
     setForm,
-    editId,
+    editareId,
     arataFormular,
-    cautare,
-    setCautare,
+    termenCautare,
+    setTermenCautare,
     filtruTip,
     setFiltruTip,
     filtruCategorie,
@@ -140,8 +143,8 @@ export default function Piesa() {
         <Field
           label="Caută piesă"
           placeholder="Cod, denumire sau producător..."
-          value={cautare}
-          onChange={(e) => setCautare(e.target.value)}
+          value={termenCautare}
+          onChange={(e) => setTermenCautare(e.target.value)}
           wrapperClassName="flex-1 min-w-[200px]"
         />
         <SelectField
@@ -160,7 +163,7 @@ export default function Piesa() {
           label="Stare"
           value={filtruTip}
           onChange={(e) =>
-            setFiltruTip(e.target.value as TipPiesaCatalogMock | 'TOATE')
+            setFiltruTip(e.target.value as TipPiesaCatalog | 'TOATE')
           }
           options={[
             { label: 'Toate Stările', value: 'TOATE' },
@@ -178,7 +181,7 @@ export default function Piesa() {
           className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-indigo-100 animate-in fade-in slide-in-from-top-4"
         >
           <h4 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3">
-            {editId !== null ? 'Editare Articol' : 'Adăugare Articol Nou'}
+            {editareId !== null ? 'Editare Articol' : 'Adăugare Articol Nou'}
           </h4>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
@@ -259,7 +262,7 @@ export default function Piesa() {
 
           <div className="mt-6 flex justify-end gap-3">
             <Button variant="outline" type="button" onClick={handleInchideFormular}>Anulează</Button>
-            <Button variant="primary" type="submit">{editId !== null ? 'Salvează' : 'Adaugă'}</Button>
+            <Button variant="primary" type="submit">{editareId !== null ? 'Salvează' : 'Adaugă'}</Button>
           </div>
         </form>
       )}
@@ -371,3 +374,4 @@ export default function Piesa() {
     </div>
   );
 }
+

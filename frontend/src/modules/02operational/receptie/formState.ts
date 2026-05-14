@@ -104,3 +104,4 @@ export const creeazaPozitieDraft = (): PozitieComandaDraft => ({
   disponibilitateStoc: true,
   observatiiPozitie: "",
 });
+

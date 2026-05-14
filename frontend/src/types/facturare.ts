@@ -1,8 +1,4 @@
-// Tipurile din acest fișier descriu obiectele demo comune dintre module.
-// Ele nu înlocuiesc modelele de business din operațional, ci doar oferă
-// o "limbă comună" pentru facturare, încasări și notificări.
-
-export interface ComandaFacturabilaMock {
+export interface ComandaFacturabila {
   idComanda: number;
   nrComanda: string;
   dataComanda: string;
@@ -14,7 +10,7 @@ export interface ComandaFacturabilaMock {
   idClient?: number;
 }
 
-export interface LinieFacturaMock {
+export interface LinieFactura {
   idLinie: number;
   idPiesa?: number;
   idKit?: number;
@@ -24,33 +20,38 @@ export interface LinieFacturaMock {
   pretUnitar: number;
 }
 
-export interface FacturaMock {
+export interface Factura {
   idFactura: number;
   idClient: number;
-  idComanda: number | null;
-  idVehicul: number | null;
-  // Campuri pentru plata prin asigurator (Varianta A)
+  idComanda?: number | null;
+  idVehicul?: number | null;
   idAsigurator?: number | null;
   numeAsigurator?: string | null;
   tipPlata?: 'client' | 'asigurator';
   numar: string;
   dataEmitere: string;
   dataScadenta: string;
-  client: string;  // intotdeauna beneficiarul (proprietarul masinii)
+  client: string;
   totalInitial: number;
   restDePlata: number;
   status: "Emisa" | "Achitata partial" | "Achitata";
 }
 
-export interface IncasareMock {
+export interface Incasare {
   idIncasare: number;
   idFactura: number;
   dataIncasare: string;
   suma: number;
   modalitate: "Transfer Bancar" | "Cash" | "POS";
+  client?: string;
+  tipPlatitor?: 'client' | 'asigurator';
+  numeAsigurator?: string | null;
+  numeBeneficiar?: string | null;
+  alocari?: any[];
+  referinta?: string;
 }
 
-export interface NotificareMock {
+export interface Notificare {
   id: number;
   data: string;
   ora?: string;
@@ -65,7 +66,7 @@ export interface NotificareMock {
   metadata?: Record<string, any>;
 }
 
-export interface TranzactieIstoricMock {
+export interface TranzactieIstoric {
   id: string;
   dataOra: string;
   tipOperatiune:
@@ -79,3 +80,4 @@ export interface TranzactieIstoricMock {
   utilizator: string;
   detalii: string;
 }
+

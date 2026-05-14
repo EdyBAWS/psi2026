@@ -31,7 +31,7 @@ export default function Facturare() {
           <p className="text-slate-500 mt-1 text-sm">
             {comandaSelectata
               ? `Generare documente fiscale pentru comanda #${comandaSelectata.nrComanda}`
-              : 'Selectează o comandă din setul comun de mock-uri pentru a genera creanța demo.'}
+              : 'Selectează o comandă din lista de mai jos pentru a genera factura.'}
           </p>
         </div>
         {comandaSelectata && (
@@ -208,7 +208,7 @@ export default function Facturare() {
                       <td className="py-3 px-4">
                         <span
                           className={`px-2 py-1 rounded text-xs font-bold ${
-                            linie.tip === 'Manoperă'
+                            linie.tip === 'Manopera'
                               ? 'bg-orange-100 text-orange-800'
                               : 'bg-blue-100 text-blue-800'
                           }`}

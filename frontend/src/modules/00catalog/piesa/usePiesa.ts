@@ -2,56 +2,66 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  type CategoriePiesa,
-  type PiesaCatalogMock,
-  type TipPiesaCatalogMock,
-} from '../../../mock/catalog';
+import { 
+  type PiesaCatalog, 
+  type TipPiesaCatalog,
+  type CategoriePiesa
+} from '../../../types/catalog';
 import {
   createPiesa,
   deletePiesa,
+  fetchIstoricPiesa,
   fetchPiese,
   updatePiesa,
-  fetchIstoricPiesa,
 } from '../catalog.service';
 
 export type SortFieldPiesa = 'codPiesa' | 'denumire' | 'pretBaza' | 'stoc';
 export type SortDir = 'asc' | 'desc';
 
-const FORM_INIT: Partial<PiesaCatalogMock> = {
-  tip: 'NOUA',
+const FORM_INIT: Partial<PiesaCatalog> = {
+  denumire: '',
+  codPiesa: '',
+  producator: '',
   categorie: 'Altele',
+  pretBaza: 0,
   stoc: 0,
+  tip: 'NOUA',
 };
 
 export function usePiesa() {
-  const [piese, setPiese] = useState<PiesaCatalogMock[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const [editId, setEditId] = useState<number | null>(null);
+  const [piese, setPiese] = useState<PiesaCatalog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editareId, setEditareId] = useState<number | null>(null);
   const [arataFormular, setArataFormular] = useState(false);
-  const [form, setForm] = useState<Partial<PiesaCatalogMock>>(FORM_INIT);
+  const [form, setForm] = useState<Partial<PiesaCatalog>>(FORM_INIT);
+  const [termenCautare, setTermenCautare] = useState('');
 
   // Istoric piese
   const [istoricCurent, setIstoricCurent] = useState<any[] | null>(null);
   const [loadingIstoric, setLoadingIstoric] = useState(false);
 
-  const [cautare, setCautare] = useState('');
-  const [filtruTip, setFiltruTip] = useState<TipPiesaCatalogMock | 'TOATE'>('TOATE');
+  // Filtre
   const [filtruCategorie, setFiltruCategorie] = useState<CategoriePiesa | 'TOATE'>('TOATE');
+  const [filtruTip, setFiltruTip] = useState<TipPiesaCatalog | 'TOATE'>('TOATE');
   const [sortField, setSortField] = useState<SortFieldPiesa>('denumire');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  const loadData = () => {
+  const incarcaPiese = async () => {
     setLoading(true);
-    fetchPiese()
-      .then(setPiese)
-      .catch(() => toast.error("Eroare la încărcarea datelor din baza de date."))
-      .finally(() => setLoading(false));
+    try {
+      const data = await fetchPiese();
+      setPiese(data);
+    } catch (err) {
+      setError('Nu am putut încărca piesele din catalog.');
+      toast.error("Eroare la încărcarea datelor din baza de date.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadData();
+    incarcaPiese();
   }, []);
 
   const handleSort = (field: SortFieldPiesa) => {
@@ -64,9 +74,9 @@ export function usePiesa() {
       (p) =>
         (filtruTip === 'TOATE' || p.tip === filtruTip) &&
         (filtruCategorie === 'TOATE' || p.categorie === filtruCategorie) &&
-        (p.codPiesa.toLowerCase().includes(cautare.toLowerCase()) ||
-          p.denumire.toLowerCase().includes(cautare.toLowerCase()) ||
-          p.producator.toLowerCase().includes(cautare.toLowerCase())),
+        (p.codPiesa.toLowerCase().includes(termenCautare.toLowerCase()) ||
+          p.denumire.toLowerCase().includes(termenCautare.toLowerCase()) ||
+          p.producator.toLowerCase().includes(termenCautare.toLowerCase())),
     )
     .sort((a, b) => {
       let cmp = 0;
@@ -80,12 +90,12 @@ export function usePiesa() {
   const handleSalvare = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (editId !== null) {
-        const actualizata = await updatePiesa(editId, form);
-        setPiese((prev) => prev.map((p) => (p.idPiesa === editId ? actualizata : p)));
+      if (editareId !== null) {
+        const actualizata = await updatePiesa(editareId, form);
+        setPiese((prev) => prev.map((p) => (p.idPiesa === editareId ? actualizata : p)));
         toast.success('Piesa a fost actualizată.');
       } else {
-        const noua = await createPiesa(form as Omit<PiesaCatalogMock, 'idPiesa'>);
+        const noua = await createPiesa(form as Omit<PiesaCatalog, 'idPiesa'>);
         setPiese((prev) => [noua, ...prev]);
         toast.success('Piesa a fost adăugată.');
       }
@@ -118,20 +128,20 @@ export function usePiesa() {
     }
   };
 
-  const handleEditeaza = (piesa: PiesaCatalogMock) => {
-    setEditId(piesa.idPiesa);
+  const handleEditeaza = (piesa: PiesaCatalog) => {
+    setEditareId(piesa.idPiesa);
     setForm({ ...piesa });
     setArataFormular(true);
   };
 
   const handleInchideFormular = () => {
     setArataFormular(false);
-    setEditId(null);
+    setEditareId(null);
     setForm(FORM_INIT);
   };
 
   const handleDeschideAdaugare = () => {
-    setEditId(null);
+    setEditareId(null);
     setForm(FORM_INIT);
     setArataFormular(true);
   };
@@ -141,11 +151,12 @@ export function usePiesa() {
   const stocCritic = piese.filter((p) => p.stoc > 0 && p.stoc < 5).length;
 
   return {
-    piese, pieseFiltrate, loading, valoareStoc, stocEpuizat, stocCritic,
-    form, setForm, editId, arataFormular, cautare, setCautare,
+    piese, pieseFiltrate, loading, error, valoareStoc, stocEpuizat, stocCritic,
+    form, setForm, editareId, arataFormular, termenCautare, setTermenCautare,
     filtruTip, setFiltruTip, filtruCategorie, setFiltruCategorie,
     sortField, sortDir, handleSort, handleSalvare, handleEditeaza,
     handleSterge, handleDeschideAdaugare, handleInchideFormular,
     istoricCurent, setIstoricCurent, loadingIstoric, handleVeziIstoric
   };
 }
+

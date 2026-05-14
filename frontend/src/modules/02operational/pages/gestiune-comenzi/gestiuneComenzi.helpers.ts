@@ -198,3 +198,4 @@ export function calculeazaStatisticiComenzi(comenzi: ComandaService[]) {
     totalIntarziate: comenzi.filter((c) => c.status && c.termenPromis && comandaEsteIntarziata(c.status, c.termenPromis)).length,
   };
 }
+

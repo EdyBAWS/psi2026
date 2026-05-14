@@ -1,7 +1,7 @@
-// Funcțiile de calcul sunt centralizate aici pentru ca totalurile din mock data,
+// Funcțiile de calcul sunt centralizate aici pentru ca totalurile din baza de date,
 // formular și listări să folosească aceeași formulă.
 // În felul acesta evităm situația în care aceeași poziție ar avea alt total
-// în tabel, alt total în comandă și alt total în mock data.
+// în tabel, alt total în comandă și alt total în baza de date.
 import type {
   PozitieComanda,
   PozitieComandaDraft,
@@ -79,3 +79,4 @@ export const comandaEsteIntarziata = (
   status: StatusComanda,
   termenPromis: Date,
 ) => comandaEsteActiva(status) && termenPromis.getTime() < Date.now();
+

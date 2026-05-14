@@ -1,28 +1,22 @@
 // src/modules/05notificari/notificari.service.ts
 import { apiJson } from '../../lib/api';
-import type { NotificareMock } from '../../mock/types';
+import { type Notificare } from '../../types/facturare';
 import type { NotificareMapareUI } from './useNotificari';
 
-const mapNotificare = (notificare: any): NotificareMock => ({
-  id: notificare.idNotificare,
-  data: new Date(notificare.data).toLocaleDateString('ro-RO'),
-  ora: new Date(notificare.data).toLocaleTimeString('ro-RO', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }),
+const mapNotificare = (notificare: any): Notificare => ({
+  id: notificare.idNotificare || notificare.id,
+  data: notificare.data || notificare.createdAt,
   mesaj: notificare.mesaj,
-  paginaDestinatie: notificare.paginaDestinatie,
-  sursaModul: notificare.sursaModul,
-  textActiune: notificare.textActiune,
-  tip: notificare.tip,
+  tip: notificare.tip || 'Info',
   citit: notificare.citit,
   arhivata: notificare.arhivata,
-  stearsa: notificare.stearsa,
-  metadata: notificare.metadata,
+  paginaDestinatie: notificare.paginaDestinatie,
+  textActiune: notificare.textActiune,
+  metadata: notificare.metadata
 });
 
 export const NotificariService = {
-  async fetchNotificari(): Promise<NotificareMock[]> {
+  async fetchNotificari(): Promise<Notificare[]> {
     const data = await apiJson<any[]>('/notificari');
     return data.map(mapNotificare);
   },
@@ -44,3 +38,4 @@ export const NotificariService = {
     return apiJson(`/notificari/${id}`, { method: 'DELETE' });
   },
 };
+

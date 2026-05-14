@@ -28,6 +28,14 @@ export class CatalogController {
     return this.catalogService.fetchIstoricPiesa(id);
   }
 
+  @Post('piese/:id/consum')
+  recordConsum(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: { idComanda: number, cantitate: number }
+  ) {
+    return this.catalogService.recordConsum(id, data);
+  }
+
   @Post('piese')
   createPiesa(@Body() data: CreatePiesaDto) {
     return this.catalogService.createPiesa(data);

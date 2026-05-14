@@ -12,7 +12,7 @@ import { Field } from '../../../componente/ui/Field';
 import { PageHeader } from '../../../componente/ui/PageHeader';
 import { SelectField } from '../../../componente/ui/SelectField';
 import { StatCard } from '../../../componente/ui/StatCard';
-import { type CategorieManopera } from '../../../mock/catalog';
+import { type CategorieManopera } from '../../../types/catalog';
 import { useManopera, type SortFieldManopera } from './useManopera';
 import { useState } from 'react';
 
@@ -52,7 +52,7 @@ export default function Manopera() {
     mediaNorma,
     form,
     setForm,
-    editId,
+    editareId,
     arataFormular,
     cautare,
     setCautare,
@@ -137,7 +137,7 @@ export default function Manopera() {
           className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-emerald-100 animate-in fade-in slide-in-from-top-4"
         >
           <h4 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3">
-            {editId !== null ? 'Editare Normă de Lucru' : 'Definire Normă de Lucru'}
+            {editareId !== null ? 'Editare Normă de Lucru' : 'Definire Normă de Lucru'}
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <Field
@@ -183,7 +183,7 @@ export default function Manopera() {
               Anulează
             </Button>
             <Button variant="secondary" type="submit">
-              {editId !== null ? 'Salvează Modificările' : 'Adaugă în Nomenclator'}
+              {editareId !== null ? 'Salvează Modificările' : 'Adaugă în Nomenclator'}
             </Button>
           </div>
         </form>

@@ -11,7 +11,7 @@ export function useIstoric() {
   const [filtruTip, setFiltruTip] = usePageSessionState<string>('istoric-facturare-tip', 'Toate');
 
   useEffect(() => {
-    // Înlocuim apelul către mock-uri cu un apel către backend-ul tău real (GET)
+    // Apel către backend-ul real (GET) pentru a prelua facturile din baza de date
     const incarcaIstoricReal = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/facturare`);
@@ -90,3 +90,4 @@ export function useIstoric() {
     totalFacturari, totalPenalizari
   };
 }
+

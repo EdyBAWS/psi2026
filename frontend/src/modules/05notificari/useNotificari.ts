@@ -3,9 +3,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { usePageSessionState } from '../../lib/pageState';
 import { NotificariService } from './notificari.service';
-import type { NotificareMock } from '../../mock/types';
+import { type Notificare } from '../../types/facturare';
 
-export type TipNotificare = NotificareMock['tip'];
+export type TipNotificare = Notificare['tip'];
 export type FiltruNotificari = 'Toate' | TipNotificare | 'Arhiva';
 
 export interface NotificareStareUI {
@@ -21,7 +21,7 @@ export interface ConfirmState {
   id?: number;
 }
 
-export function stareInitiala(notificare: NotificareMock): NotificareStareUI {
+export function stareInitiala(notificare: Notificare): NotificareStareUI {
   return {
     arhivata: notificare.arhivata ?? false,
     citit: notificare.citit ?? notificare.tip === 'Succes',
@@ -31,7 +31,7 @@ export function stareInitiala(notificare: NotificareMock): NotificareStareUI {
 
 export function useNotificari(onNavigate?: (pagina: string) => void) {
   const [loading, setLoading] = useState(true);
-  const [notificariBD, setNotificariBD] = useState<NotificareMock[]>([]);
+  const [notificariBD, setNotificariBD] = useState<Notificare[]>([]);
   
   const [filtru, setFiltru] = usePageSessionState<FiltruNotificari>('notificari-filtru', 'Toate');
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
@@ -146,7 +146,7 @@ export function useNotificari(onNavigate?: (pagina: string) => void) {
     setConfirmState(null);
   };
 
-  const handleActionClick = (notificare: NotificareMock) => {
+  const handleActionClick = (notificare: Notificare) => {
     if (!notificare.paginaDestinatie) return;
     actualizeazaNotificare(notificare.id, { citit: true });
     
@@ -179,3 +179,4 @@ export function useNotificari(onNavigate?: (pagina: string) => void) {
     marcheazaToateCitite, arhiveazaCititele, handleConfirm, handleActionClick
   };
 }
+

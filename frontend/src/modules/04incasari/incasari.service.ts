@@ -1,6 +1,6 @@
 // src/modules/04incasari/incasari.service.ts
 import { apiJson } from '../../lib/api';
-import type { FacturaMock } from '../../mock/types';
+import { type Factura, type Incasare } from '../../types/facturare';
 
 const modalitateToBackend: Record<string, string> = {
   'Transfer Bancar': 'TransferBancar',
@@ -15,11 +15,22 @@ const modalitateFromBackend: Record<string, string> = {
 };
 
 export const IncasariService = {
-  async fetchFacturiRestante(): Promise<FacturaMock[]> {
-    return apiJson('/incasari/facturi-restante');
+  async fetchFacturiRestante(): Promise<Factura[]> {
+    const data = await apiJson<any[]>('/incasari/facturi-restante');
+    return data.map(f => ({
+      idFactura: f.idFactura,
+      idClient: f.idClient,
+      numar: f.numar.toString(),
+      dataEmitere: f.dataEmiterii,
+      dataScadenta: f.scadenta,
+      client: f.client?.nume || 'Client necunoscut',
+      totalInitial: f.totalGeneral,
+      restDePlata: f.totalGeneral - (f.incasari?.reduce((acc: number, val: any) => acc + val.sumaAlocata, 0) || 0),
+      status: f.status
+    }));
   },
   
-  async fetchIncasariIstoric() {
+  async fetchIncasariIstoric(): Promise<Incasare[]> {
     const incasari = await apiJson<any[]>('/incasari');
 
     return incasari.map((incasare) => ({
@@ -27,7 +38,7 @@ export const IncasariService = {
       idFactura: incasare.alocari?.[0]?.idFactura ?? 0,
       dataIncasare: incasare.data,
       suma: incasare.suma,
-      modalitate: modalitateFromBackend[incasare.modalitate] ?? incasare.modalitate,
+      modalitate: (modalitateFromBackend[incasare.modalitate] ?? 'Cash') as "Transfer Bancar" | "Cash" | "POS",
       referinta: incasare.referinta,
       // Platitorul: asiguratorul daca exista, altfel clientul beneficiar
       client: incasare.asigurator?.denumire ?? incasare.client?.nume ?? 'Necunoscut',
@@ -64,3 +75,4 @@ export const IncasariService = {
     });
   }
 };
+

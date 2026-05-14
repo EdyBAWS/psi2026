@@ -4,15 +4,15 @@ import { usePageSessionState } from '../../../lib/pageState';
 import { FacturareService } from '../facturare.service';
 import { recordConsumPiesa } from '../../00catalog/catalog.service';
 import { API_BASE_URL } from '../../../lib/api';
-import type { ComandaFacturabilaMock, LinieFacturaMock } from '../../../mock/types';
+import { type ComandaFacturabila, type LinieFactura } from '../../../types/facturare';
 
 export type FacturareSortField = 'data' | 'nrComanda' | 'valoare';
 export type FacturareSortDir = 'asc' | 'desc';
 
 export function useFacturare() {
-  const [comenziGata, setComenziGata] = useState<ComandaFacturabilaMock[]>([]);
-  const [comandaSelectata, setComandaSelectata] = useState<ComandaFacturabilaMock | null>(null);
-  const [liniiFactura, setLiniiFactura] = useState<LinieFacturaMock[]>([]);
+  const [comenziGata, setComenziGata] = useState<ComandaFacturabila[]>([]);
+  const [comandaSelectata, setComandaSelectata] = useState<ComandaFacturabila | null>(null);
+  const [liniiFactura, setLiniiFactura] = useState<LinieFactura[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [serieFactura, setSerieFactura] = useState('F-SAG');
@@ -34,8 +34,8 @@ export function useFacturare() {
       // Verificăm dacă avem o comandă trimisă din alt modul (ex: Vehicule)
       const idSalvat = sessionStorage.getItem('facturare-idComandaSelectata');
       if (idSalvat) {
-        // Rezolvare eroare TS7006: specificăm explicit tipul (c: ComandaFacturabilaMock)
-        const comandaDeDeschis = data.find((c: ComandaFacturabilaMock) => c.idComanda.toString() === idSalvat);
+        // Rezolvare eroare TS7006: specificăm explicit tipul (c: ComandaFacturabila)
+        const comandaDeDeschis = data.find((c: ComandaFacturabila) => c.idComanda.toString() === idSalvat);
         if (comandaDeDeschis) {
           setComandaSelectata(comandaDeDeschis);
         } else {
@@ -134,11 +134,10 @@ export function useFacturare() {
         body: JSON.stringify({ status: 'FACTURAT' })
       });
 
-      // 3. Actualizăm stocul și istoricul pentru piese și kit-uri
+      // 3. Actualizăm stocul și istoricul pentru piese și kit-uri (via Backend)
       for (const item of liniiFactura) {
         try {
           if (item.tip === 'Piesa' && item.idPiesa) {
-            // A. Înregistrăm în istoricul local (pentru widget-ul din Catalog)
             await recordConsumPiesa({
               idPiesa: item.idPiesa,
               idComanda: comandaSelectata.idComanda,
@@ -146,21 +145,7 @@ export function useFacturare() {
               dataComanda: new Date().toISOString(),
               numeAngajat: "Sistem Facturare"
             });
-
-            // B. Actualizăm stocul via PATCH (dacă backend-ul suportă update)
-            try {
-              const resPiesa = await fetch(`${API_BASE_URL}/catalog/piese/${item.idPiesa}`);
-              if (resPiesa.ok) {
-                const piesaData = await resPiesa.json();
-                await fetch(`${API_BASE_URL}/catalog/piese/${item.idPiesa}`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ stoc: Math.max(0, (piesaData.stoc || 0) - item.cantitate) })
-                });
-              }
-            } catch (e) { console.error("Eroare update stoc piesa:", e); }
           }
-          // Puteți adăuga logică similară pentru kit-uri dacă aveți acces la componentele lor aici
         } catch (err) {
           console.error(`Eroare actualizare stoc pentru ${item.tip} ${item.idLinie}:`, err);
         }

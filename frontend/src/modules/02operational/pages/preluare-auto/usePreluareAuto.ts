@@ -67,3 +67,4 @@ export function usePreluareAuto(props: {
     derivate: { vehiculSelectat, dosarSelectat, clientSelectat, comandaActivaExistenta, validare, indicatori, flux, preview: calculeazaPreviewDocumente(props.comenzi, props.dosare) }
   };
 }
+

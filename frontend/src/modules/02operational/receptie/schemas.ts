@@ -61,3 +61,4 @@ export const dosarNouSchema = z.object({
     .min(1, "Inspectorul de daună este obligatoriu."),
   observatiiDauna: z.string(),
 });
+

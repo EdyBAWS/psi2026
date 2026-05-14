@@ -15,12 +15,27 @@ export class CatalogService {
   }
 
   async fetchIstoricPiesa(id: number) {
-    await this.prisma.piesa.findUniqueOrThrow({
+    return this.prisma.facturaItem.findMany({
       where: { idPiesa: id },
-      select: { idPiesa: true },
+      include: {
+        factura: {
+          include: {
+            client: true,
+            comanda: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
     });
+  }
 
-    return [];
+  async recordConsum(id: number, data: { idComanda: number, cantitate: number }) {
+    // Decrementăm stocul
+    const piesa = await this.prisma.piesa.findUniqueOrThrow({ where: { idPiesa: id } });
+    return this.prisma.piesa.update({
+      where: { idPiesa: id },
+      data: { stoc: Math.max(0, piesa.stoc - data.cantitate) }
+    });
   }
 
   async createPiesa(data: Prisma.PiesaCreateInput) {

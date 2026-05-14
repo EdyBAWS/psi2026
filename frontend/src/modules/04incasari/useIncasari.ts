@@ -3,9 +3,9 @@ import { useState, useEffect, useMemo, type ChangeEvent, type FormEvent } from '
 import { toast } from 'sonner';
 import { usePageSessionState } from '../../lib/pageState';
 import { IncasariService } from './incasari.service';
-import type { FacturaMock } from '../../mock/types';
+import { type Factura } from '../../types/facturare';
 
-export interface FacturaAlocabila extends FacturaMock {
+export interface FacturaAlocabila extends Factura {
   sumaAlocata: number | '';
 }
 
@@ -57,8 +57,8 @@ export function generareReferintaAutomata(mod: string, istoric: any[]) {
 }
 
 export function useIncasari() {
-  const [loading, setLoading] = useState(true);
-  const [facturiRestanteBD, setFacturiRestanteBD] = useState<FacturaMock[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [facturiRestanteBD, setFacturiRestanteBD] = useState<Factura[]>([]);
   const [istoricIncasariBD, setIstoricIncasariBD] = useState<any[]>([]);
 
   const [searchClient, setSearchClient] = usePageSessionState('incasari-search-client', '');
@@ -281,3 +281,4 @@ export function useIncasari() {
     resetaAlocari, handleSalvare
   };
 }
+
