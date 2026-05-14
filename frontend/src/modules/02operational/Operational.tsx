@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { fetchAsiguratori, fetchCatalogKituri, fetchCatalogManopere, fetchCatalogPiese, fetchClienti, fetchComenzi, fetchDosareDauna, fetchMecanici, fetchPozitiiComanda, fetchVehicule, createComanda, createDosarDauna, createPozitiiComanda, updateComanda } from "./operational.service";
+import { fetchAsiguratori, fetchCatalogKituri, fetchCatalogManopere, fetchCatalogPiese, fetchClienti, fetchComenzi, fetchDosareDauna, fetchMecanici, fetchAngajati, fetchPozitiiComanda, fetchVehicule, createComanda, createDosarDauna, createPozitiiComanda, updateComanda, updatePozitiiComanda } from "./operational.service";
 import GestiuneComenzi from "./pages/gestiune-comenzi/GestiuneComenzi";
 import PreluareAuto, { type SalvarePreluarePayload } from "./pages/preluare-auto/PreluareAuto";
-import type { Asigurator, CatalogKit, CatalogManopera, CatalogPiesa, Client, ComandaService, DosarDauna, Mecanic, PozitieComanda, Vehicul } from "./types";
+import type { Asigurator, CatalogKit, CatalogManopera, CatalogPiesa, Client, ComandaService, DosarDauna, Mecanic, PozitieComanda, PozitieComandaDraft, Vehicul } from "./types";
 
 export type OperationalView = "preluare-auto" | "gestiune-comenzi";
 
@@ -30,6 +30,7 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
 
   const [vehicule, setVehicule] = useState<Vehicul[]>([]);
   const [mecanici, setMecanici] = useState<Mecanic[]>([]);
+  const [angajati, setAngajati] = useState<any[]>([]);
   const [clienti, setClienti] = useState<Client[]>([]);
   const [asiguratori, setAsiguratori] = useState<Asigurator[]>([]);
   const [catalogPiese, setCatalogPiese] = useState<CatalogPiesa[]>([]);
@@ -44,9 +45,9 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
     fetchPozitiiComanda().then(setPozitii).catch(() => toast.error("Nu s-au putut încărca pozițiile.")).finally(() => setLoading((prev) => ({ ...prev, pozitii: false })));
 
     Promise.all([
-      fetchVehicule(), fetchMecanici(), fetchClienti(), fetchAsiguratori(), fetchCatalogPiese(), fetchCatalogKituri(), fetchCatalogManopere(),
-    ]).then(([v, m, c, a, p, k, man]) => {
-      setVehicule(v); setMecanici(m); setClienti(c); setAsiguratori(a); setCatalogPiese(p); setCatalogKituri(k); setCatalogManopere(man);
+      fetchVehicule(), fetchMecanici(), fetchClienti(), fetchAsiguratori(), fetchCatalogPiese(), fetchCatalogKituri(), fetchCatalogManopere(), fetchAngajati(),
+    ]).then(([v, m, c, a, p, k, man, ang]) => {
+      setVehicule(v); setMecanici(m); setClienti(c); setAsiguratori(a); setCatalogPiese(p); setCatalogKituri(k); setCatalogManopere(man); setAngajati(ang);
     }).catch(() => toast.error("Eroare la datele de referință.")).finally(() => setLoading((prev) => ({ ...prev, referinta: false })));
   }, []);
 
@@ -103,6 +104,19 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
     }
   };
 
+  const handleActualizeazaPozitii = async (idComanda: number, pozitiiNoi: PozitieComandaDraft[]) => {
+    try {
+      const salvate = await updatePozitiiComanda(idComanda, pozitiiNoi);
+      setPozitii((prev) => {
+        const faraCurenta = prev.filter(p => p.idComanda !== idComanda);
+        return [...faraCurenta, ...salvate];
+      });
+      toast.success("Articolele din deviz au fost actualizate.");
+    } catch (error) {
+      toast.error("Nu s-au putut actualiza articolele din deviz.");
+    }
+  };
+
   const seIncarca = Object.values(loading).some(Boolean);
 
   return (
@@ -114,12 +128,18 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
       ) : view === "preluare-auto" ? (
         <PreluareAuto
           clienti={clienti} vehicule={vehicule} dosare={dosare} comenzi={comenzi} pozitii={pozitii}
-          mecanici={mecanici} asiguratori={asiguratori} catalogPiese={catalogPiese} catalogKituri={catalogKituri} catalogManopere={catalogManopere}
+          mecanici={mecanici} angajati={angajati} asiguratori={asiguratori} catalogPiese={catalogPiese} catalogKituri={catalogKituri} catalogManopere={catalogManopere}
           onSalveazaPreluare={handleSalveazaPreluare}
         />
       ) : (
-        <GestiuneComenzi clienti={clienti} comenzi={comenzi} dosare={dosare} asiguratori={asiguratori} mecanici={mecanici} pozitii={pozitii} vehicule={vehicule} onActualizeazaComanda={handleActualizeazaComanda} />
+        <GestiuneComenzi 
+          clienti={clienti} comenzi={comenzi} dosare={dosare} asiguratori={asiguratori} mecanici={mecanici} pozitii={pozitii} vehicule={vehicule} 
+          catalogPiese={catalogPiese} catalogKituri={catalogKituri} catalogManopere={catalogManopere}
+          onActualizeazaComanda={handleActualizeazaComanda} 
+          onActualizeazaPozitii={handleActualizeazaPozitii}
+        />
       )}
     </section>
   );
 }
+

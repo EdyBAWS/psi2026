@@ -3,17 +3,22 @@ import { useState, useEffect, useMemo, type ChangeEvent, type FormEvent } from '
 import { toast } from 'sonner';
 import { usePageSessionState } from '../../lib/pageState';
 import { IncasariService } from './incasari.service';
-import type { FacturaMock } from '../../mock/types';
+import { type Factura } from '../../types/facturare';
 
-export interface FacturaAlocabila extends FacturaMock {
+export interface FacturaAlocabila extends Factura {
   sumaAlocata: number | '';
 }
 
-export interface ClientPlata {
-  idClient: number;
+// Entitate platitoare — poate fi client sau asigurator
+export interface Platitor {
+  tipEntitate: 'client' | 'asigurator';
+  idEntitate: number; // idClient sau idAsigurator
   identificatorFiscal: string;
   nume: string;
 }
+
+// Alias pentru compatibilitate cu Incasari.tsx existent
+export type ClientPlata = Platitor;
 
 export const METODE_PLATA = [
   { id: 'Transfer Bancar', label: 'OP / Bancă' },
@@ -52,14 +57,15 @@ export function generareReferintaAutomata(mod: string, istoric: any[]) {
 }
 
 export function useIncasari() {
-  const [loading, setLoading] = useState(true);
-  const [facturiRestanteBD, setFacturiRestanteBD] = useState<FacturaMock[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [facturiRestanteBD, setFacturiRestanteBD] = useState<Factura[]>([]);
   const [istoricIncasariBD, setIstoricIncasariBD] = useState<any[]>([]);
 
   const [searchClient, setSearchClient] = usePageSessionState('incasari-search-client', '');
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const [idClientSelectat, setIdClientSelectat] = useState<number | null>(null);
+  const [idEntitateSelectata, setIdEntitateSelectata] = useState<number | null>(null);
+  const [tipEntitateSelectata, setTipEntitateSelectata] = useState<'client' | 'asigurator' | null>(null);
   const [sumaIncasata, setSumaIncasata] = useState<number | ''>('');
   const [modalitate, setModalitate] = usePageSessionState<ModalitatePlata>('incasari-modalitate', 'Transfer Bancar');
   const [dataIncasare, setDataIncasare] = useState<string>(dataAziISO());
@@ -87,34 +93,53 @@ export function useIncasari() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalitate, istoricIncasariBD, loading]);
 
-  const clientiDisponibili = useMemo(() => {
-    return Array.from(
-      facturiRestanteBD.reduce((map, factura) => {
-        if (!map.has(factura.idClient)) {
-          map.set(factura.idClient, {
-            idClient: factura.idClient,
-            identificatorFiscal: factura.idClient < 1000 ? `ID client #${factura.idClient}` : `Client #${factura.idClient}`,
+  // Construieste lista de platitori unici:
+  // - Facturile cu idAsigurator → platitor = asiguratorul
+  // - Facturile fara idAsigurator → platitor = clientul
+  const clientiDisponibili = useMemo((): Platitor[] => {
+    const map = new Map<string, Platitor>();
+    for (const factura of facturiRestanteBD) {
+      if (factura.tipPlata === 'asigurator' && factura.idAsigurator) {
+        const key = `asigurator-${factura.idAsigurator}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            tipEntitate: 'asigurator',
+            idEntitate: factura.idAsigurator,
+            identificatorFiscal: `Asigurator #${factura.idAsigurator}`,
+            nume: factura.numeAsigurator ?? `Asigurator #${factura.idAsigurator}`,
+          });
+        }
+      } else {
+        const key = `client-${factura.idClient}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            tipEntitate: 'client',
+            idEntitate: factura.idClient,
+            identificatorFiscal: `Client #${factura.idClient}`,
             nume: factura.client,
           });
         }
-        return map;
-      }, new Map<number, ClientPlata>())
-    ).map(([, client]) => client);
+      }
+    }
+    return Array.from(map.values());
   }, [facturiRestanteBD]);
 
-  const clientiFiltrati = useMemo(() => {
+  const clientiFiltrati = useMemo((): Platitor[] => {
     const termen = searchClient.trim().toLowerCase();
     if (termen === '') return clientiDisponibili;
-    return clientiDisponibili.filter((client) =>
-      [client.nume, client.identificatorFiscal].some((camp) =>
+    return clientiDisponibili.filter((platitor) =>
+      [platitor.nume, platitor.identificatorFiscal].some((camp) =>
         camp.toLowerCase().includes(termen),
       ),
     );
   }, [searchClient, clientiDisponibili]);
 
+  const idClientSelectat = tipEntitateSelectata === 'client' ? idEntitateSelectata : null;
   const clientSelectat = useMemo(
-    () => clientiDisponibili.find((client) => client.idClient === idClientSelectat) ?? null,
-    [idClientSelectat, clientiDisponibili],
+    () => clientiDisponibili.find(
+      (p) => p.idEntitate === idEntitateSelectata && p.tipEntitate === tipEntitateSelectata
+    ) ?? null,
+    [idEntitateSelectata, tipEntitateSelectata, clientiDisponibili],
   );
 
   const totalDatorieClient = useMemo(
@@ -134,25 +159,31 @@ export function useIncasari() {
   const referintaLipsa = isReferintaObligatorie && referinta.trim() === '';
   const facturiAlocate = facturiRestante.filter((factura) => Number(factura.sumaAlocata) > 0).length;
 
-  const handleSelectClient = (client: ClientPlata) => {
-    setIdClientSelectat(client.idClient);
-    setSearchClient(client.nume);
+  const handleSelectClient = (platitor: Platitor) => {
+    setIdEntitateSelectata(platitor.idEntitate);
+    setTipEntitateSelectata(platitor.tipEntitate);
+    setSearchClient(platitor.nume);
     setShowDropdown(false);
     setSumaIncasata('');
 
-    const facturiClient = facturiRestanteBD
-      .filter((factura) => factura.idClient === client.idClient)
-      .map((factura) => ({ ...factura, sumaAlocata: '' as const }));
+    // Filtreaza facturile dupa tipul platitorului
+    const facturiPlatitor = facturiRestanteBD.filter((factura) => {
+      if (platitor.tipEntitate === 'asigurator') {
+        return factura.idAsigurator === platitor.idEntitate;
+      }
+      return factura.idClient === platitor.idEntitate && !factura.idAsigurator;
+    }).map((factura) => ({ ...factura, sumaAlocata: '' as const }));
 
-    setFacturiRestante(facturiClient);
+    setFacturiRestante(facturiPlatitor);
   };
 
   const handleSchimbareCautare = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchClient(event.target.value);
     setShowDropdown(true);
 
-    if (idClientSelectat !== null) {
-      setIdClientSelectat(null);
+    if (idEntitateSelectata !== null) {
+      setIdEntitateSelectata(null);
+      setTipEntitateSelectata(null);
       setFacturiRestante([]);
       setSumaIncasata('');
     }
@@ -183,7 +214,8 @@ export function useIncasari() {
   };
 
   const reseteazaFormular = () => {
-    setIdClientSelectat(null);
+    setIdEntitateSelectata(null);
+    setTipEntitateSelectata(null);
     setSearchClient('');
     setSumaIncasata('');
     setModalitate('Transfer Bancar');
@@ -195,8 +227,8 @@ export function useIncasari() {
   const handleSalvare = async (event: FormEvent) => {
     event.preventDefault();
 
-    if (idClientSelectat === null || sumaNum <= 0) {
-      toast.error('Selectează clientul și introdu suma primită.');
+    if (idEntitateSelectata === null || sumaNum <= 0) {
+      toast.error('Selectează platitorul și introdu suma primită.');
       return;
     }
     if (facturiAlocate === 0) {
@@ -214,7 +246,11 @@ export function useIncasari() {
 
     try {
       await IncasariService.salveazaIncasare({
-        idClient: idClientSelectat,
+        // Transmitem idAsigurator sau idClient in functie de tipul platitorului
+        ...(tipEntitateSelectata === 'asigurator'
+          ? { idAsigurator: idEntitateSelectata }
+          : { idClient: idEntitateSelectata }
+        ),
         sumaIncasata: sumaNum,
         metodaPlata: modalitate,
         referinta,
@@ -225,7 +261,7 @@ export function useIncasari() {
       const mesajRest = baniRamasi > 0
         ? ` Au rămas ${formatSuma(baniRamasi)} nealocați pentru avans sau regularizare ulterioară.`
         : '';
-      toast.success(`Încasarea pentru ${clientSelectat?.nume ?? 'client'} a fost salvată cu ${formatSuma(totalAlocat)} repartizați.${mesajRest}`);
+      toast.success(`Încasarea pentru ${clientSelectat?.nume ?? 'platitor'} a fost salvată cu ${formatSuma(totalAlocat)} repartizați.${mesajRest}`);
       reseteazaFormular();
     } catch {
       toast.error('Eroare la salvarea încasării.');
@@ -235,7 +271,9 @@ export function useIncasari() {
   return {
     loading, facturiRestanteBD, istoricIncasariBD,
     searchClient, setSearchClient, showDropdown, setShowDropdown,
-    idClientSelectat, sumaIncasata, setSumaIncasata, modalitate, setModalitate,
+    idClientSelectat, idEntitateSelectata, tipEntitateSelectata,
+    clientSelectat,
+    sumaIncasata, setSumaIncasata, modalitate, setModalitate,
     dataIncasare, setDataIncasare, referinta, setReferinta,
     clientiFiltrati, facturiRestante, totalDatorieClient, totalAlocat,
     sumaNum, baniRamasi, areEroareSume, isReferintaObligatorie, referintaLipsa, facturiAlocate,
@@ -243,3 +281,4 @@ export function useIncasari() {
     resetaAlocari, handleSalvare
   };
 }
+

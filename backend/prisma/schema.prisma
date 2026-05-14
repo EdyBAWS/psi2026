@@ -31,6 +31,7 @@ enum TipAngajat {
   Manager
   Mecanic
   Receptioner
+  Inspector
 }
 
 enum TipPiesa {
@@ -99,8 +100,9 @@ model Angajat {
   tura          String?
   
   createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  comenzi       Comanda[]
+  comenziCreate   Comanda[]     @relation("ComandaCreator")
+  comenziLucrate  Comanda[]     @relation("ComandaMecanic")
+  dosareInspectate DosarDauna[] @relation("InspectorDosare")
 }
 
 model Asigurator {
@@ -118,6 +120,8 @@ model Asigurator {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   dosareDauna DosarDauna[]
+  facturi     Factura[]    // Facturi emise pe asigurator (varianta A - plata directa)
+  incasari    Incasare[]   // Incasari de la asigurator
 }
 
 model Vehicul {
@@ -212,6 +216,9 @@ model DosarDauna {
   idAsigurator   Int?
   asigurator     Asigurator?   @relation(fields: [idAsigurator], references: [idAsigurator])
   
+  idInspector    Int?
+  inspector      Angajat?      @relation("InspectorDosare", fields: [idInspector], references: [idAngajat])
+  
   comenzi        Comanda[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -228,7 +235,9 @@ model Comanda {
   dosar           DosarDauna?   @relation(fields: [idDosar], references: [idDosar])
   
   idAngajat       Int?
-  angajat         Angajat?      @relation(fields: [idAngajat], references: [idAngajat])
+  creator         Angajat?      @relation("ComandaCreator", fields: [idAngajat], references: [idAngajat])
+  
+  mecanici        Angajat[]     @relation("ComandaMecanic")
 
   // --- CÂMPURI NOI PENTRU COMENZI FĂRĂ DOSAR ---
   idClient        Int?
@@ -252,13 +261,19 @@ model ComandaPozitie {
   idComanda   Int
   comanda     Comanda  @relation(fields: [idComanda], references: [idComanda], onDelete: Cascade)
   
-  idArticol   Int      // Va contine fie idPiesa, fie idManopera
-  tipArticol  String   // Ex: "PIESA" sau "MANOPERA"
-  cantitate   Int
-  pretUnitar  Float
-  
-  idKit       Int?
+  tipArticol  String   // "PIESA", "MANOPERA", "KIT"
+  idArticol   Int?     // idPiesa sau idManopera
+  idKit       Int?     // idKit separat daca e cazul
   kit         KitPiese? @relation(fields: [idKit], references: [idKit], onDelete: SetNull)
+
+  codArticol  String?
+  descriere   String
+  unitateMasura String?
+  cantitate   Float
+  pretUnitar  Float
+  discount    Float    @default(0)
+  cotaTva     Float    @default(19)
+  observatii  String?
   
   createdAt   DateTime @default(now())
 }
@@ -274,6 +289,11 @@ model Factura {
   idClient     Int
   client       Client            @relation(fields: [idClient], references: [idClient])
   
+  // Asiguratorul care plateste (Varianta A - factura pe asigurator)
+  // Cand este setat, idClient = beneficiar (proprietarul masinii), idAsigurator = platitor
+  idAsigurator Int?
+  asigurator   Asigurator?       @relation(fields: [idAsigurator], references: [idAsigurator])
+  
   idComanda    Int?
   comanda      Comanda?          @relation(fields: [idComanda], references: [idComanda])
   
@@ -281,9 +301,10 @@ model Factura {
   incasari     IncasareAlocare[]
   notificari   Notificare[]
   
-  totalFaraTVA Float             @default(0)
-  tva          Float             @default(0)
-  totalGeneral Float             @default(0)
+  totalFaraTVA   Float             @default(0)
+  discountProcent Float             @default(0)
+  tva            Float             @default(0)
+  totalGeneral   Float             @default(0)
   
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
@@ -310,8 +331,13 @@ model FacturaItem {
 model Incasare {
   idIncasare Int                @id @default(autoincrement())
   
-  idClient   Int
-  client     Client             @relation(fields: [idClient], references: [idClient])
+  // Clientul beneficiar (proprietarul masinii) - optional pentru incasari de la asigurator
+  idClient   Int?
+  client     Client?            @relation(fields: [idClient], references: [idClient])
+  
+  // Asiguratorul platitor (Varianta A - plata directa de la asigurator)
+  idAsigurator Int?
+  asigurator   Asigurator?      @relation(fields: [idAsigurator], references: [idAsigurator])
   
   data       DateTime           @default(now())
   suma       Float

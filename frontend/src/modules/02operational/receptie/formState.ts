@@ -25,6 +25,7 @@ export interface StareDosarAsigurare {
   sumaAprobata: number | "";
   franciza: number | "";
   statusAprobare: StatusDosar;
+  idInspector: number | null;
   inspectorDauna: string;
   observatiiDauna: string;
 }
@@ -64,6 +65,7 @@ export const stareDosarInitiala: StareDosarAsigurare = {
   sumaAprobata: "",
   franciza: "",
   statusAprobare: "In analiza",
+  idInspector: null,
   inspectorDauna: "",
   observatiiDauna: "",
 };
@@ -102,3 +104,4 @@ export const creeazaPozitieDraft = (): PozitieComandaDraft => ({
   disponibilitateStoc: true,
   observatiiPozitie: "",
 });
+

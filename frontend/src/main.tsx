@@ -14,3 +14,4 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <Toaster position="top-right" richColors closeButton />
   </React.StrictMode>,
 );
+

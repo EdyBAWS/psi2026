@@ -19,21 +19,32 @@ export function calculeazaPreviewDocumente(comenzi: ComandaService[], dosare: Do
   };
 }
 
-export function calculeazaFluxPreluare({ detaliiPreluare, dosarValid, esteLucrareAsigurare, idMecanicSelectat, poateSalva, pozitiiDraft, vehiculSelectat }: any) {
-  const pasiFlux = esteLucrareAsigurare ? ["Selectare auto", "Simptome", "Dosar Daună", "Deviz", "Confirmare"] : ["Selectare auto", "Simptome", "Deviz", "Confirmare"];
+export function calculeazaFluxPreluare({ detaliiPreluare, dosarValid, esteLucrareAsigurare, idMecaniciSelectati, poateSalva, pozitiiDraft, vehiculSelectat }: any) {
+  const pasiFlux = esteLucrareAsigurare ? ["Selectare auto", "Simptome", "Dosar Daună", "Alege piese/manopere necesare", "Confirmare"] : ["Selectare auto", "Simptome", "Alege piese/manopere necesare", "Confirmare"];
   let pasCurent = 1;
   if (!vehiculSelectat) return { pasiFlux, pasCurent };
-  if (detaliiPreluare.simptomeReclamate.trim().length > 0) {
-    pasCurent = 2;
-    if (esteLucrareAsigurare && dosarValid) pasCurent = 3;
+  
+  pasCurent = 2; // Avem vehicul, suntem la simptome
+  
+  if (detaliiPreluare.simptomeReclamate.trim().length >= 10) {
+    if (esteLucrareAsigurare) {
+      pasCurent = 3; // Simptome OK, suntem la Dosar
+      if (dosarValid) pasCurent = 4; // Dosar OK, suntem la Piese
+    } else {
+      pasCurent = 3; // Simptome OK, suntem la Piese (fără dosar)
+    }
   }
-  if (suntPozitiiValide(pozitiiDraft) && idMecanicSelectat !== null && poateSalva) pasCurent = pasiFlux.length;
+
+  if (suntPozitiiValide(pozitiiDraft) && idMecaniciSelectati.length > 0 && poateSalva) {
+    pasCurent = pasiFlux.length; // Totul OK, suntem la Confirmare
+  }
+  
   return { pasiFlux, pasCurent };
 }
 
-export function calculeazaIndicatoriPreluare(vehiculSelectat: Vehicul | null, esteLucrareAsigurare: boolean, dosarValid: boolean, detaliiPreluare: DetaliiPreluareForm, idMecanicSelectat: number | null, pozitiiDraft: PozitieComandaDraft[]) {
+export function calculeazaIndicatoriPreluare(vehiculSelectat: Vehicul | null, esteLucrareAsigurare: boolean, dosarValid: boolean, detaliiPreluare: DetaliiPreluareForm, idMecaniciSelectati: number[], pozitiiDraft: PozitieComandaDraft[]) {
   return {
-    lipsescSimptomeSauMecanic: vehiculSelectat !== null && (!detaliiPreluare.simptomeReclamate || idMecanicSelectat === null || !suntPozitiiValide(pozitiiDraft)),
+    lipsescSimptomeSauMecanic: vehiculSelectat !== null && (!detaliiPreluare.simptomeReclamate || idMecaniciSelectati.length === 0 || !suntPozitiiValide(pozitiiDraft)),
     lipsesteDosar: vehiculSelectat !== null && esteLucrareAsigurare && !dosarValid,
     rezumatPozitii: calcRezumat(pozitiiDraft),
   };

@@ -40,3 +40,4 @@ export interface Vehicul {
   vin: string;
   status: 'Activ' | 'Inactiv';
 }
+

@@ -18,7 +18,11 @@ export default function Facturare() {
   if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă comenzile...</div>;
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+        <Receipt className="w-64 h-64 text-indigo-900" />
+      </div>
+      <div className="relative z-10">
       <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">
@@ -27,7 +31,7 @@ export default function Facturare() {
           <p className="text-slate-500 mt-1 text-sm">
             {comandaSelectata
               ? `Generare documente fiscale pentru comanda #${comandaSelectata.nrComanda}`
-              : 'Selectează o comandă din setul comun de mock-uri pentru a genera creanța demo.'}
+              : 'Selectează o comandă din lista de mai jos pentru a genera factura.'}
           </p>
         </div>
         {comandaSelectata && (
@@ -204,7 +208,7 @@ export default function Facturare() {
                       <td className="py-3 px-4">
                         <span
                           className={`px-2 py-1 rounded text-xs font-bold ${
-                            linie.tip === 'Manoperă'
+                            linie.tip === 'Manopera'
                               ? 'bg-orange-100 text-orange-800'
                               : 'bg-blue-100 text-blue-800'
                           }`}
@@ -280,6 +284,7 @@ export default function Facturare() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

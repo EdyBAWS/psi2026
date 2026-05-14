@@ -5,6 +5,8 @@ import {
   IsArray,
   ValidateNested,
   IsDateString,
+  Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -35,8 +37,14 @@ export class CreateFacturareDto {
   @IsString()
   serie?: string;
 
+  // idClient = beneficiarul (proprietarul masinii) - intotdeauna prezent
   @IsNumber()
   idClient: number;
+
+  // idAsigurator = platitorul (doar pentru dosare RCA/CASCO - Varianta A)
+  @IsOptional()
+  @IsNumber()
+  idAsigurator?: number;
 
   @IsOptional()
   @IsNumber()
@@ -44,6 +52,12 @@ export class CreateFacturareDto {
 
   @IsDateString()
   scadenta: Date;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  discountProcent?: number;
 
   @IsArray()
   @ValidateNested({ each: true })

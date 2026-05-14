@@ -55,13 +55,46 @@ export class OperationalService {
     });
   }
 
+  async getNextNumarDosar(): Promise<string> {
+    const an = new Date().getFullYear();
+    const prefix = `DAUNA-${an}-`;
+    const dosare = await this.prisma.dosarDauna.findMany({
+      where: { numarDosar: { startsWith: prefix } },
+      select: { numarDosar: true },
+    });
+    let maxNr = 0;
+    for (const d of dosare) {
+      const nrStr = d.numarDosar.replace(prefix, '');
+      const nr = parseInt(nrStr, 10);
+      if (!isNaN(nr) && nr > maxNr) maxNr = nr;
+    }
+    return `${prefix}${String(maxNr + 1).padStart(3, '0')}`;
+  }
+
   async createDosar(data: CreateDosarDaunaDto) {
-    return this.prisma.dosarDauna.create({ data });
+    const numarDosar = await this.getNextNumarDosar();
+    const { idInspector, ...rest } = data;
+    return this.prisma.dosarDauna.create({ 
+      data: {
+        ...rest,
+        numarDosar,
+        idInspector: idInspector ?? undefined,
+      } 
+    });
   }
 
   async updateDosar(id: number, data: UpdateDosarDaunaDto) {
-    return this.prisma.dosarDauna.update({ where: { idDosar: id }, data });
+    const { idInspector, ...rest } = data;
+    return this.prisma.dosarDauna.update({ 
+      where: { idDosar: id }, 
+      data: {
+        ...rest,
+        idInspector: idInspector ?? undefined,
+      }
+    });
   }
+
+
 
   // --- COMENZI ---
   async getComenzi() {
@@ -69,8 +102,9 @@ export class OperationalService {
       include: {
         client: true,
         vehicul: true,
-        dosar: { include: { client: true, vehicul: true } },
-        angajat: true,
+        dosar: { include: { client: true, vehicul: true, inspector: true } },
+        creator: true,
+        mecanici: true,
         pozitii: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -90,12 +124,49 @@ export class OperationalService {
     });
   }
 
+  async getNextNumarComanda(): Promise<string> {
+    // Cautam toate comenzile din anul curent pentru a gasi cel mai mare numar
+    const an = new Date().getFullYear();
+    const prefix = `CMD-${an}-`;
+    
+    const comenzi = await this.prisma.comanda.findMany({
+      where: {
+        numarComanda: {
+          startsWith: prefix,
+        },
+      },
+      select: {
+        numarComanda: true,
+      },
+    });
+
+    let maxNr = 0;
+    for (const c of comenzi) {
+      const nrStr = c.numarComanda.replace(prefix, '');
+      const nr = parseInt(nrStr, 10);
+      if (!isNaN(nr) && nr > maxNr) {
+        maxNr = nr;
+      }
+    }
+
+    const nextId = maxNr + 1;
+    return `${prefix}${String(nextId).padStart(3, '0')}`;
+  }
+
   async createComanda(data: CreateComandaDto) {
+    const numarComanda = await this.getNextNumarComanda();
+    const { idMecanici, ...rest } = data;
+    
     return this.prisma.comanda.create({
       data: {
-        ...data,
+        ...rest,
+        numarComanda,
         dataPreconizata: data.dataPreconizata ? new Date(data.dataPreconizata) : null,
+        mecanici: idMecanici ? {
+          connect: idMecanici.map(id => ({ idAngajat: id }))
+        } : undefined
       },
+      include: { mecanici: true }
     });
   }
 
@@ -107,12 +178,18 @@ export class OperationalService {
       throw new BadRequestException('Comanda este deja facturată și nu mai poate fi modificată.');
     }
 
+    const { idMecanici, ...rest } = data;
+    
     const comanda = await this.prisma.comanda.update({
       where: { idComanda: id },
       data: {
-        ...data,
+        ...rest,
         dataPreconizata: data.dataPreconizata ? new Date(data.dataPreconizata) : undefined,
+        mecanici: idMecanici ? {
+          set: idMecanici.map(id => ({ idAngajat: id }))
+        } : undefined
       },
+      include: { mecanici: true }
     });
 
     if (data.status === StatusReparatie.ANULAT) {
@@ -126,5 +203,53 @@ export class OperationalService {
     }
 
     return comanda;
+  }
+
+  // --- POZIȚII COMANDĂ (DEVIZ) ---
+  async getPozitiiByComanda(idComanda: number) {
+    return this.prisma.comandaPozitie.findMany({
+      where: { idComanda },
+      orderBy: { idPozitie: 'asc' },
+    });
+  }
+
+  async getAllPozitii() {
+    return this.prisma.comandaPozitie.findMany({
+      orderBy: { idPozitie: 'asc' },
+    });
+  }
+
+  async updatePozitiiComanda(idComanda: number, pozitii: any[]) {
+    // Folosim o tranzacție pentru a asigura atomicitatea (ștergem tot și recreăm)
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Ștergem pozițiile existente pentru această comandă
+      await tx.comandaPozitie.deleteMany({
+        where: { idComanda },
+      });
+
+      // 2. Creăm noile poziții
+      const created = await Promise.all(
+        pozitii.map((p) =>
+          tx.comandaPozitie.create({
+            data: {
+              idComanda,
+              tipArticol: p.tipArticol || p.tipPozitie?.toUpperCase() || 'PIESA',
+              idArticol: p.idArticol || p.catalogId || null,
+              idKit: p.idKit || (p.tipPozitie === 'Kit' ? p.catalogId : null),
+              codArticol: p.codArticol,
+              descriere: p.descriere || '',
+              unitateMasura: p.unitateMasura,
+              cantitate: Number(p.cantitate) || 0,
+              pretUnitar: Number(p.pretUnitar || p.pretVanzare) || 0,
+              discount: Number(p.discount || p.discountProcent) || 0,
+              cotaTva: Number(p.cotaTva || p.cotaTVA) || 19,
+              observatii: p.observatii || p.observatiiPozitie || null,
+            },
+          }),
+        ),
+      );
+
+      return created;
+    });
   }
 }

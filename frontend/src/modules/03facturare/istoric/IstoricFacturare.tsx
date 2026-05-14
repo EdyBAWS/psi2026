@@ -1,6 +1,6 @@
 // src/modules/03facturare/IstoricFacturare.tsx
 import { ArrowDownWideNarrow, FileText, TriangleAlert, Eye, Download, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EmptyState } from '../../../componente/ui/EmptyState';
 import { StatCard } from '../../../componente/ui/StatCard';
 import { useIstoric } from '../istoric/useIstoricFacturare';
@@ -14,6 +14,18 @@ export default function IstoricFacturare() {
   } = useIstoric();
 
   const [facturaSelectata, setFacturaSelectata] = useState<any>(null);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const id = sessionStorage.getItem('highlight-factura-id');
+    if (id) {
+      setHighlightId(Number(id));
+      setTimeout(() => {
+        sessionStorage.removeItem('highlight-factura-id');
+        setHighlightId(null);
+      }, 5000);
+    }
+  }, []);
 
   const getBadgeColor = (tip: string) => {
     switch (tip) {
@@ -28,7 +40,11 @@ export default function IstoricFacturare() {
   if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă istoricul...</div>;
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+        <FileText className="w-64 h-64 text-indigo-900" />
+      </div>
+      <div className="relative z-10">
       <div className="flex justify-between items-end mb-8 border-b border-slate-100 pb-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Istoric Facturare</h2>
@@ -108,7 +124,14 @@ export default function IstoricFacturare() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {tranzactiiFiltrate.map((trx) => (
-                <tr key={trx.id} className="hover:bg-slate-50 transition-colors">
+                <tr 
+                  key={trx.id} 
+                  className={`hover:bg-slate-50 transition-all duration-1000 ${
+                    highlightId === Number(trx.id) 
+                      ? 'bg-amber-50 shadow-[inset_0_0_0_2px_rgba(245,158,11,0.2)] scale-[1.01] z-10' 
+                      : ''
+                  }`}
+                >
                   <td className="py-4 px-6 text-slate-500 font-medium">{trx.dataOra}</td>
                   <td className="py-4 px-6">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getBadgeColor(trx.tipOperatiune)}`}>
@@ -227,6 +250,7 @@ export default function IstoricFacturare() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

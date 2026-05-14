@@ -14,7 +14,6 @@ export async function seedNotificari(prisma: PrismaClient) {
   // Folosim direct primul element de incasare pentru seed (din Tehnoparts)
   const incasareTeh = incasari[0];
 
-  const f2026001 = getRequired(facByNumar, 2026001, 'factura');
   const f2026004 = getRequired(facByNumar, 2026004, 'factura');
   const f2026002 = getRequired(facByNumar, 2026002, 'factura');
   const f2026006 = getRequired(facByNumar, 2026006, 'factura');
@@ -22,16 +21,6 @@ export async function seedNotificari(prisma: PrismaClient) {
 
   await prisma.notificare.createMany({
     data: [
-      {
-        tip: TipNotificare.Succes,
-        mesaj: `Factura ${f2026001.serie}-${f2026001.numar} a fost emisă pentru Popescu Ion.`,
-        paginaDestinatie: 'facturare-istoric',
-        sursaModul: 'Facturare',
-        textActiune: 'Vezi istoricul',
-        idFactura: f2026001.idFactura,
-        idComanda: getRequired(comByNumar, 'CMD-2026-001', 'comanda').idComanda,
-        metadata: { event: 'factura-creata', seed: true },
-      },
       {
         tip: TipNotificare.Avertizare,
         mesaj: `Factura ${f2026004.serie}-${f2026004.numar} este scadentă și are 3831.80 RON de încasat.`,

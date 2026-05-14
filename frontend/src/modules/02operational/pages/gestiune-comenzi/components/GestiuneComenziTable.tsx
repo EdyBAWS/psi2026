@@ -58,7 +58,7 @@ export default function GestiuneComenziTable({
               <tr 
                 key={comanda.idComanda} 
                 onClick={() => onSelecteazaComanda(idComandaSelectata === comanda.idComanda ? null : comanda.idComanda)}
-                className={`cursor-pointer transition-colors hover:bg-slate-50 ${idComandaSelectata === comanda.idComanda ? 'bg-indigo-50' : ''}`}
+                className={`cursor-pointer transition-all duration-500 hover:bg-slate-50 ${idComandaSelectata === comanda.idComanda ? 'bg-indigo-50 shadow-[inset_0_0_0_2px_rgba(79,70,229,0.2)] animate-[pulse_2s_ease-in-out_infinite]' : ''}`}
               >
                 <td className="px-6 py-4 font-bold text-slate-800">{comanda.numarComanda}</td>
                 <td className="px-6 py-4 text-slate-500">{formatData(comanda.dataDeschidere)}</td>

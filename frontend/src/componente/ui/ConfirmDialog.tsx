@@ -24,7 +24,7 @@ export function ConfirmDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-md">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
         <h3 className="text-lg font-bold text-slate-800">{title}</h3>
         <p className="mt-2 text-sm text-slate-500">{description}</p>
@@ -40,3 +40,4 @@ export function ConfirmDialog({
     </div>
   );
 }
+

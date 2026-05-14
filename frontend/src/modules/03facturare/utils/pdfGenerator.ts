@@ -159,3 +159,4 @@ export function generareFacturaPDF(factura: any) {
 
   doc.save(`Factura_${removeDiacritics(factura.serie)}_${factura.numar}.pdf`);
 }
+

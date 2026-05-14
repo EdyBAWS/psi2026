@@ -7,9 +7,12 @@ export async function cleanupDatabase(prisma: PrismaClient) {
   await prisma.incasare.deleteMany();
   await prisma.facturaItem.deleteMany();
   await prisma.factura.deleteMany();
+  await prisma.comandaPozitie.deleteMany();
   await prisma.comanda.deleteMany();
   await prisma.dosarDauna.deleteMany();
   await prisma.vehicul.deleteMany();
+  await prisma.kitPiesaItem.deleteMany();
+  await prisma.kitPiese.deleteMany();
   await prisma.piesa.deleteMany();
   await prisma.manopera.deleteMany();
   await prisma.client.deleteMany();

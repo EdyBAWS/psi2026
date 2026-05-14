@@ -6,10 +6,10 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  type CategorieManopera,
-  type ManoperaCatalogMock,
-} from '../../../mock/catalog';
+import { 
+  type ManoperaCatalog, 
+  type CategorieManopera
+} from '../../../types/catalog';
 import {
   createManopera,
   deleteManopera,
@@ -21,18 +21,23 @@ export type SortFieldManopera = 'codManopera' | 'denumire' | 'durataStd';
 export type SortDir = 'asc' | 'desc';
 
 // Starea goală a formularului — reutilizată la reset după submit/anulare.
-const FORM_INIT: Partial<ManoperaCatalogMock> = {
+const FORM_INIT: Partial<ManoperaCatalog> = {
+  denumire: '',
+  codManopera: '',
   categorie: 'Mecanică Ușoară',
+  durataStd: 0,
+  pretOra: 0,
 };
 
 export function useManopera() {
-  const [lista, setLista] = useState<ManoperaCatalogMock[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [lista, setLista] = useState<ManoperaCatalog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Stare formular — null înseamnă că nu se editează nimic (modul adăugare).
-  const [editId, setEditId] = useState<number | null>(null);
+  const [editareId, setEditareId] = useState<number | null>(null);
   const [arataFormular, setArataFormular] = useState(false);
-  const [form, setForm] = useState<Partial<ManoperaCatalogMock>>(FORM_INIT);
+  const [form, setForm] = useState<Partial<ManoperaCatalog>>(FORM_INIT);
 
   // Filtre și sortare — nu modifică lista brută.
   const [cautare, setCautare] = useState('');
@@ -40,11 +45,20 @@ export function useManopera() {
   const [sortField, setSortField] = useState<SortFieldManopera>('denumire');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  // Încărcăm datele o singură dată (sau de la API mai târziu).
+  const incarcaDate = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchManopera();
+      setLista(data);
+    } catch (err) {
+      setError('Nu am putut încărca datele din catalog.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchManopera()
-      .then(setLista)
-      .finally(() => setLoading(false));
+    incarcaDate();
   }, []);
 
   // ── Sortare ──────────────────────────────────────────────────────────────────
@@ -77,17 +91,17 @@ export function useManopera() {
     }
 
     try {
-      if (editId !== null) {
+      if (editareId !== null) {
         // UPDATE
-        const actualizata = await updateManopera(editId, form);
+        const actualizata = await updateManopera(editareId, form);
         setLista((prev) =>
-          prev.map((m) => (m.idManopera === editId ? actualizata : m)),
+          prev.map((m) => (m.idManopera === editareId ? actualizata : m)),
         );
         toast.success('Operațiunea a fost actualizată.');
       } else {
         // INSERT
         const noua = await createManopera(
-          form as Omit<ManoperaCatalogMock, 'idManopera'>,
+          form as Omit<ManoperaCatalog, 'idManopera'>,
         );
         setLista((prev) => [noua, ...prev]);
         toast.success('Operațiunea a fost adăugată în nomenclator.');
@@ -98,16 +112,15 @@ export function useManopera() {
     }
   };
 
-  const handleEditeaza = (item: ManoperaCatalogMock) => {
-    setEditId(item.idManopera);
+  const handleEditeaza = (item: ManoperaCatalog) => {
+    setEditareId(item.idManopera);
     setForm({ ...item });
     setArataFormular(true);
-    // Scroll-ul la formular este gestionat de componentă via ref dacă e nevoie.
   };
 
 const handleSterge = async (id: number) => {
   try {
-    await deleteManopera(id); // <--- Adaugă id-ul aici
+    await deleteManopera(id);
     setLista((prev) => prev.filter((m) => m.idManopera !== id));
     toast.success('Operațiunea a fost ștearsă.');
   } catch {
@@ -117,12 +130,12 @@ const handleSterge = async (id: number) => {
 
   const handleInchideFormular = () => {
     setArataFormular(false);
-    setEditId(null);
+    setEditareId(null);
     setForm(FORM_INIT);
   };
 
   const handleDeschideAdaugare = () => {
-    setEditId(null);
+    setEditareId(null);
     setForm(FORM_INIT);
     setArataFormular(true);
   };
@@ -138,11 +151,12 @@ const handleSterge = async (id: number) => {
     lista,
     listaFiltrata,
     loading,
+    error,
     mediaNorma,
     // Formular
     form,
     setForm,
-    editId,
+    editareId,
     arataFormular,
     // Filtre
     cautare,

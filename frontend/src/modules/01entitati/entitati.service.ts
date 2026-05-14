@@ -151,3 +151,4 @@ export async function schimbaStatusVehicul(id: number, status: 'Activ' | 'Inacti
     body: JSON.stringify({ status }),
   });
 }
+

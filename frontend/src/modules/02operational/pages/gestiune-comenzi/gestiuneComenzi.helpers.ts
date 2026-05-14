@@ -44,6 +44,7 @@ export interface DetaliiComandaSelectata {
   comandaSelectata: ComandaService | null;
   dosarSelectat: DosarDauna | null;
   mecanicSelectat: Mecanic | null;
+  mecaniciSelectati: Mecanic[];
   pozitiiComandaSelectata: PozitieComanda[];
   rezumatSelectat: ReturnType<typeof calculeazaRezumatPozitii>;
   vehiculSelectat: Vehicul | null;
@@ -114,7 +115,9 @@ export function filtreazaSiSorteazaComenzi(
         ].some((camp) => camp.toLowerCase().includes(termen));
 
       const potrivireStatus = filtre.filtruStatus === "Toate" || comanda.status === filtre.filtruStatus;
-      const potrivireMecanic = filtre.filtruMecanic === "toate" || comanda.idMecanic === filtre.filtruMecanic;
+      const potrivireMecanic = filtre.filtruMecanic === "toate" || 
+                               comanda.idMecanic === filtre.filtruMecanic || 
+                               (comanda.idMecanici && comanda.idMecanici.includes(Number(filtre.filtruMecanic)));
       const potrivirePlata = filtre.filtruPlata === "Toate" || comanda.tipPlata === filtre.filtruPlata;
       const potrivireIntarziere = !filtre.doarIntarziate || (comanda.status && comanda.termenPromis && comandaEsteIntarziata(comanda.status, comanda.termenPromis));
 
@@ -179,6 +182,9 @@ export function rezolvaDetaliiComandaSelectata(
     comandaSelectata,
     dosarSelectat: comandaSelectata?.idDosar ? (dosare.find((d) => d.idDosar === comandaSelectata.idDosar) ?? null) : null,
     mecanicSelectat: mecanici.find((m) => m.idMecanic === comandaSelectata?.idMecanic) ?? null,
+    mecaniciSelectati: comandaSelectata?.idMecanici 
+      ? mecanici.filter(m => comandaSelectata.idMecanici?.includes(m.idMecanic)) 
+      : (comandaSelectata?.mecanici ?? []),
     pozitiiComandaSelectata,
     rezumatSelectat: calculeazaRezumatPozitii(pozitiiComandaSelectata),
     vehiculSelectat,
@@ -192,3 +198,4 @@ export function calculeazaStatisticiComenzi(comenzi: ComandaService[]) {
     totalIntarziate: comenzi.filter((c) => c.status && c.termenPromis && comandaEsteIntarziata(c.status, c.termenPromis)).length,
   };
 }
+

@@ -1,5 +1,5 @@
 // src/modules/02operational/pages/gestiune-comenzi/useGestiuneComenzi.ts
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { usePageSessionState } from "../../../../lib/pageState";
 import {
   calculeazaStatisticiComenzi,
@@ -48,7 +48,7 @@ export function useGestiuneComenzi({
   const [sortField, setSortField] = usePageSessionState<GestiuneSortField>("gestiune-sortField", "data");
   const [sortDir, setSortDir] = usePageSessionState<GestiuneSortDir>("gestiune-sortDir", "desc");
 
-  const [idComandaSelectata, setIdComandaSelectata] = useState<number | null>(null);
+  const [idComandaSelectata, setIdComandaSelectata] = usePageSessionState<number | null>("gestiune-idComandaSelectata", null);
 
   const reseteazaFiltre = () => {
     setCautare("");

@@ -10,7 +10,7 @@ export interface ValidarePreluareInput {
   comandaActivaExistenta: ComandaService | null;
   detaliiPreluare: DetaliiPreluareForm;
   esteLucrareAsigurare: boolean;
-  idMecanicSelectat: number | null;
+  idMecaniciSelectati: number[];
   pozitiiDraft: PozitieComandaDraft[];
   stareDosar: StareDosarAsigurare;
   totalEstimat: number;
@@ -73,7 +73,7 @@ export function valideazaPreluare({
   comandaActivaExistenta,
   detaliiPreluare,
   esteLucrareAsigurare,
-  idMecanicSelectat,
+  idMecaniciSelectati,
   pozitiiDraft,
   stareDosar,
   totalEstimat,
@@ -96,8 +96,8 @@ export function valideazaPreluare({
       `Vehiculul are deja o comandă activă (${comandaActivaExistenta.numarComanda}).`,
     );
   }
-  if (idMecanicSelectat === null) {
-    mesajeBlocare.push("Alege mecanicul responsabil pentru lucrare.");
+  if (idMecaniciSelectati.length === 0) {
+    mesajeBlocare.push("Alege cel puțin un mecanic responsabil pentru lucrare.");
   }
   if (
     !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) ||
@@ -158,7 +158,7 @@ export function valideazaPreluare({
   }
 
   const campuriCuEroare = {
-    mecanic: idMecanicSelectat === null,
+    mecanic: idMecaniciSelectati.length === 0,
     kilometrajPreluare: !esteNumarCompletat(detaliiPreluare.kilometrajPreluare) || detaliiPreluare.kilometrajPreluare <= 0,
     simptomeReclamate: detaliiPreluare.simptomeReclamate.trim().length < 10,
     termenPromis: detaliiPreluare.termenPromis === "" || new Date(detaliiPreluare.termenPromis).getTime() < new Date().setHours(0, 0, 0, 0),
@@ -174,3 +174,4 @@ export function valideazaPreluare({
     campuriCuEroare,
   };
 }
+

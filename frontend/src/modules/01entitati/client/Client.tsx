@@ -45,7 +45,11 @@ export function Client() {
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+          <Users className="w-64 h-64 text-indigo-900" />
+        </div>
+        <div className="relative z-10">
         <PageHeader 
           title="Gestiune Clienți" 
           description="Administrează clienții și datele necesare pentru facturare și relația comercială."
@@ -59,6 +63,7 @@ export function Client() {
           <StatCard label="Clienți Activi" value={stats.totalActivi} icon={<Users />} />
           <StatCard label="Persoane Juridice" value={stats.totalPJ} tone="info" icon={<Building />} />
           <StatCard label="Sold Total Debitor" value={`${stats.soldTotal.toLocaleString()} RON`} tone="warning" icon={<Wallet />} />
+        </div>
         </div>
       </div>
 

@@ -15,7 +15,7 @@ export default function PreluareAutoContext({
   return (
     <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
       <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Context client și vehicul</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Date client și vehicul</p>
         <h3 className="mt-2 text-2xl font-bold text-slate-800">{vehiculSelectat.marca} {vehiculSelectat.model}</h3>
         <dl className="mt-5 grid gap-4 text-sm text-slate-600 md:grid-cols-2">
           <div><dt className="font-semibold text-slate-700">Client</dt><dd className="mt-1">{clientSelectat?.nume ?? `#${vehiculSelectat.idClient}`}</dd></div>

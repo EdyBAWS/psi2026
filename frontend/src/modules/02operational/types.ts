@@ -42,6 +42,7 @@ export interface DosarDauna {
   sumaAprobata?: number;
   franciza?: number;
   statusAprobare?: StatusDosar;
+  idInspector?: number | null;
   inspectorDauna?: string;
   observatiiDauna?: string;
 }
@@ -50,7 +51,9 @@ export interface ComandaService {
   idComanda: number;
   idVehicul: number;
   idDosar: number | null;
-  idMecanic: number | null;
+  idMecanic?: number | null;
+  idMecanici?: number[];
+  mecanici?: Mecanic[];
   numarComanda: string;
   dataDeschidere?: Date;
   dataFinalizare?: Date | null;

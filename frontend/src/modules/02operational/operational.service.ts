@@ -17,8 +17,6 @@ import { API_BASE_URL } from "../../lib/api";
 const API_OP = `${API_BASE_URL}/operational`;
 const API_ENT = `${API_BASE_URL}/entitati`;
 const API_CAT = `${API_BASE_URL}/catalog`;
-const POZITII_STORAGE_KEY = "psi-operational-pozitii-comanda";
-
 const mapStatusToPrisma = (status?: StatusComanda): string => {
   if (!status) return "IN_ASTEPTARE_DIAGNOZA";
   switch (status as string) {
@@ -86,12 +84,20 @@ const mapComanda = (c: any, fallback?: Partial<ComandaService>): ComandaService 
   const dosar = c.dosar ?? null;
   const idVehicul = c.idVehicul ?? dosar?.idVehicul ?? dosar?.vehicul?.idVehicul ?? fallback?.idVehicul ?? 0;
   const idMecanic = c.idMecanic ?? c.idAngajat ?? fallback?.idMecanic ?? null;
+  const idMecanici = c.mecanici?.map((m: any) => m.idAngajat) ?? fallback?.idMecanici ?? [];
+  const mecanici = c.mecanici?.map((m: any) => ({
+    idMecanic: m.idAngajat,
+    nume: `${m.nume} ${m.prenume || ""}`.trim(),
+    specialitate: m.specializare || "Mecanic",
+  })) ?? fallback?.mecanici ?? [];
 
   return {
     idComanda: c.idComanda,
     idVehicul,
     idDosar: c.idDosar ?? fallback?.idDosar ?? null,
     idMecanic,
+    idMecanici,
+    mecanici,
     numarComanda: c.numarComanda ?? fallback?.numarComanda ?? "",
     dataDeschidere: c.createdAt ? new Date(c.createdAt) : fallback?.dataDeschidere,
     dataFinalizare: c.dataFinalizare ? new Date(c.dataFinalizare) : fallback?.dataFinalizare ?? null,
@@ -107,16 +113,6 @@ const mapComanda = (c: any, fallback?: Partial<ComandaService>): ComandaService 
     prioritate: fallback?.prioritate ?? "Normala",
     tipPlata: fallback?.tipPlata ?? (dosar?.idAsigurator ? "Asigurare" : "Client Direct"),
   };
-};
-
-const readPozitiiLocale = (): PozitieComanda[] => {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(window.localStorage.getItem(POZITII_STORAGE_KEY) ?? "[]"); } catch { return []; }
-};
-
-const writePozitiiLocale = (pozitii: PozitieComanda[]) => {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(POZITII_STORAGE_KEY, JSON.stringify(pozitii));
 };
 
 export const fetchComenzi = async (): Promise<ComandaService[]> => {
@@ -136,6 +132,7 @@ export async function createComanda(data: Partial<ComandaService>): Promise<Coma
       idClient: (data as any).idClient ?? undefined,
       idVehicul: (data as any).idVehicul ?? undefined,
       idAngajat: data.idMecanic ?? undefined,
+      idMecanici: data.idMecanici ?? undefined,
       dataPreconizata: data.termenPromis ? new Date(data.termenPromis).toISOString() : undefined,
       status: mapStatusToPrisma(data.status),
     }),
@@ -155,6 +152,7 @@ export async function updateComanda(idComanda: number, data: Partial<ComandaServ
       idClient: (data as any).idClient ?? undefined,
       idVehicul: (data as any).idVehicul ?? undefined,
       idAngajat: data.idMecanic ?? undefined,
+      idMecanici: data.idMecanici ?? undefined,
       dataPreconizata: data.termenPromis ? new Date(data.termenPromis).toISOString() : undefined,
       status: data.status ? mapStatusToPrisma(data.status) : undefined,
     }),
@@ -173,6 +171,7 @@ export async function createDosarDauna(data: Partial<DosarDauna>): Promise<Dosar
       idClient: data.idClient,
       idVehicul: data.idVehicul,
       idAsigurator: data.idAsigurator ?? undefined,
+      idInspector: (data as any).idInspector ?? undefined,
       status: data.status ?? "Activ",
     }),
   });
@@ -194,10 +193,13 @@ export async function fetchVehicule(): Promise<Vehicul[]> {
   return data.map((vehicul: any) => mapVehicul(vehicul));
 }
 
-export async function fetchMecanici(): Promise<Mecanic[]> {
+export async function fetchAngajati(): Promise<any[]> {
   const res = await fetch(`${API_ENT}/angajati`);
-  if (!res.ok) return [];
-  const data = await res.json();
+  return res.ok ? await res.json() : [];
+}
+
+export async function fetchMecanici(): Promise<Mecanic[]> {
+  const data = await fetchAngajati();
   return data.filter((a: any) => a.tipAngajat === "Mecanic" && a.status === "Activ").map((a: any) => ({
     idMecanic: a.idAngajat,
     nume: `${a.nume} ${a.prenume || ""}`.trim(),
@@ -260,29 +262,57 @@ export async function fetchCatalogKituri(): Promise<CatalogKit[]> {
   }));
 }
 
-export async function fetchPozitiiComanda(): Promise<PozitieComanda[]> { return readPozitiiLocale(); }
+export async function fetchPozitiiComanda(): Promise<PozitieComanda[]> {
+  const response = await fetch(`${API_OP}/comenzi-pozitii`);
+  if (!response.ok) return [];
+  const data = await response.json();
+  return data.map((p: any) => ({
+    idPozitieCmd: p.idPozitie,
+    idComanda: p.idComanda,
+    idPiesa: p.tipArticol === 'PIESA' ? p.idArticol : null,
+    idKit: p.tipArticol === 'KIT' ? (p.idKit || p.idArticol) : null,
+    idManopera: p.tipArticol === 'MANOPERA' ? p.idArticol : null,
+    tipPozitie: p.tipArticol === 'MANOPERA' ? 'Manopera' : (p.tipArticol === 'KIT' ? 'Kit' : 'Piesa'),
+    codArticol: p.codArticol || '',
+    descriere: p.descriere || '',
+    unitateMasura: p.unitateMasura || 'buc',
+    cantitate: p.cantitate || 0,
+    pretVanzare: p.pretUnitar || 0,
+    discountProcent: p.discount || 0,
+    cotaTVA: p.cotaTva || 19,
+    disponibilitateStoc: true,
+    observatiiPozitie: p.observatii || '',
+  }));
+}
 
 export async function createPozitiiComanda(idComanda: number, pozitii: PozitieComandaDraft[]): Promise<PozitieComanda[]> {
-  const existente = readPozitiiLocale();
-  const stamp = Date.now();
-  const pozitiiSalvate = pozitii.map((pozitie, index): PozitieComanda => ({
-    idPozitieCmd: stamp + index,
-    idComanda,
-    idPiesa: pozitie.tipPozitie === "Piesa" ? pozitie.catalogId : null,
-    idKit: pozitie.tipPozitie === "Kit" ? pozitie.catalogId : null,
-    idManopera: pozitie.tipPozitie === "Manopera" ? pozitie.catalogId : null,
-    tipPozitie: pozitie.tipPozitie,
-    codArticol: pozitie.codArticol,
-    descriere: pozitie.descriere,
-    unitateMasura: pozitie.unitateMasura,
-    cantitate: pozitie.cantitate,
-    pretVanzare: pozitie.pretVanzare,
-    discountProcent: pozitie.discountProcent,
-    cotaTVA: pozitie.cotaTVA,
-    disponibilitateStoc: pozitie.disponibilitateStoc,
-    observatiiPozitie: pozitie.observatiiPozitie,
-  }));
+  return updatePozitiiComanda(idComanda, pozitii);
+}
 
-  writePozitiiLocale([...existente, ...pozitiiSalvate]);
-  return pozitiiSalvate;
+export async function updatePozitiiComanda(idComanda: number, pozitiiDraft: PozitieComandaDraft[]): Promise<PozitieComanda[]> {
+  const res = await fetch(`${API_OP}/comenzi/${idComanda}/pozitii`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(pozitiiDraft),
+  });
+  if (!res.ok) throw new Error(await parseApiError(res, "Eroare la salvarea devizului"));
+  
+  const data = await res.json();
+  return data.map((p: any) => ({
+    idPozitieCmd: p.idPozitie,
+    idComanda: p.idComanda,
+    idPiesa: p.tipArticol === 'PIESA' ? p.idArticol : null,
+    idKit: p.tipArticol === 'KIT' ? (p.idKit || p.idArticol) : null,
+    idManopera: p.tipArticol === 'MANOPERA' ? p.idArticol : null,
+    tipPozitie: p.tipArticol === 'MANOPERA' ? 'Manopera' : (p.tipArticol === 'KIT' ? 'Kit' : 'Piesa'),
+    codArticol: p.codArticol || '',
+    descriere: p.descriere || '',
+    unitateMasura: p.unitateMasura || 'buc',
+    cantitate: p.cantitate || 0,
+    pretVanzare: p.pretUnitar || 0,
+    discountProcent: p.discount || 0,
+    cotaTVA: p.cotaTva || 19,
+    disponibilitateStoc: true,
+    observatiiPozitie: p.observatii || '',
+  }));
 }

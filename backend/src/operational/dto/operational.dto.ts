@@ -25,6 +25,7 @@ export class CreateDosarDaunaDto {
   @IsNumber() idClient: number;
   @IsNumber() idVehicul: number;
   @IsOptional() @IsNumber() idAsigurator?: number;
+  @IsOptional() @IsNumber() idInspector?: number;
   @IsOptional() @IsEnum(StatusGeneral) status?: StatusGeneral;
 }
 export class UpdateDosarDaunaDto extends PartialType(CreateDosarDaunaDto) {}
@@ -37,6 +38,7 @@ export class CreateComandaDto {
   @IsOptional() @IsNumber() idClient?: number;
   @IsOptional() @IsNumber() idVehicul?: number;
   @IsOptional() @IsNumber() idAngajat?: number;
+  @IsOptional() @IsNumber({}, { each: true }) idMecanici?: number[];
   @IsOptional() @IsEnum(StatusReparatie) status?: StatusReparatie;
 }
 export class UpdateComandaDto extends PartialType(CreateComandaDto) {}

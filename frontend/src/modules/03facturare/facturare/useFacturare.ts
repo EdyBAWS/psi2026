@@ -2,22 +2,28 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePageSessionState } from '../../../lib/pageState';
 import { FacturareService } from '../facturare.service';
+import { recordConsumPiesa } from '../../00catalog/catalog.service';
 import { API_BASE_URL } from '../../../lib/api';
-import type { ComandaFacturabilaMock, LinieFacturaMock } from '../../../mock/types';
+import { type ComandaFacturabila, type LinieFactura } from '../../../types/facturare';
 
 export type FacturareSortField = 'data' | 'nrComanda' | 'valoare';
 export type FacturareSortDir = 'asc' | 'desc';
 
 export function useFacturare() {
-  const [comenziGata, setComenziGata] = useState<ComandaFacturabilaMock[]>([]);
-  const [comandaSelectata, setComandaSelectata] = useState<ComandaFacturabilaMock | null>(null);
-  const [liniiFactura, setLiniiFactura] = useState<LinieFacturaMock[]>([]);
+  const [comenziGata, setComenziGata] = useState<ComandaFacturabila[]>([]);
+  const [comandaSelectata, setComandaSelectata] = useState<ComandaFacturabila | null>(null);
+  const [liniiFactura, setLiniiFactura] = useState<LinieFactura[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [serieFactura, setSerieFactura] = useState('F-SAG');
   const [numarFactura, setNumarFactura] = useState('');
   const [termenPlata, setTermenPlata] = useState<number>(0);
-  const [discountProcent, setDiscountProcent] = useState<number>(0);
+  const [discountProcent, _setDiscountProcent] = useState<number>(0);
+  const setDiscountProcent = (val: number) => {
+    if (val < 0) _setDiscountProcent(0);
+    else if (val > 100) _setDiscountProcent(100);
+    else _setDiscountProcent(val);
+  };
 
   const [cautare, setCautare] = usePageSessionState('facturare-cautare', '');
   const [sortField, setSortField] = usePageSessionState<FacturareSortField>('facturare-sort-field', 'data');
@@ -33,8 +39,8 @@ export function useFacturare() {
       // Verificăm dacă avem o comandă trimisă din alt modul (ex: Vehicule)
       const idSalvat = sessionStorage.getItem('facturare-idComandaSelectata');
       if (idSalvat) {
-        // Rezolvare eroare TS7006: specificăm explicit tipul (c: ComandaFacturabilaMock)
-        const comandaDeDeschis = data.find((c: ComandaFacturabilaMock) => c.idComanda.toString() === idSalvat);
+        // Rezolvare eroare TS7006: specificăm explicit tipul (c: ComandaFacturabila)
+        const comandaDeDeschis = data.find((c: ComandaFacturabila) => c.idComanda.toString() === idSalvat);
         if (comandaDeDeschis) {
           setComandaSelectata(comandaDeDeschis);
         } else {
@@ -107,6 +113,7 @@ export function useFacturare() {
 
   const handleEmitereFactura = async () => {
     if (!comandaSelectata || !numarFactura) return toast.error('Completarea datelor este obligatorie.');
+    if (discountProcent < 0 || discountProcent > 100) return toast.error('Discountul trebuie să fie între 0 și 100%.');
     if (!comandaSelectata.idClient) return toast.error('Comanda selectată nu are un client valid asociat.');
 
     try {
@@ -120,7 +127,15 @@ export function useFacturare() {
           idClient: comandaSelectata.idClient,
           idComanda: comandaSelectata.idComanda,
           scadenta: new Date(dataScadenta).toISOString(),
-          iteme: liniiFactura.map(l => ({ descriere: l.denumire, cantitate: l.cantitate, pretUnitar: l.pretUnitar }))
+          discountProcent: discountProcent,
+          iteme: liniiFactura.map(l => ({ 
+            descriere: l.denumire, 
+            cantitate: l.cantitate, 
+            pretUnitar: l.pretUnitar,
+            idPiesa: l.idPiesa,
+            idKit: l.idKit,
+            idManopera: l.idManopera
+          }))
         })
       });
 
@@ -132,6 +147,23 @@ export function useFacturare() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'FACTURAT' })
       });
+
+      // 3. Actualizăm stocul și istoricul pentru piese și kit-uri (via Backend)
+      for (const item of liniiFactura) {
+        try {
+          if (item.tip === 'Piesa' && item.idPiesa) {
+            await recordConsumPiesa({
+              idPiesa: item.idPiesa,
+              idComanda: comandaSelectata.idComanda,
+              cantitate: item.cantitate,
+              dataComanda: new Date().toISOString(),
+              numeAngajat: "Sistem Facturare"
+            });
+          }
+        } catch (err) {
+          console.error(`Eroare actualizare stoc pentru ${item.tip} ${item.idLinie}:`, err);
+        }
+      }
 
       toast.success(`Factura ${serieFactura}-${numarFactura} a fost salvată!`);
       setComandaSelectata(null);
