@@ -30,17 +30,22 @@ export function SelectField({
 }: SelectFieldProps) {
   return (
     <div className={cn('space-y-1.5', wrapperClassName)}>
-      <label className="block text-sm font-semibold text-slate-700">{label}</label>
+      <label className={cn(
+        'block text-sm font-semibold',
+        error ? 'text-rose-600' : 'text-slate-700'
+      )}>
+        {label}
+      </label>
       <select
         className={cn(
-          'w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500',
-          error && 'border-rose-300 focus:border-rose-300 focus:ring-rose-500',
+          'w-full rounded-xl border px-4 py-2.5 text-slate-900 outline-none transition-all focus:outline-none focus:ring-2',
+          error
+            ? 'border-rose-300 bg-rose-50/40 ring-2 ring-inset ring-rose-400/60 focus:border-rose-400 focus:ring-rose-500'
+            : 'border-slate-200 bg-white focus:border-indigo-300 focus:ring-indigo-500',
           className,
         )}
         {...props}
       >
-        {/* Placeholder-ul este util când vrem să forțăm o alegere explicită
-            și nu vrem ca primul element real să fie selectat automat. */}
         {placeholder ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (
           <option key={option.value} value={option.value}>

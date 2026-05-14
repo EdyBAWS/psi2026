@@ -91,7 +91,7 @@ export default function Manopera() {
           title="Nomenclator Manoperă"
           description="Administrează timpii tehnologici de reparație, structurați pe categorii de reparații."
           actions={
-            <Button onClick={arataFormular ? handleInchideFormular : handleDeschideAdaugare}>
+            <Button id="btn-add-manopera" onClick={arataFormular ? handleInchideFormular : handleDeschideAdaugare}>
               {arataFormular ? 'Închide Formularul' : '+ Adaugă Operațiune'}
             </Button>
           }
@@ -141,6 +141,7 @@ export default function Manopera() {
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <Field
+              id="input-cod-manopera"
               label="Cod Operațiune *"
               value={form.codManopera ?? ''}
               onChange={(e) => setForm({ ...form, codManopera: e.target.value })}
@@ -148,6 +149,7 @@ export default function Manopera() {
               required
             />
             <Field
+              id="input-denumire-manopera"
               label="Denumire Operațiune *"
               value={form.denumire ?? ''}
               onChange={(e) => setForm({ ...form, denumire: e.target.value })}
@@ -165,6 +167,7 @@ export default function Manopera() {
               required
             />
             <Field
+              id="input-durata-manopera"
               label="Normă de Timp (Ore) *"
               type="number"
               step="0.1"
@@ -182,7 +185,7 @@ export default function Manopera() {
             <Button variant="outline" type="button" onClick={handleInchideFormular}>
               Anulează
             </Button>
-            <Button variant="secondary" type="submit">
+            <Button id="btn-save-manopera" variant="secondary" type="submit">
               {editareId !== null ? 'Salvează Modificările' : 'Adaugă în Nomenclator'}
             </Button>
           </div>

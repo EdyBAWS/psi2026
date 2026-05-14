@@ -118,7 +118,7 @@ export default function Facturare() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {comenziFiltrate.map((comanda) => (
+                  {comenziFiltrate.map((comanda, index) => (
                     <tr key={comanda.idComanda} className="hover:bg-indigo-50/50 transition-colors group">
                       <td className="py-4 px-6 font-bold text-slate-800">{comanda.nrComanda}</td>
                       <td className="py-4 px-6 text-slate-500">{comanda.dataComanda}</td>
@@ -131,6 +131,7 @@ export default function Facturare() {
                       </td>
                       <td className="py-4 px-6 text-center">
                         <button
+                          id={`btn-open-factura-${index}`}
                           onClick={() => setComandaSelectata(comanda)}
                           className="text-indigo-600 hover:text-indigo-800 font-bold text-sm tracking-wide hover:underline"
                         >
@@ -150,6 +151,7 @@ export default function Facturare() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Seria</label>
               <input
+                id="input-serie-factura"
                 type="text"
                 value={serieFactura}
                 onChange={(e) => setSerieFactura(e.target.value.toUpperCase())}
@@ -159,6 +161,7 @@ export default function Facturare() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Număr Factură</label>
               <input
+                id="input-numar-factura"
                 type="text"
                 value={numarFactura}
                 onChange={(e) => setNumarFactura(e.target.value)}
@@ -276,6 +279,7 @@ export default function Facturare() {
 
           <div className="flex justify-end pt-4">
             <button
+              id="btn-save-factura"
               onClick={handleEmitereFactura}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all font-bold text-lg tracking-wide"
             >

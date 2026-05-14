@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Search, Users, Wrench, Briefcase, PenLine, Ban, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { PageHeader } from '../../../componente/ui/PageHeader';
 import { StatCard } from '../../../componente/ui/StatCard';
 import { Card, CardContent } from '../../../componente/ui/Card';
@@ -23,7 +24,8 @@ export function Angajat() {
 
   const { register, control, handleSubmit, formState: { errors }, reset } = useForm<AngajatFormValues>({
     resolver: zodResolver(angajatSchema),
-    defaultValues: { tipAngajat: 'Mecanic', status: 'Activ' }
+    shouldUnregister: true,
+    defaultValues: { tipAngajat: 'Mecanic', status: 'Activ', costOrar: 0, sporConducere: 0 }
   });
 
   const tipAngajat = useWatch({ control, name: 'tipAngajat' });
@@ -32,8 +34,19 @@ export function Angajat() {
   const deschideEditare = (angajat: AngajatEntity) => { reset(angajat); setEditId(angajat.idAngajat); setIsFormOpen(true); };
   
   const onSubmit = async (data: AngajatFormValues) => {
-    await salveaza(data, editId ?? undefined);
-    setIsFormOpen(false);
+    try {
+      await salveaza(data, editId ?? undefined);
+      toast.success(editId ? 'Angajat actualizat cu succes!' : 'Angajat adăugat cu succes!');
+      setIsFormOpen(false);
+    } catch (error) {
+      console.error('Erroare la salvare angajat:', error);
+      toast.error('A apărut o eroare la salvarea datelor. Te rugăm să încerci din nou.');
+    }
+  };
+
+  const onInvalid = (errors: any) => {
+    console.log('Validare eșuată:', errors);
+    toast.error('Te rugăm să verifici câmpurile obligatorii și formatele introduse.');
   };
 
   if (loading) return <div className="py-12 text-center text-slate-500">Se încarcă datele...</div>;
@@ -55,6 +68,7 @@ export function Angajat() {
           <StatCard label="Total Angajați Activi" value={stats.totalActivi} icon={<Users />} />
           <StatCard label="Mecanici Activi" value={stats.totalMecanici} tone="info" icon={<Wrench />} />
           <StatCard label="Manageri Activi" value={stats.totalManageri} tone="warning" icon={<Briefcase />} />
+          <StatCard label="Inspectori Activi" value={stats.totalInspectori} tone="success" icon={<Briefcase />} />
         </div>
       </div>
 
@@ -77,7 +91,7 @@ export function Angajat() {
       {isFormOpen && (
         <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-xl animate-in fade-in slide-in-from-top-4">
           <h4 className="mb-6 text-lg font-bold text-slate-800 border-b border-slate-100 pb-3">{editId ? 'Editare Angajat' : 'Definire Angajat Nou'}</h4>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Field label="Nume *" {...register('nume')} error={errors.nume?.message} />
               <Field label="Prenume *" {...register('prenume')} error={errors.prenume?.message} />
@@ -86,25 +100,40 @@ export function Angajat() {
               <Field label="Email" type="email" {...register('email')} error={errors.email?.message} />
               <SelectField 
                 label="Rol Angajat *" 
-                options={[{ label: 'Mecanic', value: 'Mecanic' }, { label: 'Manager', value: 'Manager' }, { label: 'Recepționer', value: 'Receptioner' }]}
+                options={[
+                  { label: 'Mecanic', value: 'Mecanic' },
+                  { label: 'Manager', value: 'Manager' },
+                  { label: 'Recepționer', value: 'Receptioner' },
+                  { label: 'Inspector Daune', value: 'Inspector' }
+                ]}
                 {...register('tipAngajat')} error={errors.tipAngajat?.message} 
               />
               {tipAngajat === 'Mecanic' && (
                 <>
                   <Field label="Specializare *" placeholder="ex: Mecanică Ușoară" {...register('specializare')} error={errors.specializare?.message} />
-                  <Field label="Cost Orar (RON)" type="number" step="0.01" {...register('costOrar', { valueAsNumber: true })} error={errors.costOrar?.message} />
+                  <Field label="Cost Orar (RON)" type="number" step="0.01" min="0" placeholder="0" {...register('costOrar', { valueAsNumber: true })} error={errors.costOrar?.message} />
                 </>
               )}
               {tipAngajat === 'Manager' && (
                 <>
                   <Field label="Departament *" {...register('departament')} error={errors.departament?.message} />
-                  <Field label="Spor Conducere (%)" type="number" step="0.01" {...register('sporConducere', { valueAsNumber: true })} />
+                  <Field label="Spor Conducere (%)" type="number" step="0.01" min="0" placeholder="0" {...register('sporConducere', { valueAsNumber: true })} />
+                  <Field label="Cost Orar (RON)" type="number" step="0.01" min="0" placeholder="0" {...register('costOrar', { valueAsNumber: true })} error={errors.costOrar?.message} />
                 </>
               )}
               {tipAngajat === 'Receptioner' && (
                 <>
                   <Field label="Număr Birou *" {...register('nrBirou')} error={errors.nrBirou?.message} />
-                  <Field label="Tura" placeholder="ex: Dimineața / După-amiaza" {...register('tura')} />
+                  <Field label="Tură" placeholder="ex: Dimineața / După-amiaza" {...register('tura')} />
+                  <Field label="Cost Orar (RON)" type="number" step="0.01" min="0" placeholder="0" {...register('costOrar', { valueAsNumber: true })} error={errors.costOrar?.message} />
+                </>
+              )}
+              {tipAngajat === 'Inspector' && (
+                <>
+                  <Field label="Specializare" placeholder="ex: Evaluări Daune" {...register('specializare')} error={errors.specializare?.message} />
+                  <Field label="Departament" {...register('departament')} error={errors.departament?.message} />
+                  <Field label="Număr Birou" {...register('nrBirou')} error={errors.nrBirou?.message} />
+                  <Field label="Cost Orar (RON)" type="number" step="0.01" min="0" placeholder="0" {...register('costOrar', { valueAsNumber: true })} error={errors.costOrar?.message} />
                 </>
               )}
             </div>
@@ -137,7 +166,10 @@ export function Angajat() {
                       <td className="px-6 py-4">
                         <p className="font-bold text-slate-800">{angajat.tipAngajat}</p>
                         <p className="text-xs text-slate-500">
-                          {angajat.tipAngajat === 'Mecanic' ? angajat.specializare : angajat.tipAngajat === 'Manager' ? angajat.departament : `Birou: ${angajat.nrBirou}`}
+                          {angajat.tipAngajat === 'Mecanic' ? angajat.specializare : 
+                           angajat.tipAngajat === 'Manager' ? angajat.departament : 
+                           angajat.tipAngajat === 'Receptioner' ? `Birou: ${angajat.nrBirou}` : 
+                           `Dept: ${angajat.departament || 'N/A'}`}
                         </p>
                       </td>
                       <td className="px-6 py-4">

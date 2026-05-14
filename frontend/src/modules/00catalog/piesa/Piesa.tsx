@@ -116,6 +116,7 @@ export default function Piesa() {
           description="Gestionează inventarul. Piesele utilizate în reparații nu pot fi șterse pentru a păstra istoricul."
           actions={
             <Button
+              id="btn-add-piesa"
               variant="primary"
               onClick={arataFormular ? handleInchideFormular : handleDeschideAdaugare}
             >
@@ -269,7 +270,7 @@ export default function Piesa() {
 
           <div className="mt-6 flex justify-end gap-3">
             <Button variant="outline" type="button" onClick={handleInchideFormular}>Anulează</Button>
-            <Button variant="primary" type="submit">{editareId !== null ? 'Salvează' : 'Adaugă'}</Button>
+            <Button id="btn-save-piesa" variant="primary" type="submit">{editareId !== null ? 'Salvează' : 'Adaugă'}</Button>
           </div>
         </form>
       )}

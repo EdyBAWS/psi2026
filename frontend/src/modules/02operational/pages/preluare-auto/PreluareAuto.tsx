@@ -197,6 +197,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
                         Anulează
                       </button>
                       <button
+                        id="btn-save-preluare"
                         onClick={handleSalveaza}
                         disabled={!derivate.validare.poateSalva || salvareInCurs}
                         className="group relative overflow-hidden rounded-xl bg-indigo-600 px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-indigo-200 transition-all hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0 disabled:bg-slate-300 disabled:shadow-none disabled:translate-y-0"

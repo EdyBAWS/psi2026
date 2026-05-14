@@ -25,16 +25,21 @@ export default function SelectorVehicul({ clienti, comenzi, idVehiculSelectat, o
   return (
     <div className="space-y-4">
       <div className="relative">
-        <input type="text" className="block w-full rounded-xl border border-slate-300 py-3 px-4 shadow-sm focus:ring-indigo-600 sm:text-sm" placeholder="Caută vehicul (nr. înmatriculare, client, model)..." value={cautare} onChange={(e) => setCautare(e.target.value)} />
+        <input id="input-search-vehicul" type="text" className="block w-full rounded-xl border border-slate-300 py-3 px-4 shadow-sm focus:ring-indigo-600 sm:text-sm" placeholder="Caută vehicul (nr. înmatriculare, client, model)..." value={cautare} onChange={(e) => setCautare(e.target.value)} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {vehiculeFiltrate.map((v) => {
+        {vehiculeFiltrate.map((v, index) => {
           const client = clienti.find((c) => c.idClient === v.idClient);
           const esteSelectat = v.idVehicul === idVehiculSelectat;
           const comandaActiva = comenzi.find(c => c.idVehicul === v.idVehicul && c.status && comandaEsteActiva(c.status));
 
           return (
-            <button key={v.idVehicul} onClick={() => onSelecteaza(esteSelectat ? null : v.idVehicul)} className={`relative flex flex-col items-start gap-4 rounded-xl border p-4 text-left transition-all ${esteSelectat ? "border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600" : "border-slate-200 bg-white hover:border-indigo-300"}`}>
+            <button
+              id={`btn-select-vehicul-${index}`}
+              key={v.idVehicul}
+              onClick={() => onSelecteaza(esteSelectat ? null : v.idVehicul)}
+              className={`relative flex flex-col items-start gap-4 rounded-xl border p-4 text-left transition-all ${esteSelectat ? "border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600" : "border-slate-200 bg-white hover:border-indigo-300"}`}
+            >
               <div className="w-full flex justify-between">
                 <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 text-sm font-bold text-slate-800">{v.numarInmatriculare}</span>
                 {comandaActiva && <span className="text-[10px] font-bold text-amber-600 uppercase bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">În service</span>}

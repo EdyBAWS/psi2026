@@ -22,7 +22,12 @@ export function useAngajat() {
   }, [lista, cautare, arataInactivi]);
 
   const salveaza = async (data: AngajatFormValues, editId?: number) => {
-    const saved = await saveAngajat(data, editId);
+    const payload = {
+      ...data,
+      sporConducere: (data.sporConducere !== undefined && !isNaN(data.sporConducere)) ? data.sporConducere : 0,
+      costOrar: (data.costOrar !== undefined && !isNaN(data.costOrar)) ? data.costOrar : 0,
+    };
+    const saved = await saveAngajat(payload as any, editId);
     if (editId) {
       setLista(prev => prev.map(a => a.idAngajat === editId ? saved : a));
     } else {
@@ -39,10 +44,11 @@ export function useAngajat() {
   const angajatiActivi = lista.filter(a => a.status === 'Activ');
   const totalMecanici = angajatiActivi.filter(a => a.tipAngajat === 'Mecanic').length;
   const totalManageri = angajatiActivi.filter(a => a.tipAngajat === 'Manager').length;
+  const totalInspectori = angajatiActivi.filter(a => a.tipAngajat === 'Inspector').length;
 
   return {
     listaFiltrata, loading, cautare, setCautare, arataInactivi, setArataInactivi,
     salveaza, schimbaStatus,
-    stats: { totalActivi: angajatiActivi.length, totalMecanici, totalManageri }
+    stats: { totalActivi: angajatiActivi.length, totalMecanici, totalManageri, totalInspectori }
   };
 }
