@@ -13,8 +13,11 @@ import { PageHeader } from '../../../componente/ui/PageHeader';
 import { SelectField } from '../../../componente/ui/SelectField';
 import { StatCard } from '../../../componente/ui/StatCard';
 import { type CategorieManopera } from '../../../types/catalog';
-import { useManopera, type SortFieldManopera } from './useManopera';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useManopera, type SortFieldManopera, FORM_INIT_MANOPERA } from './useManopera';
+import { manoperaSchema, type ManoperaFormValues } from '../schemas';
 
 // Opțiunile de categorie centralizate — sincronizate cu enum-ul din catalog.ts
 const CATEGORII_MANOPERA: { label: string; value: CategorieManopera }[] = [
@@ -46,30 +49,33 @@ function SortIndicator({
 
 export default function Manopera() {
   const {
-    lista,
-    listaFiltrata,
-    loading,
-    mediaNorma,
-    form,
-    setForm,
-    editareId,
-    arataFormular,
-    cautare,
-    setCautare,
-    filtruCategorie,
-    setFiltruCategorie,
-    sortField,
-    sortDir,
-    handleSort,
-    handleSalvare,
-    handleEditeaza,
-    handleSterge,
-    handleDeschideAdaugare,
-    handleInchideFormular,
+    lista, listaFiltrata, loading, mediaNorma,
+    editareId, arataFormular, cautare, setCautare,
+    filtruCategorie, setFiltruCategorie, sortField, sortDir,
+    handleSort, handleSalvare, handleEditeaza, handleSterge,
+    handleDeschideAdaugare, handleInchideFormular,
   } = useManopera();
 
-  // Confirmarea ștergerii este gestionată local în componentă (UI concern).
   const [confirmSterge, setConfirmSterge] = useState<number | null>(null);
+
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<ManoperaFormValues>({
+    resolver: zodResolver(manoperaSchema) as any,
+    mode: 'all',
+    defaultValues: FORM_INIT_MANOPERA as any
+  });
+
+  useEffect(() => {
+    if (editareId !== null) {
+      const item = lista.find(m => m.idManopera === editareId);
+      if (item) reset(item as any);
+    } else {
+      reset(FORM_INIT_MANOPERA as any);
+    }
+  }, [editareId, reset, lista]);
+
+  const onSubmit = async (data: ManoperaFormValues) => {
+    await handleSalvare(data);
+  };
 
   if (loading) {
     return (
@@ -133,7 +139,7 @@ export default function Manopera() {
       {/* ── FORMULAR ADĂUGARE / EDITARE ──────────────────────────────────────── */}
       {arataFormular && (
         <form
-          onSubmit={handleSalvare}
+          onSubmit={handleSubmit(onSubmit)}
           className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-emerald-100 animate-in fade-in slide-in-from-top-4"
         >
           <h4 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3">
@@ -143,28 +149,27 @@ export default function Manopera() {
             <Field
               id="input-cod-manopera"
               label="Cod Operațiune *"
-              value={form.codManopera ?? ''}
-              onChange={(e) => setForm({ ...form, codManopera: e.target.value })}
               placeholder="ex: MAN-SCHIMB-ULEI"
-              required
+              {...register('codManopera')}
+              error={errors.codManopera?.message}
             />
             <Field
               id="input-denumire-manopera"
               label="Denumire Operațiune *"
-              value={form.denumire ?? ''}
-              onChange={(e) => setForm({ ...form, denumire: e.target.value })}
               placeholder="ex: Schimb Ulei și Filtre"
               wrapperClassName="md:col-span-2"
-              required
+              {...register('denumire')}
+              error={errors.denumire?.message}
             />
             <SelectField
+              id="select-categorie-manopera"
               label="Categorie *"
-              value={form.categorie ?? 'Mecanică Ușoară'}
-              onChange={(e) =>
-                setForm({ ...form, categorie: e.target.value as CategorieManopera })
-              }
-              options={CATEGORII_MANOPERA}
-              required
+              options={[
+                { label: 'Selectează categorie...', value: '' },
+                ...CATEGORII_MANOPERA
+              ]}
+              {...register('categorie')}
+              error={errors.categorie?.message}
             />
             <Field
               id="input-durata-manopera"
@@ -172,13 +177,10 @@ export default function Manopera() {
               type="number"
               step="0.1"
               min="0.1"
-              value={form.durataStd ?? ''}
-              onChange={(e) =>
-                setForm({ ...form, durataStd: Number(e.target.value) })
-              }
               placeholder="ex: 1.5"
               hint="Durată standard în ore normate"
-              required
+              {...register('durataStd', { valueAsNumber: true })}
+              error={errors.durataStd?.message}
             />
           </div>
           <div className="mt-6 flex justify-end gap-3">

@@ -1,6 +1,8 @@
 // src/modules/00catalog/piese/Piesa.tsx
 import { PenLine, Trash2, ArrowUpDown, History, X, Loader2, ClipboardList } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../../../componente/ui/Button';
 import { ConfirmDialog } from '../../../componente/ui/ConfirmDialog';
 import { Field } from '../../../componente/ui/Field';
@@ -11,7 +13,8 @@ import {
   type TipPiesaCatalog,
   type CategoriePiesa,
 } from '../../../types/catalog';
-import { usePiesa, type SortFieldPiesa } from './usePiesa';
+import { usePiesa, type SortFieldPiesa, FORM_INIT } from './usePiesa';
+import { piesaSchema, type PiesaFormValues } from '../schemas';
 
 const CATEGORII_PIESA: { label: string; value: CategoriePiesa }[] = [
   { label: 'Filtre', value: 'Filtre' },
@@ -20,6 +23,8 @@ const CATEGORII_PIESA: { label: string; value: CategoriePiesa }[] = [
   { label: 'Electrice', value: 'Electrice' },
   { label: 'Suspensie & Direcție', value: 'Suspensie & Direcție' },
   { label: 'Climatizare', value: 'Climatizare' },
+  { label: 'Lichide', value: 'Lichide' },
+  { label: 'Transmisie', value: 'Transmisie' },
   { label: 'Altele', value: 'Altele' },
 ];
 
@@ -63,36 +68,37 @@ function StocBadge({ stoc }: { stoc: number }) {
 
 export default function Piesa() {
   const {
-    piese,
-    pieseFiltrate,
-    loading,
-    valoareStoc,
-    stocEpuizat,
-    stocCritic,
-    form,
-    setForm,
-    editareId,
-    arataFormular,
-    termenCautare,
-    setTermenCautare,
-    filtruTip,
-    setFiltruTip,
-    filtruCategorie,
-    setFiltruCategorie,
-    sortField,
-    sortDir,
-    handleSort,
-    handleSalvare,
-    handleEditeaza,
-    handleSterge,
-    handleDeschideAdaugare,
-    handleInchideFormular,
-    istoricCurent,
-    setIstoricCurent,
-    handleVeziIstoric
+    piese, pieseFiltrate, loading, valoareStoc, stocEpuizat, stocCritic,
+    editareId, arataFormular, termenCautare, setTermenCautare,
+    filtruTip, setFiltruTip, filtruCategorie, setFiltruCategorie,
+    sortField, sortDir, handleSort, handleSalvare, handleEditeaza,
+    handleSterge, handleDeschideAdaugare, handleInchideFormular,
+    istoricCurent, setIstoricCurent, handleVeziIstoric
   } = usePiesa();
 
   const [confirmSterge, setConfirmSterge] = useState<number | null>(null);
+
+  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<PiesaFormValues>({
+    resolver: zodResolver(piesaSchema) as any,
+    mode: 'all',
+    defaultValues: FORM_INIT as any
+  });
+
+  const watchTip = watch('tip');
+
+  // Sync form state when editing
+  useEffect(() => {
+    if (editareId !== null) {
+      const piesaEditata = piese.find(p => p.idPiesa === editareId);
+      if (piesaEditata) reset(piesaEditata as any);
+    } else {
+      reset(FORM_INIT as any);
+    }
+  }, [editareId, reset, piese]);
+
+  const onSubmit = async (data: PiesaFormValues) => {
+    await handleSalvare(data);
+  };
 
   if (loading) {
     return (
@@ -180,7 +186,7 @@ export default function Piesa() {
       {arataFormular && (
         <form
           id="form-piesa"
-          onSubmit={handleSalvare}
+          onSubmit={handleSubmit(onSubmit)}
           className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-indigo-100 animate-in fade-in slide-in-from-top-4"
         >
           <h4 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3">
@@ -191,80 +197,82 @@ export default function Piesa() {
             <Field
               id="input-cod-piesa"
               label="Cod Piesă *"
-              value={form.codPiesa ?? ''}
-              onChange={(e) => setForm({ ...form, codPiesa: e.target.value })}
               placeholder="ex: FIL-UL-BOSCH"
-              required
+              {...register('codPiesa')}
+              error={errors.codPiesa?.message}
             />
             <Field
               id="input-denumire-piesa"
               label="Denumire Piesă *"
-              value={form.denumire ?? ''}
-              onChange={(e) => setForm({ ...form, denumire: e.target.value })}
               placeholder="ex: Filtru Ulei"
               wrapperClassName="md:col-span-2"
-              required
+              {...register('denumire')}
+              error={errors.denumire?.message}
             />
             <Field
               id="input-producator-piesa"
               label="Producător *"
-              value={form.producator ?? ''}
-              onChange={(e) => setForm({ ...form, producator: e.target.value })}
               placeholder="ex: Bosch"
-              required
+              {...register('producator')}
+              error={errors.producator?.message}
             />
             <SelectField
               id="select-categorie"
-              label="Categorie"
-              value={form.categorie ?? 'Altele'}
-              onChange={(e) =>
-                setForm({ ...form, categorie: e.target.value as CategoriePiesa })
-              }
-              options={CATEGORII_PIESA}
+              label="Categorie *"
+              options={[
+                { label: 'Selectează categorie...', value: '' },
+                ...CATEGORII_PIESA
+              ]}
+              {...register('categorie')}
+              error={errors.categorie?.message}
             />
             <Field
               id="input-pret-baza"
               label="Preț Bază (RON) *"
               type="number"
               step="0.01"
-              value={form.pretBaza ?? ''}
-              onChange={(e) => setForm({ ...form, pretBaza: Number(e.target.value) })}
-              required
+              {...register('pretBaza', { valueAsNumber: true })}
+              error={errors.pretBaza?.message}
             />
             <Field
               id="input-stoc"
               label="Stoc"
               type="number"
-              value={form.stoc ?? 0}
-              onChange={(e) => setForm({ ...form, stoc: Number(e.target.value) })}
+              {...register('stoc', { valueAsNumber: true })}
+              error={errors.stoc?.message}
             />
             <SelectField
+              id="select-tip-piesa"
               label="Tip Piesă *"
-              value={form.tip ?? 'NOUA'}
-              onChange={(e) => setForm({ ...form, tip: e.target.value as any })}
-              options={[{ label: 'Nouă', value: 'NOUA' }, { label: 'SH', value: 'SH' }]}
+              options={[
+                { label: 'Selectează tip...', value: '' },
+                { label: 'Nouă', value: 'NOUA' }, 
+                { label: 'SH', value: 'SH' }
+              ]}
+              {...register('tip')}
+              error={errors.tip?.message}
             />
           </div>
 
-          {form.tip === 'NOUA' && (
+          {watchTip === 'NOUA' && (
             <div className="mt-5 pt-5 border-t border-slate-100">
               <Field
+                id="input-garantie"
                 label="Garanție (Luni) *"
                 type="number"
-                value={form.luniGarantie ?? ''}
-                onChange={(e) => setForm({ ...form, luniGarantie: Number(e.target.value) })}
-                required
+                {...register('luniGarantie', { valueAsNumber: true })}
+                error={errors.luniGarantie?.message}
               />
             </div>
           )}
 
-          {form.tip === 'SH' && (
+          {watchTip === 'SH' && (
             <div className="mt-5 pt-5 border-t border-slate-100">
               <Field
+                id="input-grad-uzura"
                 label="Grad Uzură *"
-                value={form.gradUzura ?? ''}
-                onChange={(e) => setForm({ ...form, gradUzura: e.target.value })}
-                required
+                {...register('gradUzura')}
+                error={errors.gradUzura?.message}
               />
             </div>
           )}

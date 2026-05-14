@@ -18,7 +18,7 @@ import {
 export type SortFieldPiesa = 'codPiesa' | 'denumire' | 'pretBaza' | 'stoc';
 export type SortDir = 'asc' | 'desc';
 
-const FORM_INIT: Partial<PiesaCatalog> = {
+export const FORM_INIT: Partial<PiesaCatalog> = {
   denumire: '',
   codPiesa: '',
   producator: '',
@@ -34,7 +34,6 @@ export function usePiesa() {
   const [error, setError] = useState<string | null>(null);
   const [editareId, setEditareId] = useState<number | null>(null);
   const [arataFormular, setArataFormular] = useState(false);
-  const [form, setForm] = useState<Partial<PiesaCatalog>>(FORM_INIT);
   const [termenCautare, setTermenCautare] = useState('');
 
   // Istoric piese
@@ -87,15 +86,14 @@ export function usePiesa() {
       return sortDir === 'asc' ? cmp : -cmp;
     });
 
-  const handleSalvare = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSalvare = async (data: any) => {
     try {
       if (editareId !== null) {
-        const actualizata = await updatePiesa(editareId, form);
+        const actualizata = await updatePiesa(editareId, data);
         setPiese((prev) => prev.map((p) => (p.idPiesa === editareId ? actualizata : p)));
         toast.success('Piesa a fost actualizată.');
       } else {
-        const noua = await createPiesa(form as Omit<PiesaCatalog, 'idPiesa'>);
+        const noua = await createPiesa(data as Omit<PiesaCatalog, 'idPiesa'>);
         setPiese((prev) => [noua, ...prev]);
         toast.success('Piesa a fost adăugată.');
       }
@@ -130,19 +128,16 @@ export function usePiesa() {
 
   const handleEditeaza = (piesa: PiesaCatalog) => {
     setEditareId(piesa.idPiesa);
-    setForm({ ...piesa });
     setArataFormular(true);
   };
 
   const handleInchideFormular = () => {
     setArataFormular(false);
     setEditareId(null);
-    setForm(FORM_INIT);
   };
 
   const handleDeschideAdaugare = () => {
     setEditareId(null);
-    setForm(FORM_INIT);
     setArataFormular(true);
   };
 
@@ -152,7 +147,7 @@ export function usePiesa() {
 
   return {
     piese, pieseFiltrate, loading, error, valoareStoc, stocEpuizat, stocCritic,
-    form, setForm, editareId, arataFormular, termenCautare, setTermenCautare,
+    editareId, arataFormular, termenCautare, setTermenCautare,
     filtruTip, setFiltruTip, filtruCategorie, setFiltruCategorie,
     sortField, sortDir, handleSort, handleSalvare, handleEditeaza,
     handleSterge, handleDeschideAdaugare, handleInchideFormular,

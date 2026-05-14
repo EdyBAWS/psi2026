@@ -29,6 +29,14 @@ export interface ValidarePreluareResult {
     simptomeReclamate: boolean;
     termenPromis: boolean;
     tipPlata: boolean;
+    dosar: {
+      idDosarSelectat: boolean;
+      idAsigurator: boolean;
+      numarReferintaAsigurator: boolean;
+      dataConstatare: boolean;
+      inspectorDauna: boolean;
+      sumaAprobata: boolean;
+    };
   };
 }
 
@@ -164,6 +172,14 @@ export function valideazaPreluare({
     termenPromis: detaliiPreluare.termenPromis === "" || new Date(detaliiPreluare.termenPromis).getTime() < new Date().setHours(0, 0, 0, 0),
     tipPlata: (esteLucrareAsigurare && detaliiPreluare.tipPlata !== "Asigurare") || (!esteLucrareAsigurare && detaliiPreluare.tipPlata === "Asigurare"),
     pozitii: !suntPozitiiValide(pozitiiDraft),
+    dosar: {
+      idDosarSelectat: esteLucrareAsigurare && stareDosar.mod === "existent" && stareDosar.idDosarSelectat === null,
+      idAsigurator: esteLucrareAsigurare && stareDosar.mod === "nou" && stareDosar.idAsigurator === null,
+      numarReferintaAsigurator: esteLucrareAsigurare && stareDosar.mod === "nou" && stareDosar.numarReferintaAsigurator.trim().length === 0,
+      dataConstatare: esteLucrareAsigurare && stareDosar.mod === "nou" && stareDosar.dataConstatare === "",
+      inspectorDauna: esteLucrareAsigurare && stareDosar.mod === "nou" && stareDosar.inspectorDauna.trim().length === 0,
+      sumaAprobata: esteLucrareAsigurare && stareDosar.mod === "nou" && (!esteNumarCompletat(stareDosar.sumaAprobata) || stareDosar.sumaAprobata <= 0),
+    }
   };
 
   return {

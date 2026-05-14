@@ -71,7 +71,7 @@ export default function Kituri() {
           title="Nomenclator Kit-uri Piese"
           description="Un kit este un pachet predefinit de piese. Configurează kit-uri pentru revizii sau reparații comune pentru a lucra mai rapid la recepție."
           actions={
-            <Button variant="primary" onClick={arataFormular ? handleInchideFormular : handleDeschideAdaugare}>
+            <Button id="btn-add-kit" variant="primary" onClick={arataFormular ? handleInchideFormular : handleDeschideAdaugare}>
               {arataFormular ? 'Închide Formularul' : '+ Adaugă Kit'}
             </Button>
           }
@@ -109,27 +109,30 @@ export default function Kituri() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
             <Field
+              id="input-cod-kit"
               label="Cod Kit *"
               value={form.codKit}
-              onChange={(e) => setForm({ ...form, codKit: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, codKit: e.target.value })}
               placeholder="ex: KIT-REVIZIE-01"
               required
             />
             <Field
+              id="input-denumire-kit"
               label="Denumire Kit *"
               value={form.denumire}
-              onChange={(e) => setForm({ ...form, denumire: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, denumire: e.target.value })}
               placeholder="ex: Kit Revizie Ulei"
               wrapperClassName="md:col-span-2"
               required
             />
             <Field
+              id="input-reducere-kit"
               label="Reducere Aplicată (%)"
               type="number"
               min="0"
               max="100"
               value={form.reducere}
-              onChange={(e) => setForm({ ...form, reducere: Number(e.target.value) })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, reducere: Number(e.target.value) })}
             />
           </div>
 
@@ -138,7 +141,7 @@ export default function Kituri() {
               <h5 className="font-bold text-slate-700 flex items-center gap-2">
                 <PackagePlus className="w-5 h-5" /> Componente Kit ({form.piese.length} adăugate)
               </h5>
-              <Button type="button" size="sm" variant="outline" onClick={addPiesaToKit}>
+              <Button id="btn-add-componenta" type="button" size="sm" variant="outline" onClick={addPiesaToKit}>
                 <Plus className="w-4 h-4 mr-1" /> Adaugă Piesă
               </Button>
             </div>
@@ -148,9 +151,10 @@ export default function Kituri() {
                 <div key={index} className="flex gap-3 items-end p-2 -mx-2 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-100 hover:shadow-xs">
                   <div className="flex-1">
                     <SelectField
+                      id={`select-piesa-${index}`}
                       label={`Componenta #${index + 1}`}
                       value={p.idPiesa.toString()}
-                      onChange={(e) => updatePiesaInKit(index, 'idPiesa', Number(e.target.value))}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updatePiesaInKit(index, 'idPiesa', Number(e.target.value))}
                       options={pieseInventar.map(pi => ({
                         label: `${pi.codPiesa} - ${pi.denumire} (${pi.pretBaza} RON)`,
                         value: pi.idPiesa.toString()
@@ -159,11 +163,12 @@ export default function Kituri() {
                   </div>
                   <div className="w-32">
                     <Field
+                      id={`input-cantitate-${index}`}
                       label="Cantitate"
                       type="number"
                       min="1"
                       value={p.cantitate}
-                      onChange={(e) => updatePiesaInKit(index, 'cantitate', Number(e.target.value))}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updatePiesaInKit(index, 'cantitate', Number(e.target.value))}
                       required
                     />
                   </div>
@@ -203,7 +208,7 @@ export default function Kituri() {
             </div>
             <div className="flex gap-3">
               <Button variant="outline" type="button" onClick={handleInchideFormular}>Anulează</Button>
-              <Button variant="primary" type="submit">{editId !== null ? 'Salvează Modificări' : 'Creează Kit'}</Button>
+              <Button id="btn-save-kit" variant="primary" type="submit">{editId !== null ? 'Salvează Modificări' : 'Creează Kit'}</Button>
             </div>
           </div>
         </form>

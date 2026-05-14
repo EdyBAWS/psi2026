@@ -6,7 +6,7 @@ const mesajTelefon = 'Introdu un număr de telefon valid.';
 export const clientSchema = z
   .object({
     tipClient: z.enum(['PF', 'PJ']),
-    status: z.enum(['Activ', 'Inactiv']), 
+    status: z.enum(['Activ', 'Inactiv']).default('Activ'), 
     nume: z.string().trim().min(2, 'Numele / Denumirea este obligatorie.'), 
     prenume: z.string().trim().optional(), 
     telefon: z.string().trim().min(6, mesajTelefon),
@@ -40,7 +40,7 @@ export const clientSchema = z
 
 export const angajatSchema = z
   .object({
-    status: z.enum(['Activ', 'Inactiv']),
+    status: z.enum(['Activ', 'Inactiv']).default('Activ'),
     nume: z.string().trim().min(2, 'Numele este obligatoriu.'),
     prenume: z.string().trim().min(2, 'Prenumele este obligatoriu.'),
     CNP: z.string().trim().min(13, 'CNP-ul trebuie să aibă 13 caractere.'),
@@ -49,9 +49,9 @@ export const angajatSchema = z
     tipAngajat: z.enum(['Manager', 'Mecanic', 'Receptioner', 'Inspector', 'Contabil']),
     esteInspector: z.boolean().optional().default(false),
     departament: z.string().trim().optional(),
-    sporConducere: z.number({ error: 'Introdu un număr valid.' }).min(0, 'Minim 0.').optional(),
+    sporConducere: z.number().min(0, 'Minim 0.').optional(),
     specializare: z.string().trim().optional(),
-    costOrar: z.number({ error: 'Introdu un număr valid.' }).min(0, 'Minim 0.').optional(),
+    costOrar: z.number().min(0, 'Minim 0.').optional(),
     nrBirou: z.string().trim().optional(),
     tura: z.string().trim().optional(),
   })
@@ -87,6 +87,16 @@ export const asiguratorSchema = z.object({
   status: z.enum(['Activ', 'Inactiv'])
 });
 
+export const vehiculSchema = z.object({
+  numarInmatriculare: z.string().trim().min(5, 'Număr de înmatriculare invalid (minim 5 caractere).').transform(v => v.toUpperCase()),
+  marca: z.string().trim().min(2, 'Marca este obligatorie.'),
+  model: z.string().trim().min(1, 'Modelul este obligatoriu.'),
+  vin: z.string().trim().length(17, 'Seria de șasiu (VIN) trebuie să aibă exact 17 caractere.').or(z.literal('')),
+  idClient: z.number().min(1, 'Selectarea proprietarului este obligatorie.'),
+  status: z.enum(['Activ', 'Inactiv']).default('Activ'),
+});
+
 export type ClientFormValues = z.infer<typeof clientSchema>;
 export type AngajatFormValues = z.infer<typeof angajatSchema>;
 export type AsiguratorFormValues = z.infer<typeof asiguratorSchema>;
+export type VehiculFormValues = z.infer<typeof vehiculSchema>;

@@ -150,8 +150,14 @@ export async function simulateTyping(selector: string, text: string, speed: any,
   const proto = el instanceof HTMLInputElement ? window.HTMLInputElement.prototype : window.HTMLTextAreaElement.prototype;
   const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
   
-  setter?.call(el, "");
-  el.dispatchEvent(new Event('input', { bubbles: true }));
+  // Dacă este un câmp numeric, setăm valoarea direct pentru a evita problemele cu punctul zecimal
+  if (el instanceof HTMLInputElement && el.type === 'number') {
+    setter?.call(el, text);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    await helperWait(200, speed, pause, stop);
+    return true;
+  }
 
   for (const char of text) {
     await checkStop(stop);
@@ -189,4 +195,31 @@ export async function simulateSelect(selector: string, value: string, speed: any
   
   await helperWait(300, speed, pause, stop);
   return true;
+}
+
+export async function simulateSelectByLabel(selector: string, label: string, speed: any, pause: any, stop: any) {
+  await checkStop(stop);
+  let el = findElement(selector) as HTMLElement;
+  if (!el) {
+    await helperWait(1000, speed, pause, stop);
+    el = findElement(selector) as HTMLElement;
+  }
+  if (el && !(el instanceof HTMLSelectElement)) {
+    el = (el.querySelector('select') as HTMLElement) || el;
+  }
+  if (!el || !(el instanceof HTMLSelectElement)) return false;
+
+  // Așteptăm puțin să se populeze opțiunile dacă e un render nou (React sync)
+  if (el.options.length <= 1) {
+    await helperWait(600, speed, pause, stop);
+  }
+
+  const option = Array.from(el.options).find(opt => 
+    opt.text.toLowerCase().includes(label.toLowerCase())
+  );
+  
+  if (option) {
+    return simulateSelect(selector, option.value, speed, pause, stop);
+  }
+  return false;
 }

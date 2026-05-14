@@ -5,6 +5,9 @@
 // primită prin `value` și trimite modificările înapoi prin `onChange`.
 import type { StareDosarAsigurare } from "../../../receptie/formState";
 import type { Asigurator, DosarDauna, StatusDosar, Vehicul } from "../../../types";
+import { Field } from "../../../../../componente/ui/Field";
+import { SelectField } from "../../../../../componente/ui/SelectField";
+import { TextareaField } from "../../../../../componente/ui/TextareaField";
 
 interface SelectorDosarProps {
   asiguratori: Asigurator[];
@@ -14,6 +17,14 @@ interface SelectorDosarProps {
   vehicul: Vehicul | null;
   angajati: { idAngajat: number; nume: string; prenume: string; tipAngajat: string; specializare?: string }[];
   onChange: (value: StareDosarAsigurare) => void;
+  campuriCuEroare: {
+    idDosarSelectat: boolean;
+    idAsigurator: boolean;
+    numarReferintaAsigurator: boolean;
+    dataConstatare: boolean;
+    inspectorDauna: boolean;
+    sumaAprobata: boolean;
+  };
 }
 
 const statusuriDosar: StatusDosar[] = [
@@ -44,6 +55,7 @@ export default function SelectorDosar({
   vehicul,
   angajati,
   onChange,
+  campuriCuEroare,
 }: SelectorDosarProps) {
   const inspectori = angajati.filter((a) => a.tipAngajat === "Inspector");
 
@@ -142,32 +154,24 @@ export default function SelectorDosar({
         <div className="space-y-4">
           {/* În acest mod, utilizatorul doar alege un dosar deja cunoscut. */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Selectează dosarul existent
-            </label>
-            <select
-              // `?? ''` este un fallback: dacă nu avem un id selectat, dropdown-ul rămâne gol.
+            <SelectField
+              label="Selectează dosarul existent *"
               value={value.idDosarSelectat ?? ""}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 onChange({
                   ...value,
-                  idDosarSelectat:
-                    // `event.target.value` vine ca text din browser.
-                    // Îl transformăm în `null` sau `number`, după caz.
-                    event.target.value === ""
-                      ? null
-                      : Number(event.target.value),
+                  idDosarSelectat: event.target.value === "" ? null : Number(event.target.value),
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Selectează dosar</option>
-              {dosareVehicul.map((dosar) => (
-                <option key={dosar.idDosar} value={dosar.idDosar}>
-                  {dosar.numarDosar} · {dosar.statusAprobare}
-                </option>
-              ))}
-            </select>
+              options={[
+                { label: 'Selectează dosar', value: '' },
+                ...dosareVehicul.map(dosar => ({
+                  label: `${dosar.numarDosar} · ${dosar.statusAprobare}`,
+                  value: dosar.idDosar.toString()
+                }))
+              ]}
+              error={campuriCuEroare.idDosarSelectat ? "Selectarea dosarului este obligatorie." : undefined}
+            />
           </div>
 
           {dosarSelectat ? (
@@ -249,118 +253,83 @@ export default function SelectorDosar({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Asigurator
-            </label>
-            <select
+            <SelectField
+              label="Asigurator *"
               value={value.idAsigurator ?? ""}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 onChange({
                   ...value,
-                  idAsigurator:
-                    event.target.value === ""
-                      ? null
-                      : Number(event.target.value),
+                  idAsigurator: event.target.value === "" ? null : Number(event.target.value),
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Selectează asigurator</option>
-              {asiguratori.map((asigurator) => (
-                <option
-                  key={asigurator.idAsigurator}
-                  value={asigurator.idAsigurator}
-                >
-                  {asigurator.denumire}
-                </option>
-              ))}
-            </select>
+              options={[
+                { label: 'Selectează asigurator', value: '' },
+                ...asiguratori.map(a => ({ label: a.denumire, value: a.idAsigurator.toString() }))
+              ]}
+              error={campuriCuEroare.idAsigurator ? "Câmp obligatoriu" : undefined}
+            />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Tip poliță
-            </label>
-            <select
+            <SelectField
+              label="Tip poliță *"
               value={value.tipPolita}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 onChange({
                   ...value,
-                  tipPolita: event.target
-                    .value as StareDosarAsigurare["tipPolita"],
+                  tipPolita: event.target.value as StareDosarAsigurare["tipPolita"],
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="CASCO">CASCO</option>
-              <option value="RCA">RCA</option>
-            </select>
+              options={[
+                { label: 'CASCO', value: 'CASCO' },
+                { label: 'RCA', value: 'RCA' }
+              ]}
+            />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Status aprobare
-            </label>
-            <select
+            <SelectField
+              label="Status aprobare *"
               value={value.statusAprobare}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 onChange({
                   ...value,
                   statusAprobare: event.target.value as StatusDosar,
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {statusuriDosar.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+              options={statusuriDosar.map(s => ({ label: s, value: s }))}
+            />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Data constatării
-            </label>
-            <input
+            <Field
+              label="Data constatării *"
               type="date"
               value={value.dataConstatare}
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  dataConstatare: event.target.value,
-                })
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                onChange({ ...value, dataConstatare: event.target.value })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              error={campuriCuEroare.dataConstatare ? "Câmp obligatoriu" : undefined}
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Referință asigurator
-            </label>
-            <input
-              type="text"
+            <Field
+              label="Referință asigurator *"
               value={value.numarReferintaAsigurator}
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  numarReferintaAsigurator: event.target.value,
-                })
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                onChange({ ...value, numarReferintaAsigurator: event.target.value })
               }
               placeholder="Ex: ALT-CASCO-88214"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              error={campuriCuEroare.numarReferintaAsigurator ? "Câmp obligatoriu" : undefined}
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Inspector daună
-            </label>
-            <select
+            <SelectField
+              label="Inspector daună *"
               value={value.idInspector ?? ""}
-              onChange={(event) => {
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                 const id = event.target.value === "" ? null : Number(event.target.value);
                 const inspector = inspectori.find(i => i.idAngajat === id);
                 onChange({
@@ -369,71 +338,55 @@ export default function SelectorDosar({
                   inspectorDauna: inspector ? `${inspector.nume} ${inspector.prenume}` : ""
                 });
               }}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Selectează inspector</option>
-              {inspectori.map((insp) => (
-                <option key={insp.idAngajat} value={insp.idAngajat}>
-                  {insp.nume} {insp.prenume} · {insp.specializare}
-                </option>
-              ))}
-            </select>
+              options={[
+                { label: 'Selectează inspector', value: '' },
+                ...inspectori.map(i => ({ label: `${i.nume} ${i.prenume}`, value: i.idAngajat.toString() }))
+              ]}
+              error={campuriCuEroare.inspectorDauna ? "Câmp obligatoriu" : undefined}
+            />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Sumă aprobată
-            </label>
-            <input
+            <Field
+              label="Sumă aprobată *"
               type="number"
               min="0"
               step="0.01"
               value={value.sumaAprobata}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 onChange({
                   ...value,
-                  sumaAprobata:
-                    event.target.value === "" ? "" : Number(event.target.value),
+                  sumaAprobata: event.target.value === "" ? "" : Number(event.target.value),
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              error={campuriCuEroare.sumaAprobata ? "Sumă invalidă" : undefined}
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Franciză
-            </label>
-            <input
+            <Field
+              label="Franciză"
               type="number"
               min="0"
               step="0.01"
               value={value.franciza}
-              onChange={(event) =>
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 onChange({
                   ...value,
-                  franciza:
-                    event.target.value === "" ? "" : Number(event.target.value),
+                  franciza: event.target.value === "" ? "" : Number(event.target.value),
                 })
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div className="md:col-span-2 xl:col-span-4">
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Observații dosar
-            </label>
-            <textarea
+            <TextareaField
+              label="Observații dosar"
               value={value.observatiiDauna}
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  observatiiDauna: event.target.value,
-                })
-              }
               rows={3}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
+                onChange({ ...value, observatiiDauna: event.target.value })
+              }
               placeholder="Mențiuni despre constatare, limitări de aprobare sau pașii următori."
             />
           </div>

@@ -21,7 +21,7 @@ export type SortFieldManopera = 'codManopera' | 'denumire' | 'durataStd';
 export type SortDir = 'asc' | 'desc';
 
 // Starea goală a formularului — reutilizată la reset după submit/anulare.
-const FORM_INIT: Partial<ManoperaCatalog> = {
+export const FORM_INIT_MANOPERA: Partial<ManoperaCatalog> = {
   denumire: '',
   codManopera: '',
   categorie: 'Mecanică Ușoară',
@@ -37,7 +37,6 @@ export function useManopera() {
   // Stare formular — null înseamnă că nu se editează nimic (modul adăugare).
   const [editareId, setEditareId] = useState<number | null>(null);
   const [arataFormular, setArataFormular] = useState(false);
-  const [form, setForm] = useState<Partial<ManoperaCatalog>>(FORM_INIT);
 
   // Filtre și sortare — nu modifică lista brută.
   const [cautare, setCautare] = useState('');
@@ -83,17 +82,11 @@ export function useManopera() {
     });
 
   // ── CRUD ─────────────────────────────────────────────────────────────────────
-  const handleSalvare = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.codManopera || !form.denumire || !form.durataStd) {
-      toast.error('Completează toate câmpurile obligatorii.');
-      return;
-    }
-
+  const handleSalvare = async (data: any) => {
     try {
       if (editareId !== null) {
         // UPDATE
-        const actualizata = await updateManopera(editareId, form);
+        const actualizata = await updateManopera(editareId, data);
         setLista((prev) =>
           prev.map((m) => (m.idManopera === editareId ? actualizata : m)),
         );
@@ -101,7 +94,7 @@ export function useManopera() {
       } else {
         // INSERT
         const noua = await createManopera(
-          form as Omit<ManoperaCatalog, 'idManopera'>,
+          data as Omit<ManoperaCatalog, 'idManopera'>,
         );
         setLista((prev) => [noua, ...prev]);
         toast.success('Operațiunea a fost adăugată în nomenclator.');
@@ -114,7 +107,6 @@ export function useManopera() {
 
   const handleEditeaza = (item: ManoperaCatalog) => {
     setEditareId(item.idManopera);
-    setForm({ ...item });
     setArataFormular(true);
   };
 
@@ -131,12 +123,10 @@ const handleSterge = async (id: number) => {
   const handleInchideFormular = () => {
     setArataFormular(false);
     setEditareId(null);
-    setForm(FORM_INIT);
   };
 
   const handleDeschideAdaugare = () => {
     setEditareId(null);
-    setForm(FORM_INIT);
     setArataFormular(true);
   };
 
@@ -154,8 +144,6 @@ const handleSterge = async (id: number) => {
     error,
     mediaNorma,
     // Formular
-    form,
-    setForm,
     editareId,
     arataFormular,
     // Filtre

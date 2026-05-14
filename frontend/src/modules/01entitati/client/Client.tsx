@@ -22,7 +22,8 @@ export function Client() {
   const [confirmStatus, setConfirmStatus] = useState<{ id: number, action: 'Activ' | 'Inactiv' } | null>(null);
 
   const { register, control, handleSubmit, formState: { errors }, reset } = useForm<ClientFormValues>({
-    resolver: zodResolver(clientSchema),
+    resolver: zodResolver(clientSchema) as any,
+    mode: 'all',
     defaultValues: { tipClient: 'PF', soldDebitor: 0, status: 'Activ' }
   });
 
@@ -54,7 +55,7 @@ export function Client() {
           title="Gestiune Clienți" 
           description="Administrează clienții și datele necesare pentru facturare și relația comercială."
           actions={
-            <Button variant={isFormOpen ? "outline" : "primary"} onClick={isFormOpen ? () => setIsFormOpen(false) : deschideAdaugare}>
+            <Button id="btn-add-client" variant={isFormOpen ? "outline" : "primary"} onClick={isFormOpen ? () => setIsFormOpen(false) : deschideAdaugare}>
               {isFormOpen ? 'Închide Formularul' : '+ Adaugă Client'}
             </Button>
           }
@@ -87,33 +88,38 @@ export function Client() {
           <h4 className="mb-6 text-lg font-bold text-slate-800 border-b border-slate-100 pb-3">{editId ? 'Editare Profil Client' : 'Adăugare Client Nou'}</h4>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <SelectField 
-              label="Tip Client" options={[{ label: 'Persoană Fizică (PF)', value: 'PF' }, { label: 'Persoană Juridică (PJ)', value: 'PJ' }]}
+              id="select-tip-client"
+              label="Tip Client" options={[
+                { label: 'Alege tip...', value: '' },
+                { label: 'Persoană Fizică (PF)', value: 'PF' }, 
+                { label: 'Persoană Juridică (PJ)', value: 'PJ' }
+              ]}
               {...register('tipClient')} error={errors.tipClient?.message} 
             />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {tipClient === 'PF' ? (
                 <>
-                  <Field label="Nume *" {...register('nume')} error={errors.nume?.message} />
-                  <Field label="Prenume *" {...register('prenume')} error={errors.prenume?.message} />
-                  <Field label="CNP *" {...register('CNP')} error={errors.CNP?.message} />
-                  <Field label="Serie și Nr. CI *" {...register('serieCI')} error={errors.serieCI?.message} />
+                  <Field id="input-nume-client" label="Nume *" {...register('nume')} error={errors.nume?.message} />
+                  <Field id="input-prenume-client" label="Prenume *" {...register('prenume')} error={errors.prenume?.message} />
+                  <Field id="input-cnp-client" label="CNP *" {...register('CNP')} error={errors.CNP?.message} />
+                  <Field id="input-serie-ci-client" label="Serie și Nr. CI *" {...register('serieCI')} error={errors.serieCI?.message} />
                 </>
               ) : (
                 <>
-                  <Field label="Denumire Companie *" wrapperClassName="md:col-span-2" {...register('nume')} error={errors.nume?.message} />
-                  <Field label="CUI *" placeholder="RO..." {...register('CUI')} error={errors.CUI?.message} />
-                  <Field label="Nr. Reg. Comerțului *" {...register('nrRegCom')} error={errors.nrRegCom?.message} />
-                  <Field label="Cont IBAN" wrapperClassName="md:col-span-2" {...register('IBAN')} />
+                  <Field id="input-nume-client" label="Denumire Companie *" wrapperClassName="md:col-span-2" {...register('nume')} error={errors.nume?.message} />
+                  <Field id="input-cui-client" label="CUI *" placeholder="RO..." {...register('CUI')} error={errors.CUI?.message} />
+                  <Field id="input-regcom-client" label="Nr. Reg. Comerțului *" {...register('nrRegCom')} error={errors.nrRegCom?.message} />
+                  <Field id="input-iban-client" label="Cont IBAN" wrapperClassName="md:col-span-2" {...register('IBAN')} />
                 </>
               )}
-              <Field label="Telefon *" {...register('telefon')} error={errors.telefon?.message} />
-              <Field label="Email" type="email" {...register('email')} error={errors.email?.message} />
-              <Field label="Adresă *" wrapperClassName="md:col-span-2" {...register('adresa')} error={errors.adresa?.message} />
-              <Field label="Sold Debitor Inițial (RON)" type="number" step="0.01" {...register('soldDebitor', { valueAsNumber: true })} error={errors.soldDebitor?.message} />
+              <Field id="input-telefon-client" label="Telefon *" {...register('telefon')} error={errors.telefon?.message} />
+              <Field id="input-email-client" label="Email" type="email" {...register('email')} error={errors.email?.message} />
+              <Field id="input-adresa-client" label="Adresă *" wrapperClassName="md:col-span-2" {...register('adresa')} error={errors.adresa?.message} />
+              <Field id="input-sold-client" label="Sold Debitor Inițial (RON)" type="number" step="0.01" {...register('soldDebitor', { valueAsNumber: true })} error={errors.soldDebitor?.message} />
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-50">
               <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Anulează</Button>
-              <Button type="submit" variant="primary">Salvează Datele</Button>
+              <Button id="btn-save-client" type="submit" variant="primary">Salvează Datele</Button>
             </div>
           </form>
         </div>

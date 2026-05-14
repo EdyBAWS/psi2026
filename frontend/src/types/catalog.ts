@@ -1,5 +1,5 @@
 export type TipPiesaCatalog = "NOUA" | "SH";
-export type CategoriePiesa = "Filtre" | "Frânare" | "Motor & Distribuție" | "Electrice" | "Suspensie & Direcție" | "Climatizare" | "Altele";
+export type CategoriePiesa = "Filtre" | "Frânare" | "Motor & Distribuție" | "Electrice" | "Suspensie & Direcție" | "Climatizare" | "Lichide" | "Transmisie" | "Altele";
 export type CategorieManopera = "Mecanică Ușoară" | "Mecanică Grea" | "Diagnoză" | "Tinichigerie" | "Electrică";
 
 export interface PiesaCatalog {

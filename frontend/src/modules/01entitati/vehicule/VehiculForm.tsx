@@ -1,6 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X, Save } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../../../componente/ui/Button";
+import { Field } from "../../../componente/ui/Field";
+import { SelectField } from "../../../componente/ui/SelectField";
+import { vehiculSchema, type VehiculFormValues } from "../schemas";
 import type { VehiculEntity, ClientEntity } from "../entitati.service";
 
 interface VehiculFormProps {
@@ -11,38 +16,37 @@ interface VehiculFormProps {
 }
 
 export function VehiculForm({ initialData, clienti, onClose, onSave }: VehiculFormProps) {
-  const [formData, setFormData] = useState({
-    numarInmatriculare: "",
-    marca: "",
-    model: "",
-    vin: "",
-    idClient: "",
-    status: "Activ" as "Activ" | "Inactiv"
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<VehiculFormValues>({
+    resolver: zodResolver(vehiculSchema) as any,
+    mode: 'all',
+    defaultValues: {
+      numarInmatriculare: "",
+      marca: "",
+      model: "",
+      vin: "",
+      status: "Activ"
+    }
   });
 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
-      setFormData({
+      reset({
         numarInmatriculare: initialData.numarInmatriculare,
         marca: initialData.marca,
         model: initialData.model,
         vin: initialData.vin || "",
-        idClient: initialData.idClient.toString(),
-        status: initialData.status as "Activ" | "Inactiv"
+        idClient: initialData.idClient,
+        status: initialData.status as any
       });
     }
-  }, [initialData]);
+  }, [initialData, reset]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: VehiculFormValues) => {
     setLoading(true);
     try {
-      await onSave({
-        ...formData,
-        idClient: parseInt(formData.idClient, 10)
-      });
+      await onSave(data);
     } finally {
       setLoading(false);
     }
@@ -61,83 +65,67 @@ export function VehiculForm({ initialData, clienti, onClose, onSave }: VehiculFo
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
-        <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
-            Număr Înmatriculare
-          </label>
-          <input
-            required
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-            value={formData.numarInmatriculare}
-            onChange={e => setFormData({ ...formData, numarInmatriculare: e.target.value.toUpperCase() })}
-            placeholder="Ex: B-123-ABC"
-          />
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-5 space-y-4">
+        <Field
+          id="input-nr-vehicul"
+          label="Număr Înmatriculare *"
+          placeholder="Ex: B-123-ABC"
+          {...register('numarInmatriculare')}
+          error={errors.numarInmatriculare?.message}
+        />
 
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Marcă</label>
-            <input
-              required
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-              value={formData.marca}
-              onChange={e => setFormData({ ...formData, marca: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Model</label>
-            <input
-              required
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-              value={formData.model}
-              onChange={e => setFormData({ ...formData, model: e.target.value })}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Serie Șasiu (VIN)</label>
-          <input
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none"
-            value={formData.vin}
-            onChange={e => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
-            maxLength={17}
+          <Field
+            id="input-marca-vehicul"
+            label="Marcă *"
+            {...register('marca')}
+            error={errors.marca?.message}
+          />
+          <Field
+            id="input-model-vehicul"
+            label="Model *"
+            {...register('model')}
+            error={errors.model?.message}
           />
         </div>
 
-        <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Proprietar / Client</label>
-          <select
-            required
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-            value={formData.idClient}
-            onChange={e => setFormData({ ...formData, idClient: e.target.value })}
-          >
-            <option value="">Selectează un client...</option>
-            {clienti.map(client => (
-              <option key={client.idClient} value={client.idClient}>
-                {client.tipClient === "PJ" ? client.nume : `${client.nume} ${client.prenume || ""}`}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Field
+          id="input-vin-vehicul"
+          label="Serie Șasiu (VIN)"
+          placeholder="17 caractere"
+          className="font-mono"
+          maxLength={17}
+          {...register('vin')}
+          error={errors.vin?.message}
+        />
 
-        <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Status</label>
-          <select
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-            value={formData.status}
-            onChange={e => setFormData({ ...formData, status: e.target.value as "Activ" | "Inactiv" })}
-          >
-            <option value="Activ">Activ</option>
-            <option value="Inactiv">Inactiv</option>
-          </select>
-        </div>
+        <SelectField
+          id="select-client-vehicul"
+          label="Proprietar / Client *"
+          options={[
+            { label: 'Selectează client...', value: '' },
+            ...clienti.map(c => ({
+              label: c.tipClient === "PJ" ? c.nume : `${c.nume} ${c.prenume || ""}`,
+              value: c.idClient.toString()
+            }))
+          ]}
+          {...register('idClient', { valueAsNumber: true })}
+          error={errors.idClient?.message}
+        />
+
+        <SelectField
+          label="Status"
+          options={[
+            { label: 'Activ', value: 'Activ' },
+            { label: 'Inactiv', value: 'Inactiv' }
+          ]}
+          {...register('status')}
+          error={errors.status?.message}
+        />
       </form>
 
       <div className="border-t border-slate-100 p-4 bg-slate-50">
-        <Button fullWidth type="submit" onClick={handleSubmit} disabled={loading}>
+        <Button id="btn-save-vehicul" fullWidth type="button" onClick={handleSubmit(onSubmit)} disabled={loading}>
           <Save className="w-4 h-4 mr-2" /> {loading ? "Se salvează..." : "Salvează Vehicul"}
         </Button>
       </div>

@@ -97,6 +97,7 @@ export default function PreluareAuto(props: PreluareAutoProps) {
                   nrDosarPreview={derivate.preview.numarDosarPreview}
                   value={stare.stareDosar}
                   onChange={setters.setStareDosar}
+                  campuriCuEroare={derivate.validare.campuriCuEroare.dosar}
                 />
               )}
 

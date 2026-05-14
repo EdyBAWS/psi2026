@@ -21,6 +21,7 @@ export function Asigurator() {
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<AsiguratorFormValues>({
     resolver: zodResolver(asiguratorSchema),
+    mode: 'all',
     defaultValues: { 
       status: 'Activ', 
       termenPlataZile: 30,
@@ -81,7 +82,7 @@ export function Asigurator() {
           title="Societăți Asigurare" 
           description="Gestionează datele de contact și facturare pentru asigurători."
           actions={
-            <Button variant={isFormOpen ? "outline" : "primary"} onClick={isFormOpen ? () => setIsFormOpen(false) : deschideAdaugare}>
+            <Button id="btn-add-asigurator" variant={isFormOpen ? "outline" : "primary"} onClick={isFormOpen ? () => setIsFormOpen(false) : deschideAdaugare}>
               {isFormOpen ? 'Închide Formularul' : '+ Adaugă Asigurator'}
             </Button>
           }
@@ -113,26 +114,26 @@ export function Asigurator() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="md:col-span-2">
-                <Field label="Denumire Societate *" {...register('denumire')} error={errors.denumire?.message} />
+                <Field id="input-denumire-asigurator" label="Denumire Societate *" {...register('denumire')} error={errors.denumire?.message} />
               </div>
-              <Field label="CUI *" placeholder="RO..." {...register('CUI')} error={errors.CUI?.message} />
+              <Field id="input-cui-asigurator" label="CUI *" placeholder="RO..." {...register('CUI')} error={errors.CUI?.message} />
               
-              <Field label="Nr. Reg. Comerțului" placeholder="J.../..." {...register('nrRegCom')} error={errors.nrRegCom?.message} />
-              <Field label="Email Daune" placeholder="daune@..." {...register('emailDaune')} error={errors.emailDaune?.message} />
-              <Field label="Telefon" {...register('telefon')} error={errors.telefon?.message} />
+              <Field id="input-regcom-asigurator" label="Nr. Reg. Comerțului" placeholder="J.../..." {...register('nrRegCom')} error={errors.nrRegCom?.message} />
+              <Field id="input-email-asigurator" label="Email Daune" placeholder="daune@..." {...register('emailDaune')} error={errors.emailDaune?.message} />
+              <Field id="input-telefon-asigurator" label="Telefon" {...register('telefon')} error={errors.telefon?.message} />
               
               <div className="md:col-span-2">
-                <Field label="Cont IBAN" placeholder="RO..." {...register('IBAN')} error={errors.IBAN?.message} />
+                <Field id="input-iban-asigurator" label="Cont IBAN" placeholder="RO..." {...register('IBAN')} error={errors.IBAN?.message} />
               </div>
-              <Field label="Termen Plată (Zile)" type="number" {...register('termenPlataZile', { valueAsNumber: true })} error={errors.termenPlataZile?.message} />
+              <Field id="input-termen-asigurator" label="Termen Plată (Zile)" type="number" {...register('termenPlataZile', { valueAsNumber: true })} error={errors.termenPlataZile?.message} />
 
               <div className="md:col-span-3">
-                <Field label="Adresă Sediu" placeholder="Strada, Oraș, Județ..." {...register('adresa')} error={errors.adresa?.message} />
+                <Field id="input-adresa-asigurator" label="Adresă Sediu" placeholder="Strada, Oraș, Județ..." {...register('adresa')} error={errors.adresa?.message} />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-50">
               <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Anulează</Button>
-              <Button type="submit" variant="primary">Salvează Asigurator</Button>
+              <Button id="btn-save-asigurator" type="submit" variant="primary">Salvează Asigurator</Button>
             </div>
           </form>
         </div>

@@ -175,7 +175,7 @@ export default function Vehicule({ onNavigate }: { onNavigate?: (page: string) =
           title="Gestiune Vehicule" 
           description="Administrează flota auto a clienților și urmărește istoricul intervențiilor tehnice." 
           actions={
-            <Button variant={isFormOpen ? "outline" : "primary"} onClick={isFormOpen ? () => setIsFormOpen(false) : deschideAdaugare}>
+            <Button id="btn-add-vehicul" variant={isFormOpen ? "outline" : "primary"} onClick={isFormOpen ? () => setIsFormOpen(false) : deschideAdaugare}>
               {isFormOpen ? 'Închide Formularul' : '+ Adaugă Vehicul'}
             </Button>
           }
