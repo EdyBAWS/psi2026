@@ -9,6 +9,28 @@ Aplicație full-stack pentru administrarea unui service auto. Acoperă recepție
 
 ---
 
+## 🏛️ Arhitectură și Design (Sinteză)
+
+Sistemul este construit pe o **arhitectură în 3 straturi** (3-tier) cu o implementare strictă a modelului **MVC**:
+
+1.  **Stratul de Prezentare (Frontend - React 19)**:
+    *   **View**: Componente `.tsx` (doar afișare, fără logică).
+    *   **Controller**: Hook-uri `useX.ts` (gestionează starea și logica paginii).
+    *   **Model**: Servicii `*.service.ts` (izolează apelurile API).
+
+2.  **Stratul de Logică (Backend - NestJS)**:
+    *   Implementare **MVC Headless** (API-first, fără componenta **Model**).
+    *   **Controller**: Rutare și validare DTO.
+    *   **Service**: Logica de business (calcule, reguli, fluxuri).
+
+3.  **Stratul de Date (Persistență)**:
+    *   **Prisma ORM** acționează ca Model de date, comunicând direct cu **PostgreSQL**.
+
+> [!TIP]
+> Această separare asigură un cod curat, testabil și ușor de extins, unde fiecare fișier are o singură responsabilitate (**Separation of Concerns**).
+
+---
+
 ## 🚀 Simulator de Flux (Noutate!)
 
 Aplicația include acum un **Simulator de Flux Operațional** (`AutomatedFlow.tsx`), un instrument avansat pentru demonstrații și testare automată care permite:

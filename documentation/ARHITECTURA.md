@@ -89,7 +89,7 @@ export default function GestiuneComenzi() {
   return <table>...</table>;
 }
 
-// ✅ DA — componenta primește date procesate gata
+// ✅ DA — componenta primește date gata procesate 
 export default function GestiuneComenzi(props) {
   const { stare, setters, date } = useGestiuneComenzi(props);
   return <GestiuneComenziTable comenzi={date.liniiTabel} />;
