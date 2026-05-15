@@ -27,7 +27,183 @@ Sistemul este construit pe o **arhitectură în 3 straturi** (3-tier) cu o imple
     *   **Prisma ORM** acționează ca Model de date, comunicând direct cu **PostgreSQL**.
 
 > [!TIP]
-> Această separare asigură un cod curat, testabil și ușor de extins, unde fiecare fișier are o singură responsabilitate (**Separation of Concerns**).
+> Această separare asigură un cod curat, testabil și ușor de extins, unde fiecare fișier are o singură responsabilitate (**Separation of Concerns**). Toate cele 6 module principale (Catalog, Entități, Operațional, Facturare, Încasări, Notificări) respectă **exact același șablon**.
+
+### Diagramă Arhitectură Generală (Component Diagram)
+
+```plantuml
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+package "Frontend (React / Vite)" #F8FAFC {
+  [Interfață Utilizator (UI)] as UI
+  
+  package "Module Frontend" #E2E8F0 {
+    [00 Catalog\n(Piese, Manoperă)] as CatFE
+    [01 Entități\n(Clienți, Angajați)] as EntFE
+    [02 Operațional\n(Comenzi, Dosare)] as OpFE
+    [03 Facturare\n(Emiteri)] as FactFE
+    [04 Încasări\n(Plăți, Restanțe)] as IncFE
+    [05 Notificări] as NotifFE
+  }
+  
+  [API Client\n(Fișiere .service.ts)] as ApiClient
+  
+  UI --> CatFE
+  UI --> EntFE
+  UI --> OpFE
+  UI --> FactFE
+  UI --> IncFE
+  UI --> NotifFE
+  
+  CatFE --> ApiClient
+  EntFE --> ApiClient
+  OpFE --> ApiClient
+  FactFE --> ApiClient
+  IncFE --> ApiClient
+  NotifFE --> ApiClient
+}
+
+cloud "Rețea (Rute HTTP / REST)" as Net #E0F2FE
+
+package "Backend (NestJS)" #F0FDF4 {
+  package "Controllere (Interceptează Request-uri)" #DCFCE7 {
+    [CatalogController] as CatCtrl
+    [EntitatiController] as EntCtrl
+    [OperationalController] as OpCtrl
+    [FacturareController] as FactCtrl
+    [IncasariController] as IncCtrl
+  }
+  
+  package "Servicii (Logică de Business Centrală)" #BBF7D0 {
+    [CatalogService] as CatSvc
+    [EntitatiService] as EntSvc
+    [OperationalService] as OpSvc
+    [FacturareService] as FactSvc
+    [IncasariService] as IncSvc
+    [NotificariService] as NotifSvc
+  }
+  
+  [Prisma ORM\n(Data Mapper)] as Prisma #86EFAC
+  
+  CatCtrl --> CatSvc
+  EntCtrl --> EntSvc
+  OpCtrl --> OpSvc
+  FactCtrl --> FactSvc
+  IncCtrl --> IncSvc
+  
+  OpSvc -right-> NotifSvc : Emite alertă
+  FactSvc -right-> NotifSvc : Notifică factura emisă
+  IncSvc -right-> NotifSvc : Notifică plata
+  
+  CatSvc --> Prisma
+  EntSvc --> Prisma
+  OpSvc --> Prisma
+  FactSvc --> Prisma
+  IncSvc --> Prisma
+  NotifSvc --> Prisma
+}
+
+database "Bază de Date\n(PostgreSQL)" as DB #DBEAFE
+
+ApiClient --> Net
+Net --> CatCtrl
+Net --> EntCtrl
+Net --> OpCtrl
+Net --> FactCtrl
+Net --> IncCtrl
+
+Prisma --> DB : Rulare Queries SQL (CRUD)
+@enduml
+```
+
+![Diagrama Arhitectură Generală](documentation/Diagrama%20de%20secventa%20pentru%20Tot.png)
+
+### Exemplu Flux de Bază (Salvare Preluare Auto)
+
+Orice operațiune complexă de scriere urmează o secvență strict orchestrată. Mai jos este fluxul complet de creare a unei reparații (Recepție Auto):
+
+```plantuml
+@startuml
+!theme plain
+autonumber
+
+actor "Utilizator" as User
+
+box "Frontend (React / Vite)" #F0F8FF
+participant "View\n(Operational.tsx)" as Container
+participant "API Client\n(operational.service.ts)" as ApiClient
+end box
+
+box "Backend (NestJS)" #F0FFF0
+participant "Controller\n(OperationalController)" as Ctrl
+participant "Service\n(OperationalService)" as Svc
+participant "Model / ORM\n(PrismaService)" as Prisma
+end box
+
+database "Baza de date\n(PostgreSQL)" as DB
+
+User -> Container : Apasă butonul "Deschide comanda"
+activate Container
+
+== 1. Salvare Dosar Daună (Opțional) ==
+opt dosarNou există
+    Container -> ApiClient : createDosarDauna(dosarNou)
+    ApiClient -> Ctrl : POST /operational/dosare
+    Ctrl -> Svc : createDosar(data)
+    Svc -> Prisma : prisma.dosarDauna.create()
+    Prisma -> DB : INSERT
+    Prisma --> Svc : dosarSalvat
+    Svc --> Ctrl : dosarSalvat
+    Ctrl --> ApiClient : HTTP 201
+    ApiClient --> Container : dosarSalvat
+end
+
+== 2. Salvare Comandă Principală ==
+Container -> ApiClient : createComanda({ ...comanda, idDosar })
+ApiClient -> Ctrl : POST /operational/comenzi
+Ctrl -> Svc : createComanda(data)
+Svc -> Prisma : prisma.comanda.create(...)
+Prisma -> DB : INSERT
+Prisma --> Svc : comandaSalvata
+Svc --> Ctrl : comandaSalvata
+Ctrl --> ApiClient : HTTP 201
+ApiClient --> Container : comandaSalvata
+
+== 3. Salvare Poziții Deviz (Tranzacție) ==
+Container -> ApiClient : createPozitiiComanda(...)
+ApiClient -> Ctrl : POST /operational/comenzi/{id}/pozitii
+Ctrl -> Svc : updatePozitiiComanda(...)
+
+Svc -> Prisma : prisma.$transaction()
+Prisma -> DB : DELETE FROM ComandaPozitie WHERE idComanda = id
+Prisma -> DB : INSERT INTO ComandaPozitie (Multiplu)
+Prisma --> Svc : array poziții create
+Svc --> Ctrl : array poziții
+Ctrl --> ApiClient : HTTP 201
+ApiClient --> Container : pozitiiSalvate
+
+== 4. Finalizare ==
+Container -> ApiClient : fetchComenzi() (Refresh)
+ApiClient -> Ctrl : GET /operational/comenzi
+Ctrl -> Svc : getComenzi()
+Svc -> Prisma : prisma.comanda.findMany()
+Prisma -> DB : SELECT
+Prisma --> Svc : Date
+Svc --> Ctrl : Date
+Ctrl --> ApiClient : HTTP 200
+ApiClient --> Container : comenziActualizate
+
+Container -> Container : Actualizează state local
+Container -> User : Afișează Toast Succes
+deactivate Container
+
+@enduml
+```
+
+![Flux Operațional Preluare Auto](documentation/Diagrama%20de%20secventa%20pentru%20operational.png)
 
 ---
 
