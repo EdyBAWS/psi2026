@@ -214,18 +214,33 @@ export default function IstoricFacturare() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-slate-50 border-t border-slate-200">
+                  <tfoot className="bg-slate-50 border-t border-slate-200 font-medium">
                     <tr>
-                      <td colSpan={3} className="py-3 px-4 text-right text-slate-500 font-medium">Subtotal (fără TVA):</td>
-                      <td className="py-3 px-4 text-right font-bold text-slate-800">{facturaSelectata.totalFaraTVA.toFixed(2)} RON</td>
+                      <td colSpan={3} className="py-2.5 px-4 text-right text-slate-500">Subtotal (articole):</td>
+                      <td className="py-2.5 px-4 text-right text-slate-800">{facturaSelectata.totalFaraTVA.toFixed(2)} RON</td>
                     </tr>
+                    
+                    {facturaSelectata.discountProcent > 0 && (
+                      <tr className="text-emerald-600">
+                        <td colSpan={3} className="py-2 px-4 text-right">Discount ({facturaSelectata.discountProcent}%):</td>
+                        <td className="py-2 px-4 text-right font-bold">- {(facturaSelectata.totalFaraTVA * (facturaSelectata.discountProcent / 100)).toFixed(2)} RON</td>
+                      </tr>
+                    )}
+
+                    {facturaSelectata.penalizareProcent > 0 && (
+                      <tr className="text-rose-600">
+                        <td colSpan={3} className="py-2 px-4 text-right">Penalizare ({facturaSelectata.penalizareProcent}%):</td>
+                        <td className="py-2 px-4 text-right font-bold">+ {(facturaSelectata.totalFaraTVA * (facturaSelectata.penalizareProcent / 100)).toFixed(2)} RON</td>
+                      </tr>
+                    )}
+
                     <tr>
-                      <td colSpan={3} className="py-3 px-4 text-right text-slate-500 font-medium">TVA (19%):</td>
-                      <td className="py-3 px-4 text-right font-bold text-slate-800">{facturaSelectata.tva.toFixed(2)} RON</td>
+                      <td colSpan={3} className="py-2.5 px-4 text-right text-slate-500">TVA (19%):</td>
+                      <td className="py-2.5 px-4 text-right text-slate-800 font-bold">{facturaSelectata.tva.toFixed(2)} RON</td>
                     </tr>
-                    <tr>
-                      <td colSpan={3} className="py-3 px-4 text-right font-bold text-slate-800">TOTAL DE PLATĂ:</td>
-                      <td className="py-3 px-4 text-right font-bold text-indigo-600">{facturaSelectata.totalGeneral.toFixed(2)} RON</td>
+                    <tr className="bg-slate-900 text-white border-t-2 border-indigo-500">
+                      <td colSpan={3} className="py-4 px-4 text-right font-black uppercase tracking-widest text-[10px]">TOTAL DE PLATĂ:</td>
+                      <td className="py-4 px-4 text-right font-black text-lg">{facturaSelectata.totalGeneral.toFixed(2)} RON</td>
                     </tr>
                   </tfoot>
                 </table>

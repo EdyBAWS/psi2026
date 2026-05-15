@@ -147,11 +147,24 @@ export async function simulateTyping(selector: string, text: string, speed: any,
   await moveCursorTo(el);
   el.focus();
   
+  // Goluim câmpul înainte de a începe să scriem, pentru a evita suprapunerea datelor
   const proto = el instanceof HTMLInputElement ? window.HTMLInputElement.prototype : window.HTMLTextAreaElement.prototype;
   const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+  setter?.call(el, "");
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
   
   // Dacă este un câmp numeric, setăm valoarea direct pentru a evita problemele cu punctul zecimal
   if (el instanceof HTMLInputElement && el.type === 'number') {
+    setter?.call(el, text);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    await helperWait(200, speed, pause, stop);
+    return true;
+  }
+
+  // Pentru câmpurile de tip dată, setăm valoarea direct (typing caracter cu caracter poate invalida formatul intermediar)
+  if (el instanceof HTMLInputElement && el.type === 'date') {
     setter?.call(el, text);
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));

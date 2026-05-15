@@ -15,7 +15,7 @@ interface SelectorDosarProps {
   nrDosarPreview: string;
   value: StareDosarAsigurare;
   vehicul: Vehicul | null;
-  angajati: { idAngajat: number; nume: string; prenume: string; tipAngajat: string; specializare?: string }[];
+  angajati: { idAngajat: number; nume: string; prenume: string; tipAngajat: string; specializare?: string; esteInspector?: boolean }[];
   onChange: (value: StareDosarAsigurare) => void;
   campuriCuEroare: {
     idDosarSelectat: boolean;
@@ -57,7 +57,7 @@ export default function SelectorDosar({
   onChange,
   campuriCuEroare,
 }: SelectorDosarProps) {
-  const inspectori = angajati.filter((a) => a.tipAngajat === "Inspector");
+  const inspectori = angajati.filter((a) => a.tipAngajat === "Inspector" || a.esteInspector === true);
 
   // Fără vehicul selectat nu putem ști ce dosare sunt relevante,
   // deci afișăm doar un mesaj de ghidare.
@@ -115,6 +115,7 @@ export default function SelectorDosar({
 
         <div className="flex flex-wrap gap-2">
           <button
+            id="btn-mod-dosar-existent"
             type="button"
             onClick={() => schimbaMod("existent")}
             disabled={!existaDosare}
@@ -127,6 +128,7 @@ export default function SelectorDosar({
             Dosar existent
           </button>
           <button
+            id="btn-mod-dosar-nou"
             type="button"
             onClick={() => schimbaMod("nou")}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
@@ -254,6 +256,7 @@ export default function SelectorDosar({
 
           <div>
             <SelectField
+              id="select-asigurator-dosar"
               label="Asigurator *"
               value={value.idAsigurator ?? ""}
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
@@ -272,6 +275,7 @@ export default function SelectorDosar({
 
           <div>
             <SelectField
+              id="select-tip-polita-dosar"
               label="Tip poliță *"
               value={value.tipPolita}
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
@@ -289,6 +293,7 @@ export default function SelectorDosar({
 
           <div>
             <SelectField
+              id="select-status-dosar"
               label="Status aprobare *"
               value={value.statusAprobare}
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
@@ -303,6 +308,7 @@ export default function SelectorDosar({
 
           <div>
             <Field
+              id="input-data-constatare-dosar"
               label="Data constatării *"
               type="date"
               value={value.dataConstatare}
@@ -315,6 +321,7 @@ export default function SelectorDosar({
 
           <div>
             <Field
+              id="input-referinta-asigurator-dosar"
               label="Referință asigurator *"
               value={value.numarReferintaAsigurator}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
@@ -327,6 +334,7 @@ export default function SelectorDosar({
 
           <div>
             <SelectField
+              id="select-inspector-dosar"
               label="Inspector daună *"
               value={value.idInspector ?? ""}
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -348,6 +356,7 @@ export default function SelectorDosar({
 
           <div>
             <Field
+              id="input-suma-aprobata-dosar"
               label="Sumă aprobată *"
               type="number"
               min="0"
@@ -365,6 +374,7 @@ export default function SelectorDosar({
 
           <div>
             <Field
+              id="input-franciza-dosar"
               label="Franciză"
               type="number"
               min="0"
@@ -381,6 +391,7 @@ export default function SelectorDosar({
 
           <div className="md:col-span-2 xl:col-span-4">
             <TextareaField
+              id="input-observatii-dosar"
               label="Observații dosar"
               value={value.observatiiDauna}
               rows={3}

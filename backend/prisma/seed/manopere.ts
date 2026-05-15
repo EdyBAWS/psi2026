@@ -55,14 +55,14 @@ export async function seedManopere(prisma: PrismaClient) {
       {
         codManopera: 'MAN-PARBRIZ',
         denumire: 'Înlocuire Parbriz și Calibrare Senzori',
-        categorie: 'Caroserie',
+        categorie: 'Mecanică Ușoară',
         durataStd: 3.0,
         pretOra: 260,
       },
       {
         codManopera: 'MAN-DIRECTIE',
         denumire: 'Verificare și Reglaj Direcție',
-        categorie: 'Suspensie & Direcție',
+        categorie: 'Mecanică Ușoară',
         durataStd: 1.2,
         pretOra: 220,
       },

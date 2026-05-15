@@ -24,6 +24,13 @@ export function useFacturare() {
     else _setDiscountProcent(val);
   };
 
+  const [penalizareProcent, _setPenalizareProcent] = useState<number>(0);
+  const setPenalizareProcent = (val: number) => {
+    if (val < 0) _setPenalizareProcent(0);
+    else if (val > 100) _setPenalizareProcent(100);
+    else _setPenalizareProcent(val);
+  };
+
   const [cautare, setCautare] = useState('');
   const [sortField, setSortField] = useState<FacturareSortField>('data');
   const [sortDir, setSortDir] = useState<FacturareSortDir>('desc');
@@ -64,6 +71,9 @@ export function useFacturare() {
   useEffect(() => {
     if (comandaSelectata) {
       FacturareService.fetchLiniiFactura(comandaSelectata.idComanda).then(setLiniiFactura);
+      // Resetăm discount și penalizare la schimbarea comenzii
+      setDiscountProcent(0);
+      setPenalizareProcent(0);
     } else {
       setLiniiFactura([]);
     }
@@ -92,11 +102,12 @@ export function useFacturare() {
     return comenziGata.reduce((acc, c) => acc + (c.totalEstimat || 0), 0);
   }, [comenziGata]);
 
-  const { subtotal, valoareDiscount, valoareTVA, totalPlata, dataScadenta } = useMemo(() => {
+  const { subtotal, valoareDiscount, valoarePenalizare, valoareTVA, totalPlata, dataScadenta } = useMemo(() => {
     const sub = liniiFactura.reduce((acc, l) => acc + (l.cantitate * l.pretUnitar), 0);
     const disc = sub * (discountProcent / 100);
-    const subDupaDiscount = sub - disc;
-    const tva = subDupaDiscount * 0.19;
+    const pen = sub * (penalizareProcent / 100);
+    const subFinal = sub - disc + pen;
+    const tva = subFinal * 0.19;
 
     const scadenta = new Date();
     scadenta.setDate(scadenta.getDate() + termenPlata);
@@ -104,11 +115,12 @@ export function useFacturare() {
     return { 
       subtotal: sub, 
       valoareDiscount: disc,
+      valoarePenalizare: pen,
       valoareTVA: tva, 
-      totalPlata: subDupaDiscount + tva, 
+      totalPlata: subFinal + tva, 
       dataScadenta: scadenta.toISOString().split('T')[0] 
     };
-  }, [liniiFactura, discountProcent, termenPlata]);
+  }, [liniiFactura, discountProcent, penalizareProcent, termenPlata]);
 
   const handleEmitereFactura = async () => {
     if (!comandaSelectata || !numarFactura) return toast.error('Completarea datelor este obligatorie.');
@@ -127,6 +139,7 @@ export function useFacturare() {
           idComanda: comandaSelectata.idComanda,
           scadenta: new Date(dataScadenta).toISOString(),
           discountProcent: discountProcent,
+          penalizareProcent: penalizareProcent,
           iteme: liniiFactura.map(l => ({ 
             descriere: l.denumire, 
             cantitate: l.cantitate, 
@@ -184,7 +197,8 @@ export function useFacturare() {
     handleSort: (f: FacturareSortField) => { setSortField(f); setSortDir(prev => prev === 'asc' ? 'desc' : 'asc'); },
     serieFactura, setSerieFactura, numarFactura, setNumarFactura,
     termenPlata, setTermenPlata, discountProcent, setDiscountProcent,
-    liniiFactura, subtotal, valoareDiscount, valoareTVA, totalPlata, dataScadenta,
+    penalizareProcent, setPenalizareProcent,
+    liniiFactura, subtotal, valoareDiscount, valoarePenalizare, valoareTVA, totalPlata, dataScadenta,
     handleEmitereFactura
   };
 }

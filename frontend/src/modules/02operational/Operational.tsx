@@ -79,6 +79,12 @@ export default function Operational({ onNavigate, view }: OperationalProps) {
       setPozitii((prev) => [...prev, ...pozitiiSalvate]);
 
       toast.success(`Comanda ${comandaSalvata.numarComanda} a fost deschisă cu succes.`);
+      
+      // Curățăm manual sessionStorage pentru a asigura un formular proaspăt la următoarea intrare
+      ["preluare-vehicul", "preluare-detalii", "preluare-dosar", "preluare-pozitii", "preluare-mecanici", "preluare-este-asigurare"].forEach(key => {
+        window.sessionStorage.removeItem(key);
+      });
+
       onNavigate("operational-comenzi");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Comanda nu a putut fi salvată.");

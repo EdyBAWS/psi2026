@@ -11,7 +11,8 @@ export default function Facturare() {
     cautare, setCautare, sortField, sortDir, handleSort,
     serieFactura, setSerieFactura, numarFactura, setNumarFactura,
     termenPlata, setTermenPlata, discountProcent, setDiscountProcent,
-    liniiFactura, subtotal, valoareTVA, valoareDiscount, totalPlata, dataScadenta,
+    penalizareProcent, setPenalizareProcent,
+    liniiFactura, subtotal, valoareTVA, valoareDiscount, valoarePenalizare, totalPlata, dataScadenta,
     handleEmitereFactura
   } = useFacturare();
 
@@ -235,57 +236,98 @@ export default function Facturare() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-end gap-6 pt-4 border-t border-slate-100">
-            <div className="w-full md:w-1/3">
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Aplică Discount Comercial (%)
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={discountProcent}
-                  onChange={(e) => setDiscountProcent(Number(e.target.value))}
-                  className="w-24 border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 text-center font-bold"
-                />
-                <button
-                  onClick={() => setDiscountProcent(0)}
-                  className="text-xs text-slate-500 hover:text-red-500 underline"
-                >
-                  Anulează Discount
-                </button>
+            <div className="w-full md:w-1/2 flex flex-wrap gap-8">
+              <div className="w-full md:w-fit">
+                <label className="block text-sm font-semibold text-slate-700 mb-1 uppercase tracking-wide text-[10px]">
+                  Discount Comercial (%)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="input-discount-factura"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={discountProcent}
+                    onChange={(e) => setDiscountProcent(Number(e.target.value))}
+                    className="w-20 border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 text-center font-bold"
+                  />
+                  {discountProcent > 0 && (
+                    <button
+                      onClick={() => setDiscountProcent(0)}
+                      className="text-[10px] font-bold text-rose-500 hover:underline uppercase"
+                    >
+                      Anulează
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="w-full md:w-fit">
+                <label className="block text-sm font-semibold text-slate-700 mb-1 uppercase tracking-wide text-[10px]">
+                  Penalizare Întârziere (%)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="input-penalizare-factura"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={penalizareProcent}
+                    onChange={(e) => setPenalizareProcent(Number(e.target.value))}
+                    className="w-20 border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 text-center font-bold"
+                  />
+                  {penalizareProcent > 0 && (
+                    <button
+                      onClick={() => setPenalizareProcent(0)}
+                      className="text-[10px] font-bold text-rose-500 hover:underline uppercase"
+                    >
+                      Anulează
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="w-full md:w-1/3 bg-slate-800 p-6 rounded-xl shadow-lg text-white space-y-2">
-              <div className="flex justify-between text-sm text-slate-300">
-                <span>Subtotal (fără TVA):</span>
+            <div className="w-full md:w-1/3 bg-slate-900 p-6 rounded-2xl shadow-2xl text-white space-y-3 border border-white/5">
+              <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <span>Subtotal</span>
                 <span>{subtotal.toFixed(2)} RON</span>
               </div>
+              
               {discountProcent > 0 && (
-                <div className="flex justify-between text-sm text-green-400">
-                  <span>Discount ({discountProcent}%):</span>
+                <div className="flex justify-between text-sm font-bold text-emerald-400">
+                  <span>Discount ({discountProcent}%)</span>
                   <span>- {valoareDiscount.toFixed(2)} RON</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm text-slate-300">
-                <span>TVA (19%):</span>
+
+              {penalizareProcent > 0 && (
+                <div className="flex justify-between text-sm font-bold text-rose-400">
+                  <span>Penalizare ({penalizareProcent}%)</span>
+                  <span>+ {valoarePenalizare.toFixed(2)} RON</span>
+                </div>
+              )}
+
+              <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <span>TVA (19%)</span>
                 <span>{valoareTVA.toFixed(2)} RON</span>
               </div>
-              <div className="flex justify-between text-xl font-bold pt-3 border-t border-slate-600">
-                <span>TOTAL DE PLATĂ:</span>
-                <span className="text-indigo-300">{totalPlata.toFixed(2)} RON</span>
+              
+              <div className="flex justify-between text-xl font-black pt-4 border-t border-white/10 mt-2">
+                <span className="text-indigo-200">TOTAL</span>
+                <span className="text-white">{totalPlata.toFixed(2)} RON</span>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-6">
             <button
               id="btn-save-factura"
               onClick={handleEmitereFactura}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all font-bold text-lg tracking-wide"
+              className="group relative overflow-hidden rounded-2xl bg-indigo-600 px-10 py-4 text-sm font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-indigo-200 transition-all hover:bg-indigo-700 hover:-translate-y-1 active:translate-y-0"
             >
-              ✔ Emite și Salvează Factura
+              <span className="relative z-10">✔ Emite și Salvează Factura</span>
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
             </button>
           </div>
         </div>

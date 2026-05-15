@@ -44,7 +44,7 @@ export function useAngajat() {
   const angajatiActivi = lista.filter(a => a.status === 'Activ');
   const totalMecanici = angajatiActivi.filter(a => a.tipAngajat === 'Mecanic').length;
   const totalManageri = angajatiActivi.filter(a => a.tipAngajat === 'Manager').length;
-  const totalInspectori = angajatiActivi.filter(a => a.tipAngajat === 'Inspector').length;
+  const totalInspectori = angajatiActivi.filter(a => a.tipAngajat === 'Inspector' || a.esteInspector === true).length;
 
   return {
     listaFiltrata, loading, cautare, setCautare, arataInactivi, setArataInactivi,

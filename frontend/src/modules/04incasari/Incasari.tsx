@@ -146,7 +146,7 @@ export default function Incasari() {
 
               {facturiRestante.length > 0 ? (
                 <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
-                  {facturiRestante.map((factura, index) => {
+                  {facturiRestante.map((factura) => {
                     const alocatNum = Number(factura.sumaAlocata) || 0;
                     const esteAchitatIntegral = alocatNum === factura.restDePlata && alocatNum > 0;
                     const estePlatitPartial = alocatNum > 0 && alocatNum < factura.restDePlata;
@@ -177,7 +177,7 @@ export default function Incasari() {
 
                         <div className="mt-3 md:mt-0 flex w-full md:w-auto items-center gap-3">
                           <Button
-                            id={`btn-pay-all-${index}`}
+                            id={`btn-incaseaza-max-${factura.numar}`}
                             variant="outline"
                             size="sm"
                             type="button"

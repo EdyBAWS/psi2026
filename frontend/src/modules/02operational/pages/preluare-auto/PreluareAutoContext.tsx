@@ -35,7 +35,7 @@ export default function PreluareAutoContext({
           </div>
           <label className="inline-flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100">
             <span className="text-sm font-semibold text-slate-700">Daună</span>
-            <input type="checkbox" checked={esteLucrareAsigurare} onChange={(e) => onSchimbaFluxAsigurare(e.target.checked)} className="h-4 w-4 rounded text-indigo-600" />
+            <input id="checkbox-flux-asigurare" type="checkbox" checked={esteLucrareAsigurare} onChange={(e) => onSchimbaFluxAsigurare(e.target.checked)} className="h-4 w-4 rounded text-indigo-600" />
           </label>
         </div>
         {comandaActivaExistenta && (

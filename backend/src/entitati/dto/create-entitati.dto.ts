@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { StatusGeneral, TipAngajat, TipClient } from '@prisma/client';
 
 export class CreateClientDto {
@@ -75,6 +75,10 @@ export class CreateAngajatDto {
 
   @IsEnum(TipAngajat)
   tipAngajat: TipAngajat;
+
+  @IsOptional()
+  @IsBoolean()
+  esteInspector?: boolean;
 
   @IsOptional()
   @IsString()

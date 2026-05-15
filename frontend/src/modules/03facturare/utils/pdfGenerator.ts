@@ -122,34 +122,68 @@ export function generareFacturaPDF(factura: any) {
   const finalY = (doc as any).lastAutoTable.finalY + 15;
   const rightColX = pageWidth - 14;
 
+  // Calculăm de câte linii avem nevoie în caseta de totaluri
+  let extraLines = 0;
+  if (factura.discountProcent > 0) extraLines++;
+  if (factura.penalizareProcent > 0) extraLines++;
+  
+  const boxHeight = 35 + (extraLines * 8);
+  const boxWidth = 75;
+  const boxX = pageWidth - boxWidth - 14;
+
   // Total Box Background
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(pageWidth - 80, finalY - 5, 66, 35, 2, 2, 'F');
+  doc.roundedRect(boxX, finalY - 5, boxWidth, boxHeight, 2, 2, 'F');
   doc.setDrawColor(226, 232, 240);
-  doc.roundedRect(pageWidth - 80, finalY - 5, 66, 35, 2, 2, 'S');
+  doc.roundedRect(boxX, finalY - 5, boxWidth, boxHeight, 2, 2, 'S');
+  
+  let currentY = finalY + 5;
   
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text('Subtotal:', pageWidth - 80 + 5, finalY + 5);
+  doc.text('Subtotal:', boxX + 5, currentY);
   doc.setTextColor(51, 65, 85);
   doc.setFont("helvetica", "bold");
-  doc.text(`${factura.totalFaraTVA.toFixed(2)} RON`, rightColX - 5, finalY + 5, { align: 'right' });
+  doc.text(`${factura.totalFaraTVA.toFixed(2)} RON`, rightColX - 5, currentY, { align: 'right' });
   
+  if (factura.discountProcent > 0) {
+    currentY += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(16, 185, 129); // emerald-500
+    doc.text(`Discount (${factura.discountProcent}%):`, boxX + 5, currentY);
+    doc.setFont("helvetica", "bold");
+    const valDisc = factura.totalFaraTVA * (factura.discountProcent / 100);
+    doc.text(`- ${valDisc.toFixed(2)} RON`, rightColX - 5, currentY, { align: 'right' });
+  }
+
+  if (factura.penalizareProcent > 0) {
+    currentY += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(225, 29, 72); // rose-600
+    doc.text(`Penalizare (${factura.penalizareProcent}%):`, boxX + 5, currentY);
+    doc.setFont("helvetica", "bold");
+    const valPen = factura.totalFaraTVA * (factura.penalizareProcent / 100);
+    doc.text(`+ ${valPen.toFixed(2)} RON`, rightColX - 5, currentY, { align: 'right' });
+  }
+
+  currentY += 8;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
-  doc.text('TVA (19%):', pageWidth - 80 + 5, finalY + 13);
+  doc.text('TVA (19%):', boxX + 5, currentY);
   doc.setTextColor(51, 65, 85);
   doc.setFont("helvetica", "bold");
-  doc.text(`${factura.tva.toFixed(2)} RON`, rightColX - 5, finalY + 13, { align: 'right' });
+  doc.text(`${factura.tva.toFixed(2)} RON`, rightColX - 5, currentY, { align: 'right' });
   
   // Divider inside total box
+  currentY += 5;
   doc.setDrawColor(226, 232, 240);
-  doc.line(pageWidth - 80 + 5, finalY + 18, rightColX - 5, finalY + 18);
+  doc.line(boxX + 5, currentY, rightColX - 5, currentY);
 
+  currentY += 8;
   doc.setFontSize(12);
   doc.setTextColor(79, 70, 229); // indigo-600
-  doc.text('TOTAL:', pageWidth - 80 + 5, finalY + 25);
-  doc.text(`${factura.totalGeneral.toFixed(2)} RON`, rightColX - 5, finalY + 25, { align: 'right' });
+  doc.text('TOTAL:', boxX + 5, currentY);
+  doc.text(`${factura.totalGeneral.toFixed(2)} RON`, rightColX - 5, currentY, { align: 'right' });
 
   // Footer
   doc.setFont("helvetica", "normal");

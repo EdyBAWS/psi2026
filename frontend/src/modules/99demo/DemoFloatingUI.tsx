@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Pause, Square, ChevronDown, ChevronUp, Terminal, Activity, Loader2, AlertCircle } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ChevronUp, Terminal, Activity, Loader2, AlertCircle, Lock } from 'lucide-react';
 import { useDemo } from './DemoContext';
 import { cn } from '../../lib/cn';
 
@@ -15,12 +15,26 @@ export default function DemoFloatingUI() {
   const progress = (completedCount / (steps.length || 1)) * 100;
 
   return (
-    <div className={cn(
-      "fixed bottom-8 right-8 z-[10000] transition-all duration-500 ease-in-out",
-      isExpanded ? "w-96" : "w-auto"
-    )}>
-      {/* MAIN WIDGET */}
-      <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 overflow-hidden flex flex-col">
+    <>
+      {/* GLOBAL LOCK OVERLAY (Invisible but still blocking) */}
+      {isRunning && !isPaused && (
+        <div className="fixed inset-0 z-[9999] bg-slate-900/5 cursor-not-allowed select-none backdrop-blur-[0.5px]" />
+      )}
+
+      <div className={cn(
+        "fixed bottom-8 right-8 z-[10000] transition-all duration-500 ease-in-out flex flex-col items-end gap-3",
+        isExpanded ? "w-96" : "w-auto"
+      )}>
+        {/* LOCK NOTIFICATION ATTACHED TO WIDGET */}
+        {isRunning && !isPaused && (
+          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-white/50 flex items-center gap-2 animate-in slide-in-from-bottom-4 duration-300">
+            <Lock size={14} className="text-indigo-600" />
+            <span className="text-[10px] font-black text-slate-800 tracking-tight uppercase">Interfață Blocată</span>
+          </div>
+        )}
+
+        {/* MAIN WIDGET */}
+        <div className="w-full bg-white/80 backdrop-blur-2xl rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 overflow-hidden flex flex-col">
 
         {/* HEADER */}
         <div className="bg-indigo-600 px-6 py-4 flex items-center justify-between text-white shadow-lg">
@@ -143,6 +157,7 @@ export default function DemoFloatingUI() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

@@ -121,7 +121,7 @@ export function Angajat() {
                       {...register('esteInspector')} 
                       className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" 
                     />
-                    <label htmlFor="esteInspector" className="text-sm font-semibold text-slate-700 cursor-pointer">
+                    <label htmlFor="input-este-inspector" className="text-sm font-semibold text-slate-700 cursor-pointer">
                       Acest mecanic este și Inspector Daune (permite alocarea pe dosare)
                     </label>
                   </div>
