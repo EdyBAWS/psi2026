@@ -98,7 +98,8 @@ frontend/
 │   │   ├── 02operational/
 │   │   ├── 03facturare/
 │   │   ├── 04incasari/
-│   │   └── 05notificari/
+│   │   ├── 05notificari/
+│   │   └── 99demo/
 │   └── types/
 └── dist/
 ```
@@ -258,7 +259,7 @@ Acoperă:
 - preluarea vehiculului
 - deschiderea comenzii service
 - poziții de deviz
-- subtotal / TVA / total
+- subtotal / TVA / total (cu suport pentru discount/penalizări)
 - listare și detalii comenzi
 
 Fișiere importante:
@@ -315,10 +316,17 @@ Conține centrul de notificări.
 
 Starea actuală:
 
-- consumă `src/mock/notificari.ts`
-- folosește `ConfirmDialog` pentru acțiuni destructive
-- folosește toast-uri
-- poate direcționa utilizatorul către zone ale aplicației prin navigația state-based
+- Poate direcționa utilizatorul către zone ale aplicației prin navigația state-based.
+
+### `src/modules/99demo` — Simulator Flux
+
+Acesta este un modul avansat de demonstrație și testare automată.
+
+Acoperă:
+- Popularea automată a bazei de date cu un set complet de date demo.
+- Executarea automată a fluxurilor de recepție (RCA, CASCO, Flotă).
+- Controlul vitezei de simulare, pauză și terminal de log-uri live.
+- Blocarea interfeței pentru a asigura integritatea demo-ului.
 
 ## Fluxurile demo dintre module
 

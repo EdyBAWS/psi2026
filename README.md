@@ -1,6 +1,21 @@
 # Service Auto G — Aplicație de Management Service Auto
 
+> [!IMPORTANT]
+> Pentru o privire de ansamblu asupra structurii tehnice, a deciziilor de design și a cerințelor funcționale, consultă:
+> - [ARHITECTURĂ APLICAȚIE](documentation/ARHITECTURA.md)
+> - [SPECIFICAȚII DE CERINȚE (REQUIREMENTS)](documentation/requirements.md)
+
 Aplicație full-stack pentru administrarea unui service auto. Acoperă recepție vehicule, dosare de daună, comenzi de reparație, catalog piese & manoperă, kituri de piese, facturare fiscală, încasări și notificări persistate în baza de date.
+
+---
+
+## 🚀 Simulator de Flux (Noutate!)
+
+Aplicația include acum un **Simulator de Flux Operațional** (`AutomatedFlow.tsx`), un instrument avansat pentru demonstrații și testare automată care permite:
+- **Populare Automată**: Inițializarea bazei de date cu date de test (piese, kituri, clienți, vehicule).
+- **Scenarii Business Complexe**: Executarea automată a fluxului de recepție pentru diverse cazuri (Dosar RCA, Dosar CASCO, Reparație Directă).
+- **Control Vizual**: Interfață blocată în timpul rulării, terminal de log-uri live și controale de viteză/pauză.
+- **Validare E2E**: Verificarea întregului proces, de la intrarea mașinii în service până la emiterea facturii finale.
 
 ---
 
@@ -157,7 +172,7 @@ psi2026/
 |----------|----------------|
 | `client/` | Clienți PF/PJ, CNP/CUI/serieCI, sold debitor, activare/dezactivare |
 | `vehicule/` | Flotă auto, VIN, marca/model, proprietar, istoric comenzi per vehicul cu navigare directă |
-| `angajat/` | Personal (Manager/Mecanic/Receptioner), cost orar, specializare, departament |
+| `angajat/` | Personal (Manager/Mecanic/Receptioner), cost orar, specializare, **rol dublu (Mecanic + Inspector Daune)** |
 | `asigurator/` | Societăți asigurare, CUI, termen plată zile, email daune, IBAN |
 
 ### `02operational` — Flux Operațional
@@ -179,8 +194,8 @@ psi2026/
 
 | Submodul | Funcționalități |
 |----------|----------------|
-| `facturare/` | Emitere factură din comandă finalizată, serie/număr/scadență, discount comercial, linii extrase din deviz, total cu TVA |
-| `istoric/` | Registru facturi emise, filtru tip operațiune, vizualizare detalii factură, descărcare PDF |
+| `facturare/` | Emitere factură din comandă finalizată, serie/număr/scadență, **discount comercial și penalizări**, linii extrase din deviz, total cu TVA |
+| `istoric/` | Registru facturi emise, filtru tip operațiune, **vizualizare detalii cu discount/penalizări**, descărcare PDF |
 | `penalizari/` | Calculul penalizărilor de întârziere, procent configurat, 2 zecimale, aplicare manuală |
 | `oferte/` | Campanii și oferte comerciale |
 
@@ -205,6 +220,12 @@ psi2026/
 - Tipuri: `Info`, `Avertizare`, `Succes`
 - Funcționalități: marchează citit, arhivează, restaurează, șterge definitiv
 - Navigare contextuală: click pe notificare → redirect pe pagina relevantă + highlight pe item (încasare, factură, comandă)
+
+### `99demo` — Simulator Flux
+
+- Instrument de demonstrație și testare automată
+- Scenarii predefinite pentru fluxuri RCA, CASCO și Flotă
+- Vizualizare progres, terminal de log-uri și control asupra interfeței
 - Filtrare: Toate / Avertizare / Info / Succes / Arhivă
 
 ---
@@ -554,4 +575,6 @@ Endpoint-uri testate real: catalog, entități, operațional (vehicule, dosare, 
 
 - [`backend/README.md`](backend/README.md) — detalii specifice backend
 - [`frontend/README.md`](frontend/README.md) — detalii specifice frontend
+- [`documentation/ARHITECTURA.md`](documentation/ARHITECTURA.md) — Arhitectură tehnică și design sistem
+- [`documentation/requirements.md`](documentation/requirements.md) — Cerințe funcționale și non-funcționale
 - [`documentation/`](documentation/) — modele de proiect PSI (PDF Partea 1-4) + documentație Word

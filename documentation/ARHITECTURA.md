@@ -1,4 +1,6 @@
-# Arhitectura Aplicației „Service Auto G"
+# Arhitectura Tehnică a Sistemului „Service Auto G”
+
+Acest document detaliază structura internă, deciziile de design și fluxurile de date ale sistemului. Pentru cerințele funcționale detaliate, consultă [Specificațiile de Cerințe (Requirements)](requirements.md).
 *Document de referință pentru prezentarea academică*
 
 ---

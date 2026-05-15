@@ -257,6 +257,7 @@ GET   /entitati/angajati
 POST  /entitati/angajati
 PATCH /entitati/angajati/:id
 PATCH /entitati/angajati/:id/status
+(Include suport pentru câmpul `esteInspector` pentru roluri multiple)
 
 GET   /entitati/asiguratori
 POST  /entitati/asiguratori
@@ -306,11 +307,13 @@ PATCH  /facturare/:id
 DELETE /facturare/:id
 ```
 
-La creare, service-ul calculează:
+La creare, service-ul calculează automat:
 
-- total fără TVA
-- TVA
-- total general
+- **total fără TVA** (suma brută a articolelor)
+- **valoare discount și penalizare** (procente aplicate la subtotal)
+- **baza impozabilă** (subtotal - discount + penalizare)
+- **TVA (19%)** aplicat la baza impozabilă
+- **total general** (baza impozabilă + TVA)
 
 ### `incasari`
 
