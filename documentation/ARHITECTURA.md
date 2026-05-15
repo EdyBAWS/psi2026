@@ -7,7 +7,7 @@ Acest document detaliază structura internă, deciziile de design și fluxurile 
 
 ## Diagrama de Arhitectură
 
-![Arhitectura în straturi](C:\Users\Edy\.gemini\antigravity\brain\8c1d176f-8061-4307-bab9-d6b2708c4dd6\architecture_diagram_1778706309905.png)
+![Arhitectura în straturi](arhitectura_straturi.png)
 
 ---
 
@@ -216,9 +216,11 @@ Fiecare modul conține:
 
 ---
 
-## 5. Diagrama ERD (Entitate-Relație)
+## 5. Diagrama ERD și Model Conceptual
 
-![ERD](C:\Users\Edy\.gemini\antigravity\brain\8c1d176f-8061-4307-bab9-d6b2708c4dd6\er_diagram_1778706343289.png)
+Sistemul folosește un model conceptual bazat pe entități interconectate. Puteți edita diagrama folosind fișierul sursă: [model_conceptual.drawio.xml](model_conceptual.drawio.xml) (deschideți în diagrams.net).
+
+![ERD](diagrama_erd.png)
 
 ```mermaid
 erDiagram
