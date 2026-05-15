@@ -218,7 +218,7 @@ Fiecare modul conține:
 
 ## 5. Diagrama ERD și Model Conceptual
 
-Sistemul folosește un model conceptual bazat pe entități interconectate. Puteți edita diagrama folosind fișierul sursă: [model_conceptual.drawio.xml](model_conceptual.drawio.xml) (deschideți în diagrams.net).
+Sistemul folosește un model conceptual bazat pe entități interconectate. Structura bazei de date este sincronizată cu schema Prisma a proiectului. Puteți edita diagrama folosind fișierul sursă: [diagrama_erd_completa.drawio.xml](diagrama_erd_completa.drawio.xml) (deschideți în diagrams.net).
 
 ![ERD](diagrama_erd.png)
 

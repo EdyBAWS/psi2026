@@ -272,7 +272,7 @@ export default function Manopera() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <p className="font-bold text-indigo-600 text-base">
-                      {item.pretOra.toFixed(2)} RON
+                      {item.pretOra ? item.pretOra.toFixed(2) : "180.00"} RON
                     </p>
                   </td>
                   <td className="px-6 py-4">
